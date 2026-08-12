@@ -1,0 +1,21 @@
+---
+description: Gridiron Gateway market narrative — scouting, compliance, NIL, anti-fraud AI
+alwaysApply: true
+---
+
+# Industry Narrative & Product Imperatives
+
+Athletic recruitment and performance analytics are shifting to data-driven precision. Gridiron Gateway sits at the center of that shift: verified scouting data, automated NCAA compliance, and real-time NIL valuation in one multi-tenant ecosystem.
+
+## Competitive / Adjacent Context (cite when designing features)
+- **S2 Cognition–class tools:** Cognitive decision-making / sports-IQ diagnostics → map to Gateway Cognition (scheme-fit processing speed).
+- **Catapult-class wearables:** GPS / load telemetry → map to Gateway BioScan (WebSocket ingress, max MPH, acceleration, player load).
+- **AI film fraud:** Athletes may doctor highlight reels to deceive scouts → map to Gateway TrueSpeed (framerate / velocity authenticity) and AI Film Studio verification workflows.
+- **Transfer portal chaos + salary-cap era:** Automated scouting agents, CapGM ($20.5M integer-cents), RallySafe escrow transparency, and compliance gates are mandatory product surfaces—not optional polish.
+
+## Product Implications for Code
+1. Prefer **verified / instrumented** metrics over self-reported claims (laser combine, BioScan, TrueSpeed).
+2. Surface **compliance + financial transparency** whenever messaging, NIL, or roster spend is involved.
+3. Design coach workflows for **portal volatility** (risk flags, win-impact cross-refs, RBAC isolation).
+4. Treat AI assistants/agents as **verification and triage** aids (scout authenticity, scheme match, audit trails)—not as ungoverned auto-approvers of compliance or payouts.
+5. When writing copy or UI microcopy, frame the platform as the unified command center for recruits and staff operating in this monitored, analytics-first landscape.
