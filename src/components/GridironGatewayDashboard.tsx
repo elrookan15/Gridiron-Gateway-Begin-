@@ -42,6 +42,7 @@ import {
   Film,
   Bot,
   ShieldCheck,
+  Database,
 } from "lucide-react";
 import { NILValuationChart } from "./NILValuationChart";
 import { CapGMRosterSimulator } from "./CapGMRosterSimulator";
@@ -54,6 +55,7 @@ import { MultiTenantRoleSelector, MOCK_MULTI_TENANT_USERS } from "./MultiTenantR
 import { AutonomousScoutingAgent } from "./AutonomousScoutingAgent";
 import { CombineLaserApiModule } from "./CombineLaserApiModule";
 import { ParentConsentPortal } from "./ParentConsentPortal";
+import { SchoolsCsvImporter } from "./SchoolsCsvImporter";
 
 // ============================================================================
 // TYPES & DATA MODELS
@@ -567,7 +569,17 @@ const MOCK_ATHLETE_DOSSIER: AthleteDossierData = {
 
 export const GridironGatewayDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    "directory" | "dossier" | "nil_calculator" | "cap_gm" | "cognition" | "nextgen_tech" | "film_studio" | "autonomous_scout" | "combine_laser" | "parent_portal"
+    | "directory"
+    | "dossier"
+    | "nil_calculator"
+    | "cap_gm"
+    | "cognition"
+    | "nextgen_tech"
+    | "film_studio"
+    | "autonomous_scout"
+    | "combine_laser"
+    | "parent_portal"
+    | "csv_importer"
   >("directory");
 
   const [activeUser, setActiveUser] = useState(MOCK_MULTI_TENANT_USERS[0]);
@@ -902,6 +914,18 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             >
               <ShieldCheck className="w-4 h-4 text-rose-300" />
               <span className="hidden md:inline">Parent Portal</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("csv_importer")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === "csv_importer"
+                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <Database className="w-4 h-4 text-amber-300" />
+              <span className="hidden md:inline">CSV Import</span>
             </button>
 
             <button
@@ -1660,6 +1684,12 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {activeTab === "parent_portal" && (
           <div className="animate-fadeIn">
             <ParentConsentPortal />
+          </div>
+        )}
+
+        {activeTab === "csv_importer" && (
+          <div className="animate-fadeIn">
+            <SchoolsCsvImporter />
           </div>
         )}
       </main>

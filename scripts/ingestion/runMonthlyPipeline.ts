@@ -1,15 +1,14 @@
 /**
- * Monthly orchestration entrypoint for the program/coach ingestion pipeline.
- * Produces JSON artifacts under data/ingestion/output for Postgres upsert.
+ * Monthly orchestration — CFBD → JUCO CSV → Sidearm (optional).
  */
 import dotenv from "dotenv";
-import type { IngestionRunSummary } from "../../src/types";
-import { syncCfbdTeams } from "./cfbdTeamsSync";
-import { importJucoPrepCsv } from "./jucoPrepCsvImport";
-import { scrapeSidearmStaff } from "./sidearmStaffScraper";
-import { writeJsonArtifact } from "./lib/io";
-import path from "path";
 import fs from "fs";
+import path from "path";
+import type { IngestionRunSummary } from "../../src/types";
+import { runCfbdIngestionPipeline } from "../../src/cfbdIngestionPipeline";
+import { runSidearmDirectoryScraper } from "../../src/sidearmDirectoryScraper";
+import { parseSchoolsCsv } from "../../src/schoolsCsvImport";
+import { writeJsonArtifact } from "../../src/ingestionUtils";
 
 dotenv.config();
 
@@ -21,8 +20,8 @@ async function main() {
   let coachesMissingEmail = 0;
 
   try {
-    const cfbdPrograms = await syncCfbdTeams();
-    programsUpserted += cfbdPrograms.length;
+    const cfbd = await runCfbdIngestionPipeline();
+    programsUpserted += cfbd.count;
   } catch (err) {
     errors.push(`CFBD: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -33,26 +32,27 @@ async function main() {
   );
   if (fs.existsSync(csvDefault)) {
     try {
-      const { programs, coaches } = importJucoPrepCsv(csvDefault);
-      programsUpserted += programs.length;
-      coachesUpserted += coaches.length;
-      coachesMissingEmail += coaches.filter((c) => !c.email).length;
+      const csv = parseSchoolsCsv(fs.readFileSync(csvDefault, "utf8"));
+      programsUpserted += csv.programsUpserted;
+      coachesUpserted += csv.coachesUpserted;
+      coachesMissingEmail += csv.coaches.filter((c) => !c.email).length;
+      errors.push(...csv.errors.map((e) => `CSV: ${e}`));
     } catch (err) {
       errors.push(`CSV: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
-  const skipScrape = process.env.SKIP_SIDEARM_SCRAPE === "1";
-  if (!skipScrape) {
+  if (process.env.SKIP_SIDEARM_SCRAPE === "1") {
+    console.log("[Pipeline] SKIP_SIDEARM_SCRAPE=1 — scraper bypassed.");
+  } else {
     try {
-      const coaches = await scrapeSidearmStaff();
-      coachesUpserted += coaches.length;
-      coachesMissingEmail += coaches.filter((c) => !c.email).length;
+      const sidearm = await runSidearmDirectoryScraper();
+      coachesUpserted += sidearm.count;
+      coachesMissingEmail += sidearm.missingEmailCount;
+      errors.push(...sidearm.errors.map((e) => `Sidearm: ${e}`));
     } catch (err) {
       errors.push(`Sidearm: ${err instanceof Error ? err.message : String(err)}`);
     }
-  } else {
-    console.log("[Pipeline] SKIP_SIDEARM_SCRAPE=1 — scraper bypassed.");
   }
 
   const summary: IngestionRunSummary = {
@@ -68,7 +68,6 @@ async function main() {
   const summaryPath = writeJsonArtifact("ingestion_run_summary.json", summary);
   console.log(`[Pipeline] Summary → ${summaryPath}`);
   console.log(JSON.stringify(summary, null, 2));
-
   if (errors.length) process.exitCode = 1;
 }
 

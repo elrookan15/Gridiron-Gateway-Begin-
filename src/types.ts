@@ -514,6 +514,7 @@ export interface CanonicalCoachStaffRecord {
   roleCategory: CoachStaffRoleCategory;
   email: string | null;
   phone: string | null;
+  twitterHandle?: string | null;
   staffPageUrl: string;
   source: Exclude<ProgramDataSource, "cfbd">;
   lastVerifiedAt: string;
@@ -530,15 +531,34 @@ export interface IngestionRunSummary {
   errors: string[];
 }
 
+/**
+ * Relational coach row for CoachesDirectory / messaging (Postgres `coaching_staff`).
+ * `schoolId` maps to `program_directory.id` (typically `cfbd-{cfbdId}`).
+ * `email` is nullable — never invent unpublished athletics contacts.
+ */
 export interface DatabaseCoach {
   coachId: string;
-  schoolId: string; // Foreign key to CFBD School ID
+  schoolId: string;
   fullName: string;
-  title: string; // e.g., "Wide Receivers Coach / Recruiting Coordinator"
-  email: string;
+  title: string;
+  email: string | null;
   officePhone: string | null;
   twitterHandle: string | null;
   lastVerifiedDate: string;
+}
+
+/** Map Sidearm/CSV ingress → relational `DatabaseCoach` contract. */
+export function toDatabaseCoach(staff: CanonicalCoachStaffRecord): DatabaseCoach {
+  return {
+    coachId: staff.id,
+    schoolId: staff.programId,
+    fullName: staff.fullName,
+    title: staff.title,
+    email: staff.email,
+    officePhone: staff.phone,
+    twitterHandle: staff.twitterHandle ?? null,
+    lastVerifiedDate: staff.lastVerifiedAt,
+  };
 }
 
 

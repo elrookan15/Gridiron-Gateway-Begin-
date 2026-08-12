@@ -21,6 +21,10 @@ import {
   sanitizeErrorMessage,
   verifyStripeWebhook,
 } from "./src/serverSecurity";
+import { runCfbdIngestionPipeline } from "./src/cfbdIngestionPipeline";
+import { runSidearmDirectoryScraper } from "./src/sidearmDirectoryScraper";
+import { parseSchoolsCsv } from "./src/schoolsCsvImport";
+import type { CanonicalProgramRecord, DatabaseCoach } from "./src/types";
 
 dotenv.config();
 
@@ -28,7 +32,7 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const IS_PROD = process.env.NODE_ENV === "production";
 
-app.use(express.json({ limit: "256kb" }));
+app.use(express.json({ limit: "2mb" }));
 
 // ---------------------------------------------------------------------------
 // Typed domain stores (in-memory until Supabase schema.sql is wired)
@@ -75,6 +79,26 @@ interface RolePermissions {
 
 const BIOSCAN_TELEMETRY_DB: Record<string, BioscanTelemetry> = {};
 const ACTIVE_WS_CLIENTS = new Set<WebSocket>();
+
+/** In-memory program/coach directory until Supabase upsert is wired. */
+const PROGRAM_DIRECTORY_DB: CanonicalProgramRecord[] = [];
+const COLLEGE_COACHES_DB: DatabaseCoach[] = [];
+
+function upsertPrograms(programs: CanonicalProgramRecord[]) {
+  for (const program of programs) {
+    const idx = PROGRAM_DIRECTORY_DB.findIndex((p) => p.id === program.id);
+    if (idx >= 0) PROGRAM_DIRECTORY_DB[idx] = program;
+    else PROGRAM_DIRECTORY_DB.push(program);
+  }
+}
+
+function upsertCoaches(coaches: DatabaseCoach[]) {
+  for (const coach of coaches) {
+    const idx = COLLEGE_COACHES_DB.findIndex((c) => c.coachId === coach.coachId);
+    if (idx >= 0) COLLEGE_COACHES_DB[idx] = coach;
+    else COLLEGE_COACHES_DB.push(coach);
+  }
+}
 
 /** Server-authoritative portal flags — never trust client claims. */
 const PORTAL_FLAGGED_ATHLETE_IDS = new Set<string>(["ath_portal_flagged_demo"]);
@@ -186,6 +210,109 @@ app.use("/api", (req, res, next) => {
     return next();
   }
   return requireApiAuth(req, res, next);
+});
+
+const adminRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: "admin-ingest" });
+
+// ============================================================================
+// ADMIN DATA INGESTION (CFBD / SIDEARM / JUCO CSV)
+// ============================================================================
+
+app.post("/api/v1/admin/sync-cfbd", adminRateLimit, async (_req, res) => {
+  try {
+    const result = await runCfbdIngestionPipeline();
+    upsertPrograms(result.programs);
+    return res.status(200).json({
+      status: "CFBD_SYNC_COMPLETE",
+      syncedAt: result.syncedAt,
+      programsUpserted: result.count,
+      totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
+      artifactPath: result.artifactPath,
+    });
+  } catch (err: unknown) {
+    console.error("CFBD sync error:", err);
+    return res.status(500).json({
+      error: "CFBD_SYNC_FAILED",
+      message: sanitizeErrorMessage(err, "Failed to sync CFBD teams."),
+    });
+  }
+});
+
+app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
+  try {
+    const programs = Array.isArray(req.body?.programs) ? req.body.programs : undefined;
+    const result = await runSidearmDirectoryScraper({ programs });
+    upsertCoaches(result.databaseCoaches);
+    return res.status(200).json({
+      status: "SIDEARM_SCRAPE_COMPLETE",
+      scrapedAt: result.scrapedAt,
+      coachesUpserted: result.count,
+      missingEmailCount: result.missingEmailCount,
+      errors: result.errors,
+      totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+      artifactPath: result.artifactPath,
+    });
+  } catch (err: unknown) {
+    console.error("Sidearm scrape error:", err);
+    return res.status(500).json({
+      error: "SIDEARM_SCRAPE_FAILED",
+      message: sanitizeErrorMessage(err, "Failed to scrape Sidearm directories."),
+    });
+  }
+});
+
+app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
+  try {
+    const csvText = typeof req.body?.csvText === "string" ? req.body.csvText : "";
+    if (!csvText.trim()) {
+      return res.status(400).json({
+        error: "MISSING_CSV",
+        message: "csvText is required in the request body.",
+      });
+    }
+
+    const result = parseSchoolsCsv(csvText);
+    if (!result.programs.length && result.errors.length) {
+      return res.status(400).json({
+        error: "CSV_VALIDATION_FAILED",
+        message: result.errors[0],
+        errors: result.errors,
+      });
+    }
+
+    upsertPrograms(result.programs);
+    upsertCoaches(result.coaches);
+
+    return res.status(200).json({
+      status: "CSV_IMPORT_COMPLETE",
+      importedAt: result.importedAt,
+      programsUpserted: result.programsUpserted,
+      coachesUpserted: result.coachesUpserted,
+      duplicatesSkipped: result.duplicatesSkipped,
+      errors: result.errors,
+      totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
+      totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+      artifactPath: result.artifactPath,
+    });
+  } catch (err: unknown) {
+    console.error("CSV import error:", err);
+    return res.status(500).json({
+      error: "CSV_IMPORT_FAILED",
+      message: sanitizeErrorMessage(err, "Failed to import schools CSV."),
+    });
+  }
+});
+
+app.get("/api/v1/admin/directory-snapshot", (_req, res) => {
+  res.json({
+    programs: PROGRAM_DIRECTORY_DB,
+    coaches: COLLEGE_COACHES_DB,
+    totals: {
+      programs: PROGRAM_DIRECTORY_DB.length,
+      coaches: COLLEGE_COACHES_DB.length,
+      coachesMissingEmail: COLLEGE_COACHES_DB.filter((c) => !c.email).length,
+    },
+  });
 });
 
 // ==========================================

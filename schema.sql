@@ -882,6 +882,7 @@ CREATE TABLE coaching_staff (
   -- Nullable by design: never invent contacts when Sidearm omits them
   email TEXT,
   phone TEXT,
+  twitter_handle TEXT,
   staff_page_url TEXT NOT NULL,
   source program_data_source NOT NULL CHECK (source IN ('sidearm_scrape', 'csv_bulk', 'manual')),
   last_verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -896,6 +897,27 @@ CREATE INDEX idx_coaching_staff_email ON coaching_staff (email) WHERE email IS N
 CREATE INDEX idx_coaching_staff_active ON coaching_staff (is_active);
 
 COMMENT ON TABLE program_directory IS 'CFBD-synced NCAA programs + CSV-imported JUCO/Prep — source of truth for SchoolsDirectory.';
-COMMENT ON TABLE coaching_staff IS 'Verified coach contacts from Sidearm scrape or CSV. email/phone NULL when unpublished.';
-COMMENT ON COLUMN coaching_staff.email IS 'Must be extracted from published athletics pages or verified CSV — never LLM-generated.';
+COMMENT ON TABLE coaching_staff IS 'Verified coach contacts from Sidearm scrape or CSV. Maps to TypeScript DatabaseCoach (coachId=id, schoolId=program_id).';
+COMMENT ON COLUMN coaching_staff.email IS 'Must be extracted from published athletics pages or verified CSV — never LLM-generated. Nullable when unpublished.';
+COMMENT ON COLUMN coaching_staff.twitter_handle IS 'Optional public handle; null until verified from staff page or CSV.';
+
+-- Application-facing alias matching DatabaseCoach / CoachesDirectory contracts
+CREATE TABLE college_coaches (
+  coach_id TEXT PRIMARY KEY,
+  school_id TEXT NOT NULL REFERENCES program_directory(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  email TEXT,
+  office_phone TEXT,
+  twitter_handle TEXT,
+  last_verified_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_college_coaches_school ON college_coaches (school_id);
+CREATE INDEX idx_college_coaches_email ON college_coaches (email) WHERE email IS NOT NULL;
+
+COMMENT ON TABLE college_coaches IS 'Production coach directory rows (DatabaseCoach). Populated by Sidearm scrape + JUCO/Prep CSV — never LLM-generated.';
 
