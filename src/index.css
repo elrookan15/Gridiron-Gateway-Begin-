@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 12mm;
+  }
+
+  body {
+    background-color: white !important;
+    color: #0f172a !important;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  }
+  
+  header, nav, button, .no-print {
+    display: none !important;
+  }
+  
+  * {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  .print\:block {
+    display: block !important;
+  }
+
+  .print\:hidden {
+    display: none !important;
+  }
+}
+
+/* ==========================================================================
+   GLOBAL LIGHT MODE THEME OVERRIDES
+   Adapts dark sports-tech slate colors to clean professional light view
+   ========================================================================== */
+
+html.light-theme,
+body.light-theme,
+.light-theme {
+  background-color: #f8fafc !important; /* slate-50 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+/* Main background remapping */
+.light-theme main,
+.light-theme .bg-slate-950 {
+  background-color: #f8fafc !important;
+}
+
+/* Card & panel container remapping */
+.light-theme .bg-slate-900,
+.light-theme .bg-slate-900\/90,
+.light-theme .bg-slate-900\/80,
+.light-theme .bg-slate-900\/70,
+.light-theme .bg-slate-900\/60,
+.light-theme .bg-slate-900\/50,
+.light-theme .bg-slate-900\/40,
+.light-theme .bg-slate-950\/90,
+.light-theme .bg-slate-950\/80,
+.light-theme .bg-slate-950\/70,
+.light-theme .bg-slate-950\/60,
+.light-theme .bg-slate-950\/50 {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+}
+
+/* Secondary nested sub-cards */
+.light-theme .bg-slate-800,
+.light-theme .bg-slate-800\/80,
+.light-theme .bg-slate-800\/60,
+.light-theme .bg-slate-800\/50,
+.light-theme .bg-slate-800\/40,
+.light-theme .bg-slate-850,
+.light-theme .bg-slate-950\/95 {
+  background-color: #f1f5f9 !important; /* slate-100 */
+}
+
+/* Inputs & Form controls */
+.light-theme input:not([type="checkbox"]):not([type="radio"]),
+.light-theme select,
+.light-theme textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important; /* slate-300 */
+}
+
+.light-theme input::placeholder,
+.light-theme textarea::placeholder {
+  color: #94a3b8 !important; /* slate-400 */
+}
+
+/* Borders adaptation */
+.light-theme .border-slate-800,
+.light-theme .border-slate-800\/80,
+.light-theme .border-slate-800\/60,
+.light-theme .border-slate-800\/50,
+.light-theme .border-slate-700,
+.light-theme .border-slate-700\/80,
+.light-theme .border-slate-850,
+.light-theme .border-slate-900 {
+  border-color: #e2e8f0 !important; /* slate-200 */
+}
+
+/* Typography text color adaptation */
+.light-theme .text-white,
+.light-theme .text-slate-100 {
+  color: #0f172a !important; /* slate-900 */
+}
+
+.light-theme .text-slate-200,
+.light-theme .text-slate-300 {
+  color: #334155 !important; /* slate-700 */
+}
+
+.light-theme .text-slate-400 {
+  color: #475569 !important; /* slate-600 */
+}
+
+.light-theme .text-slate-500 {
+  color: #64748b !important; /* slate-500 */
+}
+
+/* Gradients adaptation for top banners and header bars */
+.light-theme .from-emerald-950 {
+  --tw-gradient-from: #ecfdf5 !important; /* emerald-50 */
+}
+.light-theme .via-slate-900 {
+  --tw-gradient-via: #f1f5f9 !important; /* slate-100 */
+}
+.light-theme .to-emerald-950 {
+  --tw-gradient-to: #ecfdf5 !important;
+}
+
+/* Accent badges contrast enhancement in light mode */
+.light-theme .text-lime-400 {
+  color: #65a30d !important; /* lime-600 */
+}
+.light-theme .text-sky-300,
+.light-theme .text-sky-400 {
+  color: #0284c7 !important; /* sky-600 */
+}
+.light-theme .text-amber-300,
+.light-theme .text-amber-400 {
+  color: #d97706 !important; /* amber-600 */
+}
+.light-theme .text-emerald-400 {
+  color: #059669 !important; /* emerald-600 */
+}
+.light-theme .text-rose-400,
+.light-theme .text-rose-500 {
+  color: #e11d48 !important; /* rose-600 */
+}
+
+/* Tables in light mode */
+.light-theme table thead tr {
+  background-color: #f1f5f9 !important;
+}
+.light-theme table tbody tr {
+  border-color: #f1f5f9 !important;
+}
+.light-theme table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Modals & Overlays */
+.light-theme .bg-black\/80,
+.light-theme .bg-slate-950\/80 {
+  background-color: rgba(15, 23, 42, 0.6) !important;
+}
+
