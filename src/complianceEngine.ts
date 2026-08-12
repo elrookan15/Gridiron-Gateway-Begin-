@@ -311,7 +311,9 @@ export function evaluateComplianceGate(params: {
 
   // Exactly 1 matched row
   const period = matchedRows[0];
-  const isMethodAllowed = period.contact_methods_allowed.includes(contact_method as any) && period.period_type !== "dead";
+  const allowedMethods = period.contact_methods_allowed as readonly string[];
+  const isMethodAllowed =
+    allowedMethods.includes(contact_method) && period.period_type !== "dead";
 
   if (!isMethodAllowed) {
     const blockReason = `Blocked by NCAA ${period.period_type.toUpperCase()} period rule (${period.id}). Contact method '${contact_method}' not permitted under allowed methods: [${period.contact_methods_allowed.join(", ")}].`;
