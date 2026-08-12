@@ -532,8 +532,8 @@ export interface IngestionRunSummary {
 }
 
 /**
- * Relational coach row for CoachesDirectory / messaging (Postgres `coaching_staff`).
- * `schoolId` maps to `program_directory.id` (typically `cfbd-{cfbdId}`).
+ * Relational coach row for CoachesDirectory / messaging (Postgres `college_coaches`).
+ * `schoolId` maps to `schools.school_id` in schema.production.sql (typically `cfbd-{id}`).
  * `email` is nullable — never invent unpublished athletics contacts.
  */
 export interface DatabaseCoach {
@@ -544,7 +544,47 @@ export interface DatabaseCoach {
   email: string | null;
   officePhone: string | null;
   twitterHandle: string | null;
-  lastVerifiedDate: string;
+  sourceUrl: string | null;
+  lastVerifiedAt: string;
+}
+
+/** Production schools row — schema.production.sql */
+export type DivisionTierEnum =
+  | "FBS_POWER_4"
+  | "FBS_GROUP_OF_5"
+  | "FCS"
+  | "D2"
+  | "D3"
+  | "NAIA"
+  | "JUCO"
+  | "PREP";
+
+export interface DatabaseSchool {
+  schoolId: string;
+  institutionName: string;
+  mascot: string | null;
+  abbreviation: string | null;
+  tier: DivisionTierEnum;
+  conference: string | null;
+  city: string | null;
+  state: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  stadiumCapacity: number | null;
+  lastSyncedAt: string;
+}
+
+/** Lean athlete facts for Autonomous Scouting Agent / Leaderboard indexes */
+export interface DatabaseAthleteProfile {
+  athleteId: string;
+  firstName: string;
+  lastName: string;
+  gradYear: number;
+  primaryPosition: string;
+  state: string | null;
+  starRating: number;
+  trueSpeedMph: number | null;
+  cognitionScore: number | null;
 }
 
 /** Map Sidearm/CSV ingress → relational `DatabaseCoach` contract. */
@@ -557,7 +597,49 @@ export function toDatabaseCoach(staff: CanonicalCoachStaffRecord): DatabaseCoach
     email: staff.email,
     officePhone: staff.phone,
     twitterHandle: staff.twitterHandle ?? null,
-    lastVerifiedDate: staff.lastVerifiedAt,
+    sourceUrl: staff.staffPageUrl,
+    lastVerifiedAt: staff.lastVerifiedAt,
+  };
+}
+
+export function classificationToDivisionTier(
+  classification: CanonicalProgramRecord["classification"]
+): DivisionTierEnum {
+  switch (classification) {
+    case "fbs":
+      return "FBS_POWER_4";
+    case "fcs":
+      return "FCS";
+    case "ii":
+      return "D2";
+    case "iii":
+      return "D3";
+    case "naia":
+      return "NAIA";
+    case "juco":
+      return "JUCO";
+    case "prep":
+      return "PREP";
+    default:
+      return "FCS";
+  }
+}
+
+/** Map CFBD/CSV program ingress → production `schools` row. */
+export function toDatabaseSchool(program: CanonicalProgramRecord): DatabaseSchool {
+  return {
+    schoolId: program.id,
+    institutionName: program.institutionName,
+    mascot: program.mascot,
+    abbreviation: program.abbreviation,
+    tier: classificationToDivisionTier(program.classification),
+    conference: program.conference,
+    city: program.city,
+    state: program.state,
+    primaryColor: program.primaryColorHex,
+    secondaryColor: program.secondaryColorHex,
+    stadiumCapacity: program.stadiumCapacity,
+    lastSyncedAt: program.lastSyncedAt,
   };
 }
 

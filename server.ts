@@ -21,8 +21,8 @@ import {
   sanitizeErrorMessage,
   verifyStripeWebhook,
 } from "./src/serverSecurity";
-import { runCfbdIngestionPipeline } from "./src/cfbdIngestionPipeline";
-import { runSidearmDirectoryScraper } from "./src/sidearmDirectoryScraper";
+import { syncCfbdTeams, runCfbdIngestionPipeline } from "./src/cfbdIngestionPipeline";
+import { scrapeSidearmDirectory, runSidearmDirectoryScraper } from "./src/sidearmDirectoryScraper";
 import { parseSchoolsCsv } from "./src/schoolsCsvImport";
 import type { CanonicalProgramRecord, DatabaseCoach } from "./src/types";
 
@@ -300,6 +300,35 @@ app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
       error: "CSV_IMPORT_FAILED",
       message: sanitizeErrorMessage(err, "Failed to import schools CSV."),
     });
+  }
+});
+
+/**
+ * 📡 Admin: Trigger CFBD Sync
+ */
+app.post('/api/v1/admin/sync-cfbd', async (req, res) => {
+  try {
+    const result = await syncCfbdTeams();
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to synchronize with CFBD API' });
+  }
+});
+
+/**
+ * 🕵️‍♂️ Admin: Trigger Sidearm Scraper for a specific school
+ */
+app.post('/api/v1/admin/scrape-sidearm', async (req, res) => {
+  const { schoolId, directoryUrl } = req.body;
+  if (!schoolId || !directoryUrl) {
+    return res.status(400).json({ error: 'schoolId and directoryUrl are required.' });
+  }
+  
+  try {
+    const coaches = await scrapeSidearmDirectory(schoolId, directoryUrl);
+    res.status(200).json({ status: 'success', count: coaches.length, coaches });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to scrape directory' });
   }
 });
 

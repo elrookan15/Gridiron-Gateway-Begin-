@@ -201,7 +201,8 @@ export function parseSchoolsCsv(csvText: string): SchoolsCsvImportResult {
       email,
       officePhone: phoneIdx >= 0 ? emptyToNull(row[phoneIdx]) : null,
       twitterHandle: null,
-      lastVerifiedDate: importedAt,
+      sourceUrl: null,
+      lastVerifiedAt: importedAt,
     });
   });
 

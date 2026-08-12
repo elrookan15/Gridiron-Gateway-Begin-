@@ -304,7 +304,7 @@ College football has 900+ programs and extreme coaching turnover. **Never invent
 | 3. JUCO / Prep | `npm run ingest:juco-csv` | Verified CSV bulk import (`data/ingestion/templates/…`) |
 | 4. Monthly orchestrator | `npm run ingest:monthly` | Runs 1→3; set `SKIP_SIDEARM_SCRAPE=1` to skip live HTML |
 
-Artifacts land in `data/ingestion/output/` (gitignored). Postgres targets: `program_directory` + `coaching_staff` in `schema.sql`. Missing contacts must render as **Contact not verified** — never a hallucinated `@university.edu`.
+Artifacts land in `data/ingestion/output/` (gitignored). Postgres targets: production tables in [`schema.production.sql`](schema.production.sql) (`schools`, `college_coaches`, `athlete_profiles`). Legacy MVP auth/compliance schema remains in [`schema.sql`](schema.sql). Missing contacts must render as **Contact not verified** — never a hallucinated `@university.edu`.
 
 ### Running Test Suites
 

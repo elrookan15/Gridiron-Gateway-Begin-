@@ -1,8 +1,54 @@
 -- =============================================================================
--- GRIDIRON GATEWAY — MVP DATABASE SCHEMA
--- Target Platform: Supabase (PostgreSQL 15+)
+-- GRIDIRON GATEWAY — PRODUCTION RELATIONAL SCHEMA
+-- Target Platform: Supabase / PostgreSQL 15+
 -- Philosophy: Fail-Closed Security, Complete Data Integrity & NCAA Compliance
 -- =============================================================================
+
+CREATE TYPE division_tier_enum AS ENUM ('FBS_POWER_4', 'FBS_GROUP_OF_5', 'FCS', 'D2', 'D3', 'NAIA', 'JUCO', 'PREP');
+
+CREATE TABLE IF NOT EXISTS schools (
+    school_id VARCHAR(100) PRIMARY KEY,
+    institution_name VARCHAR(255) NOT NULL,
+    mascot VARCHAR(100),
+    abbreviation VARCHAR(50),
+    tier division_tier_enum NOT NULL,
+    conference VARCHAR(100),
+    city VARCHAR(100),
+    state VARCHAR(50),
+    primary_color VARCHAR(7),
+    secondary_color VARCHAR(7),
+    stadium_capacity INTEGER,
+    last_synced_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS college_coaches (
+    coach_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id VARCHAR(100) REFERENCES schools(school_id) ON DELETE CASCADE,
+    full_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    office_phone VARCHAR(50),
+    twitter_handle VARCHAR(100),
+    source_url VARCHAR(500),
+    last_verified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS athlete_profiles (
+    athlete_id VARCHAR(100) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    grad_year INTEGER NOT NULL,
+    primary_position VARCHAR(10) NOT NULL,
+    state VARCHAR(50),
+    star_rating INTEGER DEFAULT 0,
+    true_speed_mph DECIMAL(5,2),
+    cognition_score INTEGER
+);
+
+-- Optimize queries for the Autonomous Scouting Agent and Leaderboard
+CREATE INDEX IF NOT EXISTS idx_schools_tier ON schools(tier);
+CREATE INDEX IF NOT EXISTS idx_coaches_school ON college_coaches(school_id);
+CREATE INDEX IF NOT EXISTS idx_athletes_position_year ON athlete_profiles(primary_position, grad_year);
 
 -- -----------------------------------------------------------------------------
 -- 1. STRICT DOMAIN ENUMS
@@ -83,20 +129,7 @@ CREATE TABLE users (
 COMMENT ON TABLE users IS 'Primary profile table linked to auth.users with self-referencing guardian linkage for minors.';
 COMMENT ON COLUMN users.guardian_id IS 'Self-referencing FK linking minor athletes to verified parent/guardian user account.';
 
--- Database Coaches Relational Mapping (Linked to CFBD School ID)
-CREATE TABLE database_coaches (
-  coach_id VARCHAR(64) PRIMARY KEY,
-  school_id VARCHAR(64) NOT NULL,
-  full_name VARCHAR(128) NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  email VARCHAR(128) NOT NULL,
-  office_phone VARCHAR(32),
-  twitter_handle VARCHAR(64),
-  last_verified_date TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
-CREATE INDEX idx_database_coaches_school_id ON database_coaches(school_id);
-CREATE INDEX idx_database_coaches_email ON database_coaches(email);
+-- Colleges, Universities & Prep Programs Directory (legacy MVP UUID model)
 CREATE TABLE schools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -901,7 +934,8 @@ COMMENT ON TABLE coaching_staff IS 'Verified coach contacts from Sidearm scrape 
 COMMENT ON COLUMN coaching_staff.email IS 'Must be extracted from published athletics pages or verified CSV — never LLM-generated. Nullable when unpublished.';
 COMMENT ON COLUMN coaching_staff.twitter_handle IS 'Optional public handle; null until verified from staff page or CSV.';
 
--- Application-facing alias matching DatabaseCoach / CoachesDirectory contracts
+-- Application-facing coach directory (legacy TEXT ids). Prefer schema.production.sql
+-- college_coaches (UUID + schools.school_id FK) for new Supabase deployments.
 CREATE TABLE college_coaches (
   coach_id TEXT PRIMARY KEY,
   school_id TEXT NOT NULL REFERENCES program_directory(id) ON DELETE CASCADE,
@@ -910,7 +944,8 @@ CREATE TABLE college_coaches (
   email TEXT,
   office_phone TEXT,
   twitter_handle TEXT,
-  last_verified_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  source_url TEXT,
+  last_verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -919,5 +954,5 @@ CREATE TABLE college_coaches (
 CREATE INDEX idx_college_coaches_school ON college_coaches (school_id);
 CREATE INDEX idx_college_coaches_email ON college_coaches (email) WHERE email IS NOT NULL;
 
-COMMENT ON TABLE college_coaches IS 'Production coach directory rows (DatabaseCoach). Populated by Sidearm scrape + JUCO/Prep CSV — never LLM-generated.';
+COMMENT ON TABLE college_coaches IS 'Legacy ingest mirror. Production deployments should use schema.production.sql.';
 
