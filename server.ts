@@ -21,7 +21,7 @@ import {
   sanitizeErrorMessage,
   verifyStripeWebhook,
 } from "./src/serverSecurity";
-import { runCfbdIngestionPipeline } from "./src/cfbdIngestionPipeline";
+import { syncCfbdTeams } from "./src/cfbdIngestionPipeline";
 import {
   scrapeSidearmDirectory,
   runSidearmDirectoryScraper,
@@ -228,18 +228,12 @@ const adminRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: "adm
  */
 app.post("/api/v1/admin/sync-cfbd", adminRateLimit, async (_req, res) => {
   try {
-    const result = await runCfbdIngestionPipeline();
+    const result = await syncCfbdTeams();
     upsertPrograms(result.programs);
     return res.status(200).json({
-      status: result.status,
-      syncedAt: result.syncedAt,
-      count: result.count,
+      ...result,
       programsUpserted: result.count,
-      schoolsUpserted: result.schools.length,
       totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
-      artifactPath: result.artifactPath,
-      // Keep `data` for clients expecting DatabaseSchool[] from syncCfbdTeams.
-      data: result.data,
     });
   } catch (err: unknown) {
     console.error("CFBD sync error:", err);
