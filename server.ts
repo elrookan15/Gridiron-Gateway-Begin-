@@ -180,7 +180,8 @@ app.use("/api", (req, res, next) => {
   // Express strips the mount prefix, so path is relative to /api.
   if (
     req.path === "/v1/bioscan/webhooks/catapult" ||
-    req.path === "/v1/rallysafe/webhooks/stripe"
+    req.path === "/v1/rallysafe/webhooks/stripe" ||
+    req.path === "/v1/combines/webhooks/laser"
   ) {
     return next();
   }
@@ -288,40 +289,197 @@ app.get("/api/compliance/recruiting-periods", (_req, res) => {
 // PHASE 4: COMBINE LASER API & PARENT CONSENT REST ENDPOINTS
 // ============================================================================
 
-app.post("/api/v1/combines/webhooks/laser", (req, res) => {
-  const { athleteName, combineEventName, laserFortyTime, laserShuttleTime, laserThreeConeTime, verticalJumpInches, broadJumpInches } = req.body;
-  if (!athleteName || !laserFortyTime) {
-    return res.status(400).json({ error: "MISSING_LASER_TELEMETRY", message: "athleteName and laserFortyTime required." });
+interface LaserCombineRecord {
+  id: string;
+  athleteName: string;
+  combineEventName: string;
+  laserFortyTime: number;
+  laserShuttleTime: number;
+  laserThreeConeTime: number;
+  verticalJumpInches: number;
+  broadJumpInches: number;
+  badge: "⚡ Laser Verified";
+  timestamp: string;
+}
+
+interface ParentConsentDbRecord {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  parentName: string;
+  parentEmail: string;
+  consentScope: string[];
+  nilEscrowDisclosureAcknowledged: boolean;
+  minorSafetyStatus: "COPPA_FERPA_VERIFIED";
+  coppaComplianceStatus: "COPPA / FERPA Verified";
+  timestamp: string;
+}
+
+const LASER_COMBINE_DB: LaserCombineRecord[] = [];
+const PARENT_CONSENT_DB: ParentConsentDbRecord[] = [];
+
+app.post(
+  "/api/v1/combines/webhooks/laser",
+  requireWebhookSecret("x-laser-secret", "LASER_WEBHOOK_SECRET"),
+  (req, res) => {
+    try {
+      const {
+        athleteName,
+        combineEventName,
+        laserFortyTime,
+        laserShuttleTime,
+        laserThreeConeTime,
+        verticalJumpInches,
+        broadJumpInches,
+      } = req.body ?? {};
+
+      if (typeof athleteName !== "string" || !athleteName.trim()) {
+        return res.status(400).json({
+          error: "MISSING_LASER_TELEMETRY",
+          message: "athleteName is required.",
+        });
+      }
+
+      const forty = Number(laserFortyTime);
+      if (!Number.isFinite(forty) || forty <= 0) {
+        return res.status(400).json({
+          error: "MISSING_LASER_TELEMETRY",
+          message: "laserFortyTime must be a positive number.",
+        });
+      }
+
+      const record: LaserCombineRecord = {
+        id: `las_${Date.now()}`,
+        athleteName: athleteName.trim(),
+        combineEventName:
+          typeof combineEventName === "string" && combineEventName.trim()
+            ? combineEventName.trim()
+            : "Regional Combine Showcase",
+        laserFortyTime: forty,
+        laserShuttleTime: Number(laserShuttleTime) || 0,
+        laserThreeConeTime: Number(laserThreeConeTime) || 0,
+        verticalJumpInches: Number(verticalJumpInches) || 0,
+        broadJumpInches: Number(broadJumpInches) || 0,
+        badge: "⚡ Laser Verified",
+        timestamp: new Date().toISOString(),
+      };
+
+      LASER_COMBINE_DB.unshift(record);
+
+      return res.status(201).json({
+        status: "LASER_TIMING_INGESTED",
+        id: record.id,
+        badge: record.badge,
+        athleteName: record.athleteName,
+        combineEventName: record.combineEventName,
+        laserFortyTime: record.laserFortyTime,
+        laserShuttleTime: record.laserShuttleTime,
+        laserThreeConeTime: record.laserThreeConeTime,
+        verticalJumpInches: record.verticalJumpInches,
+        broadJumpInches: record.broadJumpInches,
+        timestamp: record.timestamp,
+      });
+    } catch (err: unknown) {
+      console.error("Laser webhook error:", err);
+      return res.status(500).json({
+        error: sanitizeErrorMessage(err, "Failed to ingest laser combine telemetry."),
+      });
+    }
   }
-  return res.status(201).json({
-    status: "LASER_TIMING_INGESTED",
-    badge: "⚡ Laser Verified",
-    athleteName,
-    combineEventName: combineEventName || "Regional Combine Showcase",
-    laserFortyTime,
-    laserShuttleTime,
-    laserThreeConeTime,
-    verticalJumpInches,
-    broadJumpInches,
-    timestamp: new Date().toISOString(),
-  });
+);
+
+app.get("/api/v1/combines/laser-entries", (_req, res) => {
+  res.json({ total: LASER_COMBINE_DB.length, entries: LASER_COMBINE_DB });
 });
 
-app.post("/api/v1/compliance/parent-consent", (req, res) => {
-  const { athleteId, athleteName, parentName, parentEmail, consentScope } = req.body;
-  if (!athleteId || !parentEmail) {
-    return res.status(400).json({ error: "MISSING_CONSENT_DATA", message: "athleteId and parentEmail required." });
+app.post("/api/v1/compliance/parent-consent", mutateRateLimit, (req, res) => {
+  try {
+    const body = req.body ?? {};
+    const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : "";
+    const athleteName =
+      typeof body.athleteName === "string" && body.athleteName.trim()
+        ? body.athleteName.trim()
+        : athleteId || "Student-Athlete";
+    const parentName =
+      (typeof body.parentName === "string" && body.parentName.trim()) ||
+      (typeof body.guardianName === "string" && body.guardianName.trim()) ||
+      "";
+    const parentEmail =
+      (typeof body.parentEmail === "string" && body.parentEmail.trim()) ||
+      (typeof body.guardianEmail === "string" && body.guardianEmail.trim()) ||
+      "";
+    const consentScope = body.consentScope;
+    const nilEscrowDisclosureAcknowledged =
+      body.nilEscrowDisclosureAcknowledged === true || body.milestoneDisclosuresAgreed === true;
+
+    if (!athleteId) {
+      return res.status(400).json({
+        error: "MISSING_CONSENT_DATA",
+        message: "athleteId is required.",
+      });
+    }
+    if (!parentEmail.includes("@")) {
+      return res.status(400).json({
+        error: "MISSING_CONSENT_DATA",
+        message: "Valid parentEmail / guardianEmail is required.",
+      });
+    }
+    if (!parentName) {
+      return res.status(400).json({
+        error: "MISSING_CONSENT_DATA",
+        message: "parentName / guardianName is required.",
+      });
+    }
+    if (!nilEscrowDisclosureAcknowledged) {
+      return res.status(400).json({
+        error: "NIL_DISCLOSURE_REQUIRED",
+        message: "RallySafe NIL escrow disclosure must be acknowledged.",
+      });
+    }
+
+    const record: ParentConsentDbRecord = {
+      id: `consent_${Date.now()}`,
+      athleteId,
+      athleteName,
+      parentName,
+      parentEmail: parentEmail.toLowerCase(),
+      consentScope: Array.isArray(consentScope)
+        ? consentScope.filter((s: unknown) => typeof s === "string")
+        : ["Messaging Consent", "NIL Escrow Authorization"],
+      nilEscrowDisclosureAcknowledged: true,
+      minorSafetyStatus: "COPPA_FERPA_VERIFIED",
+      coppaComplianceStatus: "COPPA / FERPA Verified",
+      timestamp: new Date().toISOString(),
+    };
+
+    PARENT_CONSENT_DB.unshift(record);
+
+    return res.status(200).json({
+      status: "CONSENT_RECORDED",
+      id: record.id,
+      consentId: record.id,
+      coppaComplianceStatus: record.coppaComplianceStatus,
+      minorSafetyStatus: record.minorSafetyStatus,
+      safetyStatus: "CONSENT_GRANTED",
+      athleteId: record.athleteId,
+      athleteName: record.athleteName,
+      parentName: record.parentName,
+      parentEmail: record.parentEmail,
+      guardianName: record.parentName,
+      guardianEmail: record.parentEmail,
+      consentScope: record.consentScope,
+      timestamp: record.timestamp,
+    });
+  } catch (err: unknown) {
+    console.error("Parent consent error:", err);
+    return res.status(500).json({
+      error: sanitizeErrorMessage(err, "Failed to record parent consent."),
+    });
   }
-  return res.status(200).json({
-    status: "CONSENT_RECORDED",
-    coppaComplianceStatus: "COPPA / FERPA Verified",
-    athleteId,
-    athleteName,
-    parentName,
-    parentEmail,
-    consentScope: consentScope || ["Messaging Consent", "NIL Escrow Authorization"],
-    timestamp: new Date().toISOString(),
-  });
+});
+
+app.get("/api/v1/compliance/parent-consent", (_req, res) => {
+  res.json({ total: PARENT_CONSENT_DB.length, consents: PARENT_CONSENT_DB });
 });
 
 app.post("/api/compliance/run-tests", mutateRateLimit, (_req, res) => {

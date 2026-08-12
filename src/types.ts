@@ -429,44 +429,44 @@ export interface MultiTenantUser {
 }
 
 // PHASE 4: AUTONOMOUS SCOUTING, LASER COMBINE & PARENT PORTAL INTERFACES
+
 export interface SchemeFitScoutAlert {
-  id: string;
-  recruitId: string;
+  alertId: string;
+  athleteId: string;
   athleteName: string;
-  position: Position;
-  targetScheme: string;
-  matchPercentage: number;
-  keyMatchingFactors: string[];
-  trueSpeedMph: number;
-  cognitionScore: number;
+  confidenceScore: number; 
+  matchedScheme: 'Air Raid' | 'Spread Option' | 'West Coast' | '3-4 Blitz' | 'Cover 3 Match';
+  keyMetrics: {
+    trueSpeedMph: number;
+    cognitionScore: number;
+    laserShuttle?: number;
+  };
   timestamp: string;
 }
 
 export interface VerifiedLaserCombineEntry {
-  id: string;
-  athleteName: string;
-  combineEventName: string;
-  laserFortyTime: number;
-  laserShuttleTime: number;
-  laserThreeConeTime: number;
+  eventId: string;
+  athleteId: string;
+  combineLocation: string;
+  date: string;
+  laser40YardDash: number;
+  laser20YardShuttle: number;
+  laser3ConeDrill: number;
   verticalJumpInches: number;
   broadJumpInches: number;
-  verificationStatus: "⚡ Laser Verified";
-  timestamp: string;
+  verifiedBy: string;
 }
+
+export type MinorSafetyStatus = "PENDING_CONSENT" | "CONSENT_GRANTED" | "CONSENT_DENIED";
 
 export interface ParentConsentRecord {
-  id: string;
+  consentId: string;
   athleteId: string;
-  athleteName: string;
-  parentName: string;
-  parentEmail: string;
-  isConsentGranted: boolean;
-  coppaComplianceStatus: "COPPA / FERPA Verified" | "Pending Sign-Off";
-  signedTimestamp: string;
-  consentScope: string[];
+  guardianName: string;
+  guardianEmail: string;
+  safetyStatus: MinorSafetyStatus;
+  milestoneDisclosuresAgreed: boolean;
+  coppaFerpaWaived: boolean;
+  escrowCampaignId?: string;
 }
-
-
-
 
