@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Users,
   Plus,
@@ -23,7 +23,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { MOCK_COACH_PIPELINE_PROSPECTS } from "../data/mockData";
-import { CoachPipelineProspect, Position } from "../types";
+import { CoachPipelineProspect } from "../types";
 
 export const CoachPipelineBoard: React.FC = () => {
   const [prospects, setProspects] = useState<CoachPipelineProspect[]>(MOCK_COACH_PIPELINE_PROSPECTS);
@@ -52,18 +52,6 @@ export const CoachPipelineBoard: React.FC = () => {
   });
 
   const stages: CoachPipelineProspect["stage"][] = ["Identified", "Contacted", "Offered", "Committed"];
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowBulkNoteModal(false);
-        setShowBulkDeleteConfirm(false);
-        setShowAddModal(false);
-      }
-    };
-    document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, []);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
@@ -261,7 +249,7 @@ export const CoachPipelineBoard: React.FC = () => {
     const created: CoachPipelineProspect = {
       id: `pip-${Date.now()}`,
       athleteName: newProspect.athleteName,
-      position: newProspect.position as Position,
+      position: newProspect.position as any,
       highSchoolOrSchool: newProspect.highSchoolOrSchool || "High School",
       state: newProspect.state,
       gradClass: newProspect.gradClass,
@@ -296,7 +284,7 @@ export const CoachPipelineBoard: React.FC = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2 text-xs animate-pulse">
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2 text-xs animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -627,7 +615,7 @@ export const CoachPipelineBoard: React.FC = () => {
                                   onClick={() => handleStageChange(prospect.id, s)}
                                   className="px-1.5 py-0.5 rounded bg-slate-800 hover:bg-purple-600 hover:text-white text-slate-300 text-[9px] font-medium transition-colors cursor-pointer"
                                 >
-                                  {{"Identified": "Id", "Contacted": "Ct", "Film Evaluated": "Fl", "Offered": "Of", "Official Visit": "Ov", "Committed": "Cm"}[s as string] ?? s[0]}
+                                  {s[0]}
                                 </button>
                               )
                           )}
@@ -650,8 +638,8 @@ export const CoachPipelineBoard: React.FC = () => {
 
       {/* Bulk Add Note Modal */}
       {showBulkNoteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn" onClick={() => setShowBulkNoteModal(false)}>
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2">
                 <MessageSquarePlus className="w-5 h-5 text-purple-400" />
@@ -745,8 +733,8 @@ export const CoachPipelineBoard: React.FC = () => {
 
       {/* Bulk Delete Confirmation Modal */}
       {showBulkDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn" onClick={() => setShowBulkDeleteConfirm(false)}>
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <div className="p-2 rounded-xl bg-rose-950/80 border border-rose-500/40">
                 <AlertTriangle className="w-6 h-6 text-rose-400" />
@@ -792,14 +780,9 @@ export const CoachPipelineBoard: React.FC = () => {
 
       {/* Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md" onClick={() => setShowAddModal(false)}>
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-white">Add Prospect to Board</h3>
-              <button type="button" onClick={() => setShowAddModal(false)} className="text-slate-500 hover:text-slate-300">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-4">Add Prospect to Board</h3>
             <form onSubmit={handleAddProspect} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-400 mb-1">Athlete Full Name</label>

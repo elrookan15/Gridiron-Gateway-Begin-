@@ -2,15 +2,6 @@ import React, { useState } from "react";
 import { AthleteProfile } from "../types";
 import { Sparkles, Copy, Check, Send, Bot, Shield, ArrowRight, Loader2, RefreshCw } from "lucide-react";
 
-interface ScoutReport {
-  compositeStarRating: string;
-  scoutingOverview: string;
-  strengths: string[];
-  areasToImprove: string[];
-  projectedLevel: string;
-  schemeFits: string[];
-}
-
 interface AIRecruitingAssistantProps {
   athleteProfile: AthleteProfile;
 }
@@ -41,7 +32,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
 
   // AI Scout Report state
   const [scoutLoading, setScoutLoading] = useState(false);
-  const [scoutReport, setScoutReport] = useState<ScoutReport | null>(null);
+  const [scoutReport, setScoutReport] = useState<any>(null);
 
   const handleGenerateEmail = async () => {
     setLoading(true);
@@ -114,16 +105,12 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
     }
   };
 
-  const handleCopy = async () => {
+  const handleCopy = () => {
     if (!generatedResult) return;
     const fullText = `SUBJECT: ${generatedResult.subject}\n\n${generatedResult.body}`;
-    try {
-      await navigator.clipboard.writeText(fullText);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // Clipboard access denied — fallback: select text
-    }
+    navigator.clipboard.writeText(fullText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -148,7 +135,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
           <button
             onClick={handleGenerateScoutReport}
             disabled={scoutLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs border border-emerald-500/30 transition-all shrink-0 min-h-[44px]"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs border border-emerald-500/30 transition-all shrink-0"
           >
             {scoutLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bot className="w-4 h-4" />}
             Generate AI Scout Evaluation
@@ -160,7 +147,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
       {scoutReport && (
         <div className="bg-slate-900 border border-emerald-500/40 rounded-2xl p-6 shadow-xl space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-            <h2 className="text-base font-bold text-emerald-400 flex items-center gap-2">
+            <h2 className="text-md font-bold text-emerald-400 flex items-center gap-2">
               <Shield className="w-5 h-5 text-emerald-400" /> AI Scout Evaluation & Projected Level
             </h2>
             <span className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/40">
@@ -201,7 +188,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Left Form Controls */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-5">
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
+          <h2 className="text-md font-bold text-white flex items-center gap-2">
             1. Target College Program & Scheme
           </h2>
 
@@ -291,7 +278,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
           <button
             onClick={handleGenerateEmail}
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 hover:from-purple-500 hover:to-indigo-400 text-white font-extrabold text-sm transition-all shadow-xl shadow-purple-500/20 flex items-center justify-center gap-2 min-h-[44px]"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-500 hover:from-purple-500 hover:to-indigo-400 text-white font-extrabold text-sm transition-all shadow-xl shadow-purple-500/20 flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -309,7 +296,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 className="text-md font-bold text-white flex items-center gap-2">
                 Drafted College Coach Outreach Message
               </h2>
               {generatedResult && (
