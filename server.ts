@@ -269,7 +269,9 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
       return res.status(200).json({
         status: "success",
         count: coaches.length,
+        coachesUpserted: coaches.length,
         coaches,
+        missingEmailCount: coaches.filter((c) => !c.email).length,
         totalCoachesInMemory: COLLEGE_COACHES_DB.length,
       });
     }

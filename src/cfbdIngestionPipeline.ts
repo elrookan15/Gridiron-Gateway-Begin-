@@ -63,7 +63,7 @@ function toDatabaseSchoolFromFbs(team: CfbdFbsTeam, syncedAt: string): DatabaseS
     institutionName: team.school.trim(),
     mascot: team.mascot?.trim() || null,
     abbreviation: team.abbreviation?.trim() || null,
-    tier: mapConferenceToTier(team.conference),
+    tier: mapFbsConferenceToTier(team.conference),
     conference: team.conference?.trim() || null,
     city: team.location?.city?.trim() || null,
     state: team.location?.state?.trim() || null,
