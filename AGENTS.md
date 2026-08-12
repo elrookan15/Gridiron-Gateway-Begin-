@@ -43,6 +43,12 @@ Athletic recruitment is shifting to data-driven precision. Gridiron Gateway unif
 ## Product Guide
 Treat `README.md` as the canonical product/feature guide (CapGM, Film Studio, BioScan, RallySafe, RBAC personas, API table). Prefer extending named modules listed there over inventing parallel files.
 
+## Data Integrity (Programs & Coaches)
+- Never LLM-generate coach emails/phones into mock datasets.
+- NCAA programs: CFBD sync (`npm run ingest:cfbd`).
+- Coach contacts: Sidearm scrape or verified CSV only; null contacts allowed.
+- Schema: `program_directory` + `coaching_staff` in `schema.sql`.
+
 ## Quality Mandates
 - Cite interfaces from `src/types.ts` or the component under edit.
 - Stress-test before UI output: long names, mobile collapse, thin borders, roster scroll safety, modal Escape/outside-click, webhook try/catch, no `any` leakage.

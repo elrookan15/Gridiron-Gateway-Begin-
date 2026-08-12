@@ -9,6 +9,8 @@
  *   npx tsx scripts/ingestion/cfbdTeamsSync.ts
  */
 import dotenv from "dotenv";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 import type { CanonicalProgramRecord } from "../../src/types";
 import { normalizeHexColor, writeJsonArtifact } from "./lib/io";
 
@@ -96,7 +98,8 @@ export async function syncCfbdTeams(): Promise<CanonicalProgramRecord[]> {
   return programs;
 }
 
-if (import.meta.url === `file://${process.argv[1].replace(/\\/g, "/")}` || process.argv[1]?.includes("cfbdTeamsSync")) {
+const isDirectRun = path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || "");
+if (isDirectRun) {
   syncCfbdTeams().catch((err) => {
     console.error("[CFBD] Sync failed:", err instanceof Error ? err.message : err);
     process.exit(1);

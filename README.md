@@ -280,6 +280,7 @@ npm install
 # 3. Configure environment
 cp .env.example .env
 # Set GEMINI_API_KEY and (for production) API_ACCESS_TOKEN / webhook secrets
+# Set COLLEGE_FOOTBALL_API_KEY for program-directory sync (collegefootballdata.com)
 
 # 4. Type-check TypeScript codebase
 npx tsc --noEmit
@@ -291,6 +292,19 @@ npm run dev
 npm run build
 npm start
 ```
+
+### Program & Coach Data Ingestion (Do Not LLM-Generate Staff Lists)
+
+College football has 900+ programs and extreme coaching turnover. **Never invent coach emails in `mockData.ts`.** Use the automated pipeline:
+
+| Step | Script | Source |
+| :--- | :--- | :--- |
+| 1. NCAA programs | `npm run ingest:cfbd` | CFBD `GET /teams` (Bearer `COLLEGE_FOOTBALL_API_KEY`) |
+| 2. Coach contacts | `npm run ingest:sidearm` | Rate-limited Sidearm athletics staff HTML (mailto/tel only) |
+| 3. JUCO / Prep | `npm run ingest:juco-csv` | Verified CSV bulk import (`data/ingestion/templates/…`) |
+| 4. Monthly orchestrator | `npm run ingest:monthly` | Runs 1→3; set `SKIP_SIDEARM_SCRAPE=1` to skip live HTML |
+
+Artifacts land in `data/ingestion/output/` (gitignored). Postgres targets: `program_directory` + `coaching_staff` in `schema.sql`. Missing contacts must render as **Contact not verified** — never a hallucinated `@university.edu`.
 
 ### Running Test Suites
 

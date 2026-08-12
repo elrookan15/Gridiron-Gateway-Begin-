@@ -16,6 +16,7 @@
  */
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import type { CanonicalCoachStaffRecord } from "../../src/types";
 import {
@@ -160,9 +161,11 @@ export async function scrapeSidearmStaff(seedPath?: string): Promise<CanonicalCo
 const seedArgIndex = process.argv.indexOf("--seed");
 const seedArg = seedArgIndex >= 0 ? process.argv[seedArgIndex + 1] : undefined;
 
-if (process.argv[1]?.includes("sidearmStaffScraper")) {
+const isDirectRun = path.resolve(fileURLToPath(import.meta.url)) === path.resolve(process.argv[1] || "");
+if (isDirectRun) {
   scrapeSidearmStaff(seedArg).catch((err) => {
     console.error("[Sidearm] Scrape failed:", err instanceof Error ? err.message : err);
     process.exit(1);
   });
 }
+
