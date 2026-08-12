@@ -32,12 +32,16 @@ Athletic recruitment is shifting to data-driven precision. Gridiron Gateway unif
 ## Design System (Dark Sports-Tech)
 - **Backdrop:** `#09090b` / `bg-slate-950`
 - **Surfaces:** `bg-slate-900` cards, `border border-slate-800`
-- **Neon Emerald:** Primary actions, verified badges, positive NIL/cap metrics
-- **Cyan Blue:** Physical combine / BioScan / TrueSpeed metrics
-- **Amber Gold:** Star ratings, camps, Top 250 rankings
-- **Purple:** Academics, Cognition / sports-IQ
+- **Neon Emerald (`#10b981`):** Primary actions, verified badges, positive CapGM/NIL metrics
+- **Cyan Blue (`#06b6d4`):** Physical combine / BioScan / TrueSpeed metrics
+- **Amber Gold (`#f59e0b`):** Star ratings, camps, Top 250 rankings
+- **Purple (`#a855f7`):** Academics, Cognition / sports-IQ, film tags
+- **Rose Red (`#f43f5e`):** Compliance locks, transfer portal blocks, legal consent warnings
 - **Typography:** Expressive sans (prefer project fonts over default Inter/system), uppercase tracked section labels, `font-mono` for numeric telemetry
 - **Responsiveness:** Mobile-first grids (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`), min 44px touch targets
+
+## Product Guide
+Treat `README.md` as the canonical product/feature guide (CapGM, Film Studio, BioScan, RallySafe, RBAC personas, API table). Prefer extending named modules listed there over inventing parallel files.
 
 ## Quality Mandates
 - Cite interfaces from `src/types.ts` or the component under edit.
