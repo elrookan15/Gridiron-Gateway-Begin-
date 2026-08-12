@@ -61,3 +61,6 @@ src/
     └── ParentConsentPortal.tsx          # Phase 4
 server.ts  # Express REST + BioScan WebSockets
 ```
+
+## [Code Review Gatekeeper — complementary]
+Elite diagnosis-first reviewer (see `.cursor/rules/gridiron-code-reviewer.mdc`). On review/refactor: state Logic Flaws + UI/UX Violations **before** code; enforce `min-h-[40px]`/`min-h-[44px]` + `py-1.5` touch targets, `mt-0.5` title/metadata, `shrink-0` icons/avatars, `truncate`/`line-clamp-1` metadata; early returns; prefer `map`/`filter`/`reduce`/`some`/`every`. Keep Gridiron accents (emerald/cyan/amber/purple/rose). Format: Diagnosis → Refactored Code → Commit Message. Never commit unless asked.

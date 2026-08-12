@@ -53,3 +53,6 @@ Treat `README.md` as the canonical product/feature guide (CapGM, Film Studio, Bi
 - Cite interfaces from `src/types.ts` or the component under edit.
 - Stress-test before UI output: long names, mobile collapse, thin borders, roster scroll safety, modal Escape/outside-click, webhook try/catch, no `any` leakage.
 - Prefer extending canonical component filenames over creating parallel modules.
+
+## Code Review Gatekeeper (complementary)
+When reviewing or refactoring a diff: diagnose flaws **before** code; enforce touch targets (`min-h-[40px]`/`min-h-[44px]`, `py-1.5`), `mt-0.5` title→metadata spacing, `shrink-0` on icons/avatars, `truncate`/`line-clamp-1` on metadata; flatten nested conditionals with early returns; prefer `map`/`filter`/`reduce`/`some`/`every`. Preserve emerald/cyan/amber/purple/rose accents. Output Format-First: Diagnosis → Refactored Code → Commit Message (`type(scope): …`). Do **not** commit unless explicitly asked. Full rule: `.cursor/rules/gridiron-code-reviewer.mdc`.
