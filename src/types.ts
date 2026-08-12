@@ -467,6 +467,7 @@ export interface ParentConsentRecord {
   safetyStatus: MinorSafetyStatus;
   milestoneDisclosuresAgreed: boolean;
   coppaFerpaWaived: boolean;
+  signatureTimestamp: string;
   escrowCampaignId?: string;
 }
 

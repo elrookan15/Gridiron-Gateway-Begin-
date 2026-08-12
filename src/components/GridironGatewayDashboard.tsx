@@ -1632,11 +1632,16 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         )}
 
         {/* ==================================================================== */}
-        {/* TAB 8: AUTONOMOUS SCHEME-FIT SCOUTING AGENT                          */}
+        {/* TAB 8: NEXT-GEN SCOUTING & AUTONOMOUS AGENT (PHASE 4)                 */}
         {/* ==================================================================== */}
         {activeTab === "autonomous_scout" && (
-          <div className="animate-fadeIn">
-            <AutonomousScoutingAgent />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn">
+            <div className="lg:col-span-1">
+              <AutonomousScoutingAgent />
+            </div>
+            <div className="lg:col-span-2">
+              <CombineLaserApiModule />
+            </div>
           </div>
         )}
 
