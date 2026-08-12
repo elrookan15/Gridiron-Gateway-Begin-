@@ -1,0 +1,15 @@
+---
+description: Never hallucinate college coach contacts — use ingestion pipeline only
+alwaysApply: true
+---
+
+# Coach / Program Data Integrity
+
+Gridiron Gateway dies if prospects email fired coaches or invented `@university.edu` addresses.
+
+## Hard Rules
+1. **Never** generate or LLM-fill coach emails, phone numbers, or staff directories into `mockData.ts` / UI datasets.
+2. NCAA programs (FBS/FCS/DII/DIII) come from **CFBD** `GET /teams` via `scripts/ingestion/cfbdTeamsSync.ts`.
+3. Coach contacts come from **Sidearm staff-page extraction** (`sidearmStaffScraper.ts`) or **verified CSV** (`jucoPrepCsvImport.ts`) only — `email`/`phone` may be `null`.
+4. Persist into `program_directory` / `coaching_staff` (see `schema.sql`). Static mocks are UI placeholders until Supabase upsert is wired.
+5. If a contact is missing, show “Contact not verified” — do not invent a fallback address.

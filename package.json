@@ -9,7 +9,11 @@
     "start": "node dist/server.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist server.cjs",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "ingest:cfbd": "tsx scripts/ingestion/cfbdTeamsSync.ts",
+    "ingest:sidearm": "tsx scripts/ingestion/sidearmStaffScraper.ts",
+    "ingest:juco-csv": "tsx scripts/ingestion/jucoPrepCsvImport.ts data/ingestion/templates/juco_prep_programs.template.csv",
+    "ingest:monthly": "tsx scripts/ingestion/runMonthlyPipeline.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

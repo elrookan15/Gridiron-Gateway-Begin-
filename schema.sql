@@ -83,7 +83,20 @@ CREATE TABLE users (
 COMMENT ON TABLE users IS 'Primary profile table linked to auth.users with self-referencing guardian linkage for minors.';
 COMMENT ON COLUMN users.guardian_id IS 'Self-referencing FK linking minor athletes to verified parent/guardian user account.';
 
--- Colleges, Universities & Prep Programs Directory
+-- Database Coaches Relational Mapping (Linked to CFBD School ID)
+CREATE TABLE database_coaches (
+  coach_id VARCHAR(64) PRIMARY KEY,
+  school_id VARCHAR(64) NOT NULL,
+  full_name VARCHAR(128) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  email VARCHAR(128) NOT NULL,
+  office_phone VARCHAR(32),
+  twitter_handle VARCHAR(64),
+  last_verified_date TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE INDEX idx_database_coaches_school_id ON database_coaches(school_id);
+CREATE INDEX idx_database_coaches_email ON database_coaches(email);
 CREATE TABLE schools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -813,4 +826,76 @@ INSERT INTO schools (
     ARRAY['Multiple Heisman Trophy alumni', 'National championship high school'],
     'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&auto=format&fit=crop&q=80'
 );
+
+-- =============================================================================
+-- AUTOMATED INGESTION PIPELINE (CFBD + SIDEARM + CSV)
+-- Programs/coaches must come from verified ingress — never LLM-hallucinated staff.
+-- =============================================================================
+
+CREATE TYPE program_data_source AS ENUM (
+  'cfbd',
+  'sidearm_scrape',
+  'csv_bulk',
+  'manual'
+);
+
+CREATE TYPE coach_staff_role AS ENUM (
+  'Head Coach',
+  'Offensive Coordinator',
+  'Defensive Coordinator',
+  'Position Coach',
+  'Recruiting Coordinator',
+  'Other'
+);
+
+CREATE TABLE program_directory (
+  id TEXT PRIMARY KEY,
+  cfbd_id INTEGER UNIQUE,
+  institution_name TEXT NOT NULL,
+  mascot TEXT,
+  abbreviation TEXT,
+  conference TEXT,
+  classification TEXT NOT NULL CHECK (
+    classification IN ('fbs', 'fcs', 'ii', 'iii', 'juco', 'prep', 'naia', 'unknown')
+  ),
+  city TEXT,
+  state TEXT,
+  stadium_capacity INTEGER,
+  primary_color_hex TEXT,
+  secondary_color_hex TEXT,
+  athletics_base_url TEXT,
+  data_source program_data_source NOT NULL,
+  last_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_program_directory_classification ON program_directory (classification);
+CREATE INDEX idx_program_directory_conference ON program_directory (conference);
+
+CREATE TABLE coaching_staff (
+  id TEXT PRIMARY KEY,
+  program_id TEXT NOT NULL REFERENCES program_directory(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  role_category coach_staff_role NOT NULL DEFAULT 'Other',
+  -- Nullable by design: never invent contacts when Sidearm omits them
+  email TEXT,
+  phone TEXT,
+  staff_page_url TEXT NOT NULL,
+  source program_data_source NOT NULL CHECK (source IN ('sidearm_scrape', 'csv_bulk', 'manual')),
+  last_verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (program_id, full_name, title)
+);
+
+CREATE INDEX idx_coaching_staff_program ON coaching_staff (program_id);
+CREATE INDEX idx_coaching_staff_email ON coaching_staff (email) WHERE email IS NOT NULL;
+CREATE INDEX idx_coaching_staff_active ON coaching_staff (is_active);
+
+COMMENT ON TABLE program_directory IS 'CFBD-synced NCAA programs + CSV-imported JUCO/Prep — source of truth for SchoolsDirectory.';
+COMMENT ON TABLE coaching_staff IS 'Verified coach contacts from Sidearm scrape or CSV. email/phone NULL when unpublished.';
+COMMENT ON COLUMN coaching_staff.email IS 'Must be extracted from published athletics pages or verified CSV — never LLM-generated.';
 

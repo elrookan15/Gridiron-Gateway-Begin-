@@ -471,3 +471,74 @@ export interface ParentConsentRecord {
   escrowCampaignId?: string;
 }
 
+// ============================================================================
+// AUTOMATED PROGRAM / COACH INGESTION PIPELINE (CFBD + SIDEARM + CSV)
+// Never invent coach emails or staff lists — only persist verified ingress.
+// ============================================================================
+
+export type ProgramDataSource = "cfbd" | "sidearm_scrape" | "csv_bulk" | "manual";
+
+export type CoachStaffRoleCategory =
+  | "Head Coach"
+  | "Offensive Coordinator"
+  | "Defensive Coordinator"
+  | "Position Coach"
+  | "Recruiting Coordinator"
+  | "Other";
+
+/** Canonical program row synced from CFBD `/teams` or JUCO/Prep CSV bulk import. */
+export interface CanonicalProgramRecord {
+  id: string;
+  cfbdId: number | null;
+  institutionName: string;
+  mascot: string | null;
+  abbreviation: string | null;
+  conference: string | null;
+  classification: "fbs" | "fcs" | "ii" | "iii" | "juco" | "prep" | "naia" | "unknown";
+  city: string | null;
+  state: string | null;
+  stadiumCapacity: number | null;
+  primaryColorHex: string | null;
+  secondaryColorHex: string | null;
+  athleticsBaseUrl: string | null;
+  dataSource: ProgramDataSource;
+  lastSyncedAt: string;
+}
+
+/** Staff contact extracted from Sidearm `/staff.aspx` / `/coaches.aspx` or CSV — email/phone may be null. */
+export interface CanonicalCoachStaffRecord {
+  id: string;
+  programId: string;
+  fullName: string;
+  title: string;
+  roleCategory: CoachStaffRoleCategory;
+  email: string | null;
+  phone: string | null;
+  staffPageUrl: string;
+  source: Exclude<ProgramDataSource, "cfbd">;
+  lastVerifiedAt: string;
+  isActive: boolean;
+}
+
+export interface IngestionRunSummary {
+  runId: string;
+  startedAt: string;
+  finishedAt: string;
+  programsUpserted: number;
+  coachesUpserted: number;
+  coachesMissingEmail: number;
+  errors: string[];
+}
+
+export interface DatabaseCoach {
+  coachId: string;
+  schoolId: string; // Foreign key to CFBD School ID
+  fullName: string;
+  title: string; // e.g., "Wide Receivers Coach / Recruiting Coordinator"
+  email: string;
+  officePhone: string | null;
+  twitterHandle: string | null;
+  lastVerifiedDate: string;
+}
+
+
