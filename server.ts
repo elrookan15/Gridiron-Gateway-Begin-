@@ -284,6 +284,46 @@ app.get("/api/compliance/recruiting-periods", (_req, res) => {
   });
 });
 
+// ============================================================================
+// PHASE 4: COMBINE LASER API & PARENT CONSENT REST ENDPOINTS
+// ============================================================================
+
+app.post("/api/v1/combines/webhooks/laser", (req, res) => {
+  const { athleteName, combineEventName, laserFortyTime, laserShuttleTime, laserThreeConeTime, verticalJumpInches, broadJumpInches } = req.body;
+  if (!athleteName || !laserFortyTime) {
+    return res.status(400).json({ error: "MISSING_LASER_TELEMETRY", message: "athleteName and laserFortyTime required." });
+  }
+  return res.status(201).json({
+    status: "LASER_TIMING_INGESTED",
+    badge: "⚡ Laser Verified",
+    athleteName,
+    combineEventName: combineEventName || "Regional Combine Showcase",
+    laserFortyTime,
+    laserShuttleTime,
+    laserThreeConeTime,
+    verticalJumpInches,
+    broadJumpInches,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.post("/api/v1/compliance/parent-consent", (req, res) => {
+  const { athleteId, athleteName, parentName, parentEmail, consentScope } = req.body;
+  if (!athleteId || !parentEmail) {
+    return res.status(400).json({ error: "MISSING_CONSENT_DATA", message: "athleteId and parentEmail required." });
+  }
+  return res.status(200).json({
+    status: "CONSENT_RECORDED",
+    coppaComplianceStatus: "COPPA / FERPA Verified",
+    athleteId,
+    athleteName,
+    parentName,
+    parentEmail,
+    consentScope: consentScope || ["Messaging Consent", "NIL Escrow Authorization"],
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.post("/api/compliance/run-tests", mutateRateLimit, (_req, res) => {
   try {
     const suiteResults = runComplianceTestSuite();

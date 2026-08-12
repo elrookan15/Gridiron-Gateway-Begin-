@@ -428,5 +428,45 @@ export interface MultiTenantUser {
   permissions: RolePermissionConfig;
 }
 
+// PHASE 4: AUTONOMOUS SCOUTING, LASER COMBINE & PARENT PORTAL INTERFACES
+export interface SchemeFitScoutAlert {
+  id: string;
+  recruitId: string;
+  athleteName: string;
+  position: Position;
+  targetScheme: string;
+  matchPercentage: number;
+  keyMatchingFactors: string[];
+  trueSpeedMph: number;
+  cognitionScore: number;
+  timestamp: string;
+}
+
+export interface VerifiedLaserCombineEntry {
+  id: string;
+  athleteName: string;
+  combineEventName: string;
+  laserFortyTime: number;
+  laserShuttleTime: number;
+  laserThreeConeTime: number;
+  verticalJumpInches: number;
+  broadJumpInches: number;
+  verificationStatus: "⚡ Laser Verified";
+  timestamp: string;
+}
+
+export interface ParentConsentRecord {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  parentName: string;
+  parentEmail: string;
+  isConsentGranted: boolean;
+  coppaComplianceStatus: "COPPA / FERPA Verified" | "Pending Sign-Off";
+  signedTimestamp: string;
+  consentScope: string[];
+}
+
+
 
 

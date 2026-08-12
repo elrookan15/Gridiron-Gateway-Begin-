@@ -40,6 +40,8 @@ import {
   Play,
   Brain,
   Film,
+  Bot,
+  ShieldCheck,
 } from "lucide-react";
 import { NILValuationChart } from "./NILValuationChart";
 import { CapGMRosterSimulator } from "./CapGMRosterSimulator";
@@ -49,6 +51,9 @@ import { BioScanTelemetryModule } from "./BioScanTelemetryModule";
 import { RallySafeEscrowModule } from "./RallySafeEscrowModule";
 import { AiFilmTaggingStudio } from "./AiFilmTaggingStudio";
 import { MultiTenantRoleSelector, MOCK_MULTI_TENANT_USERS } from "./MultiTenantRoleSelector";
+import { AutonomousScoutingAgent } from "./AutonomousScoutingAgent";
+import { CombineLaserApiModule } from "./CombineLaserApiModule";
+import { ParentConsentPortal } from "./ParentConsentPortal";
 
 // ============================================================================
 // TYPES & DATA MODELS
@@ -562,7 +567,7 @@ const MOCK_ATHLETE_DOSSIER: AthleteDossierData = {
 
 export const GridironGatewayDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<
-    "directory" | "dossier" | "nil_calculator" | "cap_gm" | "cognition" | "nextgen_tech" | "film_studio"
+    "directory" | "dossier" | "nil_calculator" | "cap_gm" | "cognition" | "nextgen_tech" | "film_studio" | "autonomous_scout" | "combine_laser" | "parent_portal"
   >("directory");
 
   const [activeUser, setActiveUser] = useState(MOCK_MULTI_TENANT_USERS[0]);
@@ -861,6 +866,42 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             >
               <Film className="w-4 h-4 text-indigo-300" />
               <span className="hidden md:inline">AI Film Tagging</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("autonomous_scout")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === "autonomous_scout"
+                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <Bot className="w-4 h-4 text-emerald-300" />
+              <span className="hidden md:inline">Auto Scouting</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("combine_laser")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === "combine_laser"
+                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <Zap className="w-4 h-4 text-sky-300" />
+              <span className="hidden md:inline">Laser Combine</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("parent_portal")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === "parent_portal"
+                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-rose-300" />
+              <span className="hidden md:inline">Parent Portal</span>
             </button>
 
             <button
@@ -1587,6 +1628,33 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {activeTab === "film_studio" && (
           <div className="animate-fadeIn">
             <AiFilmTaggingStudio />
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB 8: AUTONOMOUS SCHEME-FIT SCOUTING AGENT                          */}
+        {/* ==================================================================== */}
+        {activeTab === "autonomous_scout" && (
+          <div className="animate-fadeIn">
+            <AutonomousScoutingAgent />
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB 9: VERIFIED COMBINE LASER API HUB                                 */}
+        {/* ==================================================================== */}
+        {activeTab === "combine_laser" && (
+          <div className="animate-fadeIn">
+            <CombineLaserApiModule />
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB 10: PARENT & GUARDIAN COMPLIANCE CONSENT PORTAL                   */}
+        {/* ==================================================================== */}
+        {activeTab === "parent_portal" && (
+          <div className="animate-fadeIn">
+            <ParentConsentPortal />
           </div>
         )}
       </main>
