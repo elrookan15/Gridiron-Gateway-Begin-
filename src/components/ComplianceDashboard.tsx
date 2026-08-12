@@ -123,7 +123,7 @@ export const ComplianceDashboard: React.FC = () => {
 
   // Server Test Suite State
   const [testSuiteLoading, setTestSuiteLoading] = useState(false);
-  const [testSuiteData, setTestSuiteData] = useState<{ summary: any; results: any[]; timestamp: string } | null>(null);
+  const [testSuiteData, setTestSuiteData] = useState<any | null>(null);
 
   // Regional NIL Lookup State
   const [selectedState, setSelectedState] = useState<string>("FL");
@@ -279,7 +279,7 @@ export const ComplianceDashboard: React.FC = () => {
     };
   };
 
-  const gateResult = React.useMemo(() => getGateDecision(), [simPeriodMonth, simContactMethod]);
+  const gateResult = getGateDecision();
 
   const handleTestSendMessage = () => {
     const newLog: AuditLogRow = {
@@ -297,7 +297,7 @@ export const ComplianceDashboard: React.FC = () => {
       citation: gateResult.citation
     };
 
-    setAuditLogs(prev => [newLog, ...prev]);
+    setAuditLogs([newLog, ...auditLogs]);
   };
 
   const selectedStateData = STATE_NIL_RULES[selectedState] || STATE_NIL_RULES.FL;
@@ -881,7 +881,7 @@ export const ComplianceDashboard: React.FC = () => {
                       <UserCheck className="w-3.5 h-3.5 text-blue-400" /> Parental / Guardian Consent
                     </div>
                     <div className="text-white font-extrabold text-sm">
-                      {selectedStateData.parentalConsentRequired ? "Mandatory for Minors (\u003C 18)" : "Optional"}
+                      {selectedStateData.parentalConsentRequired ? "Mandatory for Minors (< 18)" : "Optional"}
                     </div>
                     <p className="text-slate-400 text-[11px]">
                       Parent or legal guardian linked account approval required prior to executing any endorsement contract.

@@ -135,8 +135,6 @@ export const NcaaEligibilityTracker: React.FC = () => {
               <span className="text-[10px] text-slate-400 block font-semibold">SAT Score</span>
               <input
                 type="number"
-                min={400}
-                max={1600}
                 value={satScore}
                 onChange={(e) => setSatScore(Number(e.target.value))}
                 className="w-full text-center font-bold text-white bg-transparent focus:outline-none"
@@ -146,8 +144,6 @@ export const NcaaEligibilityTracker: React.FC = () => {
               <span className="text-[10px] text-slate-400 block font-semibold">ACT Score</span>
               <input
                 type="number"
-                min={1}
-                max={36}
                 value={actScore}
                 onChange={(e) => setActScore(Number(e.target.value))}
                 className="w-full text-center font-bold text-white bg-transparent focus:outline-none"
@@ -231,7 +227,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
             </select>
             <button
               type="submit"
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 min-h-[44px] rounded-xl text-xs flex items-center gap-1"
+              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1"
             >
               <Plus className="w-4 h-4" /> Add Course
             </button>
@@ -270,7 +266,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
                   <td className="p-3 text-right">
                     <button
                       onClick={() => handleRemoveCourse(course.id)}
-                      className="text-slate-500 hover:text-rose-400 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="text-slate-500 hover:text-rose-400 p-1"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

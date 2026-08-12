@@ -19,16 +19,6 @@ export const LeaderboardTop250: React.FC = () => {
   const [showClassCalculator, setShowClassCalculator] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<string>("Georgia");
 
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectedRecruitModal) {
-        setSelectedRecruitModal(null);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedRecruitModal]);
-
   const filteredRecruits = MOCK_TOP_RECRUITS.filter((rec) => {
     if (rec.gradClass !== selectedClass) return false;
     if (selectedPos !== "ALL" && rec.position !== selectedPos) return false;
@@ -54,13 +44,13 @@ export const LeaderboardTop250: React.FC = () => {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/60 p-6 rounded-3xl border border-slate-800 shadow-xl">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-bold uppercase tracking-wider mb-2">
-            <Trophy className="w-3.5 h-3.5" /> Gateway / Gateway Scout Style Top 250 National Leaderboard
+            <Trophy className="w-3.5 h-3.5" /> 247Sports / Rivals Style Top 250 National Leaderboard
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             Top 250 National Football Recruits
           </h1>
           <p className="text-xs text-slate-400 mt-1">
-            Verified composite rankings, predictor engine commitment predictions, and college offer lists.
+            Verified composite rankings, crystal ball commitment predictions, and college offer lists.
           </p>
         </div>
 
@@ -304,11 +294,11 @@ export const LeaderboardTop250: React.FC = () => {
                     </span>
                   </div>
 
-                  {/* Predictor Engine Predictions Visual */}
+                  {/* Crystal Ball Predictions Visual */}
                   {rec.crystalBall && rec.crystalBall.length > 0 && (
                     <div>
                       <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                        <span>Predictor Engine Prediction</span>
+                        <span>Crystal Ball Prediction</span>
                         <span className="font-bold text-white">{rec.crystalBall[0].school} ({rec.crystalBall[0].percentage}%)</span>
                       </div>
                       <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden flex">
@@ -363,8 +353,8 @@ export const LeaderboardTop250: React.FC = () => {
 
       {/* PLAYER DETAIL DRAWER MODAL */}
       {selectedRecruitModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4" onClick={() => setSelectedRecruitModal(null)}>
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 relative max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setSelectedRecruitModal(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-white text-lg font-bold"

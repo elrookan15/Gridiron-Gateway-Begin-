@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AthleteProfile } from "../types";
 import {
   ShieldCheck,
@@ -47,16 +47,6 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
   const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setShowVideoModal(false);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   const handleExportPdf = () => {
     setIsExportingPdf(true);
     // Simulate generation delay
@@ -68,7 +58,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
 
 
   const handleCopyShareLink = () => {
-    navigator.clipboard.writeText(window.location.href).catch(() => { /* clipboard blocked in insecure context */ });
+    navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -547,13 +537,14 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
               {/* Left Aspect Video Player (5 Cols) */}
               <div className="md:col-span-5 relative aspect-video bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col items-center justify-center group">
-                {profile.videoIntroUrl ? (
-                  <video src={profile.videoIntroUrl} controls className="w-full h-full object-cover" />
-                ) : (
-                  <div className="flex items-center justify-center bg-slate-950 rounded-xl aspect-video min-h-[180px] w-full h-full">
-                    <p className="text-slate-500 text-sm">No pitch video recorded yet.</p>
-                  </div>
-                )}
+                <video
+                  src={
+                    profile.videoIntroUrl ||
+                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                  }
+                  controls
+                  className="w-full h-full object-cover"
+                />
                 <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-400 border border-slate-800 flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3 text-emerald-400" /> 30-Sec Coach Pitch
                 </div>
@@ -771,8 +762,8 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
 
       {/* HUDL FILM MODAL PREVIEW */}
       {showVideoModal && (
-        <div onClick={() => setShowVideoModal(false)} className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div onClick={(e) => e.stopPropagation()} className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-extrabold text-white flex items-center gap-2">
                 <Video className="w-5 h-5 text-cyan-400" /> {profile.fullName} — Junior Season Highlights

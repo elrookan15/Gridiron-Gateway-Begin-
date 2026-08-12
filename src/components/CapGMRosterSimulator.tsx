@@ -191,7 +191,7 @@ export const CapGMRosterSimulator: React.FC = () => {
   // Add Portal Target to Roster
   const handleSignPortalTarget = (target: RosterPlayerCapItem) => {
     if (remainingCapCalculated < target.nilCapValue) {
-      alert(`Insufficient Salary Cap space to sign ${target.athleteName} (${formatCurrency(target.nilCapValue)} required).`);
+      alert(`Insufficient Salary Cap space to sign ${target.athleteName} ($${formatCurrency(target.nilCapValue)} required).`);
       return;
     }
 
@@ -216,7 +216,7 @@ export const CapGMRosterSimulator: React.FC = () => {
       {/* HEADER BANNER */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/60 border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div className="flex-1">
+          <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
               <DollarSign className="w-3.5 h-3.5" /> General Manager Cap & SP+ Analytics Engine
             </div>
@@ -297,7 +297,7 @@ export const CapGMRosterSimulator: React.FC = () => {
               : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
           }`}
         >
-          <Users className="w-4 h-4 shrink-0" /> Roster Cap Allocation ({model.players.length} Roster Players)
+          <Users className="w-4 h-4" /> Roster Cap Allocation ({model.players.length} Roster Players)
         </button>
 
         <button
@@ -308,7 +308,7 @@ export const CapGMRosterSimulator: React.FC = () => {
               : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
           }`}
         >
-          <BarChart3 className="w-4 h-4 shrink-0" /> SP+ & EPA Win Impact Calculator
+          <BarChart3 className="w-4 h-4" /> SP+ & EPA Win Impact Calculator
         </button>
 
         <button
@@ -319,7 +319,7 @@ export const CapGMRosterSimulator: React.FC = () => {
               : "bg-slate-900 text-slate-400 hover:text-white border border-slate-800"
           }`}
         >
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" /> Transfer Portal Retention Risk Engine
+          <AlertTriangle className="w-4 h-4 text-amber-400" /> Transfer Portal Retention Risk Engine
         </button>
       </div>
 
@@ -331,7 +331,7 @@ export const CapGMRosterSimulator: React.FC = () => {
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-emerald-400" /> Active Roster Contract Ledger
+                  <Users className="w-5 h-5 text-emerald-400" /> Active Roster Contract Contracts
                 </h2>
                 <span className="text-xs text-slate-400">Position NIL Salary Cap Ledger</span>
               </div>

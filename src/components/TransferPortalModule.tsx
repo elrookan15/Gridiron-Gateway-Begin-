@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { RefreshCw, Search, ShieldCheck, Filter, ExternalLink, Calendar, Award, CheckCircle2, AlertCircle, DollarSign, TrendingUp } from "lucide-react";
 import { MOCK_TRANSFER_PORTAL_ATHLETES } from "../data/mockData";
-import { Position } from "../types";
+import { Position, CollegeDivision } from "../types";
 
 export const TransferPortalModule: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPosition, setSelectedPosition] = useState<Position | "ALL">("ALL");
+  const [selectedPosition, setSelectedPosition] = useState<string>("ALL");
   const [selectedStatus, setSelectedStatus] = useState<string>("ALL");
 
   const filteredAthletes = MOCK_TRANSFER_PORTAL_ATHLETES.filter((athlete) => {
@@ -75,7 +75,7 @@ export const TransferPortalModule: React.FC = () => {
           </div>
           <select
             value={selectedPosition}
-            onChange={(e) => setSelectedPosition(e.target.value as any)}
+            onChange={(e) => setSelectedPosition(e.target.value)}
             className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500"
           >
             <option value="ALL">All Positions</option>
@@ -99,12 +99,6 @@ export const TransferPortalModule: React.FC = () => {
       </div>
 
       {/* Athlete Grid */}
-      {filteredAthletes.length === 0 && (
-        <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-500">
-          <p className="text-lg font-bold">No portal athletes match your filters.</p>
-          <p className="text-sm mt-1">Try adjusting the position, status, or search term.</p>
-        </div>
-      )}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {filteredAthletes.map((athlete) => (
           <div
@@ -145,7 +139,7 @@ export const TransferPortalModule: React.FC = () => {
                 ) : (
                   <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold border border-emerald-500/30 flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    {athlete.destinationSchool || 'Destination TBD'}
+                    {athlete.destinationSchool}
                   </span>
                 )}
               </div>
