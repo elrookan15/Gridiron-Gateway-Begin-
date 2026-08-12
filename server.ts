@@ -21,8 +21,12 @@ import {
   sanitizeErrorMessage,
   verifyStripeWebhook,
 } from "./src/serverSecurity";
-import { syncCfbdTeams, runCfbdIngestionPipeline } from "./src/cfbdIngestionPipeline";
-import { scrapeSidearmDirectory, runSidearmDirectoryScraper } from "./src/sidearmDirectoryScraper";
+import { runCfbdIngestionPipeline } from "./src/cfbdIngestionPipeline";
+import {
+  scrapeSidearmDirectory,
+  runSidearmDirectoryScraper,
+  type SidearmSeedProgram,
+} from "./src/sidearmDirectoryScraper";
 import { parseSchoolsCsv } from "./src/schoolsCsvImport";
 import type { CanonicalProgramRecord, DatabaseCoach } from "./src/types";
 
@@ -218,16 +222,24 @@ const adminRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: "adm
 // ADMIN DATA INGESTION (CFBD / SIDEARM / JUCO CSV)
 // ============================================================================
 
+/**
+ * Admin: Trigger CFBD sync → upsert into in-memory PROGRAM_DIRECTORY_DB.
+ * Body: none required.
+ */
 app.post("/api/v1/admin/sync-cfbd", adminRateLimit, async (_req, res) => {
   try {
     const result = await runCfbdIngestionPipeline();
     upsertPrograms(result.programs);
     return res.status(200).json({
-      status: "CFBD_SYNC_COMPLETE",
+      status: result.status,
       syncedAt: result.syncedAt,
+      count: result.count,
       programsUpserted: result.count,
+      schoolsUpserted: result.schools.length,
       totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
       artifactPath: result.artifactPath,
+      // Keep `data` for clients expecting DatabaseSchool[] from syncCfbdTeams.
+      data: result.data,
     });
   } catch (err: unknown) {
     console.error("CFBD sync error:", err);
@@ -238,19 +250,48 @@ app.post("/api/v1/admin/sync-cfbd", adminRateLimit, async (_req, res) => {
   }
 });
 
+/**
+ * Admin: Sidearm directory scrape.
+ * Prefer single-school `{ schoolId, directoryUrl }`; optionally batch `{ programs: SidearmSeedProgram[] }`.
+ */
 app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
   try {
-    const programs = Array.isArray(req.body?.programs) ? req.body.programs : undefined;
-    const result = await runSidearmDirectoryScraper({ programs });
-    upsertCoaches(result.databaseCoaches);
-    return res.status(200).json({
-      status: "SIDEARM_SCRAPE_COMPLETE",
-      scrapedAt: result.scrapedAt,
-      coachesUpserted: result.count,
-      missingEmailCount: result.missingEmailCount,
-      errors: result.errors,
-      totalCoachesInMemory: COLLEGE_COACHES_DB.length,
-      artifactPath: result.artifactPath,
+    const schoolId = typeof req.body?.schoolId === "string" ? req.body.schoolId.trim() : "";
+    const directoryUrl =
+      typeof req.body?.directoryUrl === "string" ? req.body.directoryUrl.trim() : "";
+    const programs = Array.isArray(req.body?.programs)
+      ? (req.body.programs as SidearmSeedProgram[])
+      : undefined;
+
+    if (schoolId && directoryUrl) {
+      const coaches = await scrapeSidearmDirectory(schoolId, directoryUrl);
+      upsertCoaches(coaches);
+      return res.status(200).json({
+        status: "success",
+        count: coaches.length,
+        coaches,
+        totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+      });
+    }
+
+    if (programs?.length) {
+      const result = await runSidearmDirectoryScraper({ programs });
+      upsertCoaches(result.databaseCoaches);
+      return res.status(200).json({
+        status: "success",
+        count: result.count,
+        coaches: result.databaseCoaches,
+        scrapedAt: result.scrapedAt,
+        missingEmailCount: result.missingEmailCount,
+        errors: result.errors,
+        totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+        artifactPath: result.artifactPath,
+      });
+    }
+
+    return res.status(400).json({
+      error: "schoolId and directoryUrl are required.",
+      message: "Provide { schoolId, directoryUrl } or a non-empty programs[] batch.",
     });
   } catch (err: unknown) {
     console.error("Sidearm scrape error:", err);
@@ -261,6 +302,10 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
   }
 });
 
+/**
+ * Admin: JUCO/Prep CSV import — real parse via parseSchoolsCsv when csvText provided.
+ * SchoolsCsvImporter depends on this contract (programsUpserted / coachesUpserted).
+ */
 app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
   try {
     const csvText = typeof req.body?.csvText === "string" ? req.body.csvText : "";
@@ -283,8 +328,10 @@ app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
     upsertPrograms(result.programs);
     upsertCoaches(result.coaches);
 
-    return res.status(200).json({
-      status: "CSV_IMPORT_COMPLETE",
+    // 202 Accepted-style messaging while still performing the upsert synchronously.
+    return res.status(202).json({
+      status: "accepted",
+      message: "CSV import accepted and processed.",
       importedAt: result.importedAt,
       programsUpserted: result.programsUpserted,
       coachesUpserted: result.coachesUpserted,
@@ -300,35 +347,6 @@ app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
       error: "CSV_IMPORT_FAILED",
       message: sanitizeErrorMessage(err, "Failed to import schools CSV."),
     });
-  }
-});
-
-/**
- * 📡 Admin: Trigger CFBD Sync
- */
-app.post('/api/v1/admin/sync-cfbd', async (req, res) => {
-  try {
-    const result = await syncCfbdTeams();
-    res.status(200).json(result);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to synchronize with CFBD API' });
-  }
-});
-
-/**
- * 🕵️‍♂️ Admin: Trigger Sidearm Scraper for a specific school
- */
-app.post('/api/v1/admin/scrape-sidearm', async (req, res) => {
-  const { schoolId, directoryUrl } = req.body;
-  if (!schoolId || !directoryUrl) {
-    return res.status(400).json({ error: 'schoolId and directoryUrl are required.' });
-  }
-  
-  try {
-    const coaches = await scrapeSidearmDirectory(schoolId, directoryUrl);
-    res.status(200).json({ status: 'success', count: coaches.length, coaches });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to scrape directory' });
   }
 });
 

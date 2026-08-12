@@ -602,12 +602,25 @@ export function toDatabaseCoach(staff: CanonicalCoachStaffRecord): DatabaseCoach
   };
 }
 
+const POWER4_CONFERENCES = ["SEC", "Big Ten", "Big 12", "ACC"] as const;
+
+/** Power 4 vs Group of 5 from CFBD conference name (FBS only). */
+export function mapFbsConferenceToTier(
+  conference: string | null | undefined
+): Extract<DivisionTierEnum, "FBS_POWER_4" | "FBS_GROUP_OF_5"> {
+  if (conference && (POWER4_CONFERENCES as readonly string[]).includes(conference)) {
+    return "FBS_POWER_4";
+  }
+  return "FBS_GROUP_OF_5";
+}
+
 export function classificationToDivisionTier(
-  classification: CanonicalProgramRecord["classification"]
+  classification: CanonicalProgramRecord["classification"],
+  conference?: string | null
 ): DivisionTierEnum {
   switch (classification) {
     case "fbs":
-      return "FBS_POWER_4";
+      return mapFbsConferenceToTier(conference);
     case "fcs":
       return "FCS";
     case "ii":
@@ -632,7 +645,7 @@ export function toDatabaseSchool(program: CanonicalProgramRecord): DatabaseSchoo
     institutionName: program.institutionName,
     mascot: program.mascot,
     abbreviation: program.abbreviation,
-    tier: classificationToDivisionTier(program.classification),
+    tier: classificationToDivisionTier(program.classification, program.conference),
     conference: program.conference,
     city: program.city,
     state: program.state,
