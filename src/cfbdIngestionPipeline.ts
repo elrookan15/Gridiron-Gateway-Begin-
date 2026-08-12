@@ -1,11 +1,14 @@
 /**
  * CFBD Ingestion Pipeline — FBS program synchronizer for production `schools` rows.
  * GET https://api.collegefootballdata.com/teams/fbs?year=YYYY
- * Auth: COLLEGE_FOOTBALL_API_KEY (legacy) or CFBD_API_KEY.
+ * Auth: CFBD_API_KEY || COLLEGE_FOOTBALL_API_KEY.
  * Never invents coaching staff or .edu emails.
  */
-import type { CanonicalProgramRecord, DatabaseSchool } from "./types";
-import { mapFbsConferenceToTier } from "./types";
+import {
+  mapFbsConferenceToTier,
+  type CanonicalProgramRecord,
+  type DatabaseSchool,
+} from "./types";
 import { normalizeHexColor, slugify, writeJsonArtifact } from "./ingestionUtils";
 
 const CFBD_BASE_URL = "https://api.collegefootballdata.com";
@@ -37,11 +40,11 @@ export interface CfbdSyncResult {
   artifactPath: string;
 }
 
-/** Resolve CFBD bearer from either supported env name. */
+/** Resolve CFBD bearer from either supported env name (`CFBD_API_KEY || COLLEGE_FOOTBALL_API_KEY`). */
 export function resolveCfbdApiKey(): string | undefined {
   const key =
-    process.env.COLLEGE_FOOTBALL_API_KEY?.trim() ||
-    process.env.CFBD_API_KEY?.trim();
+    process.env.CFBD_API_KEY?.trim() ||
+    process.env.COLLEGE_FOOTBALL_API_KEY?.trim();
   return key || undefined;
 }
 
@@ -111,7 +114,7 @@ export async function syncCfbdTeams(year = Number(process.env.CFBD_YEAR) || 2026
   const apiKey = resolveCfbdApiKey();
   if (!apiKey) {
     throw new Error(
-      "CFBD Sync Failed: set COLLEGE_FOOTBALL_API_KEY or CFBD_API_KEY (collegefootballdata.com)."
+      "CFBD Sync Failed: set CFBD_API_KEY or COLLEGE_FOOTBALL_API_KEY (collegefootballdata.com)."
     );
   }
 

@@ -139,13 +139,21 @@ export async function runSidearmDirectoryScraper(
   if (typeof schoolIdOrOptions === "string" && directoryUrl) {
     const databaseCoaches = await scrapeSidearmDirectory(schoolIdOrOptions, directoryUrl);
     const scrapedAt = new Date().toISOString();
+    const missingEmailCount = databaseCoaches.filter((c) => !c.email).length;
+    const artifactPath = writeJsonArtifact("sidearm_coaches.json", {
+      scrapedAt,
+      count: databaseCoaches.length,
+      missingEmailCount,
+      errors: [],
+      databaseCoaches,
+    });
     return {
       scrapedAt,
       count: databaseCoaches.length,
-      missingEmailCount: databaseCoaches.filter((c) => !c.email).length,
+      missingEmailCount,
       databaseCoaches,
       errors: [],
-      artifactPath: "data/ingestion/sidearm_coaches.json",
+      artifactPath,
     };
   }
 
@@ -157,16 +165,15 @@ export async function runSidearmDirectoryScraper(
       options?.seedPath ||
       path.resolve(process.cwd(), "data/ingestion/seeds/sidearm_program_urls.sample.json");
     if (!fs.existsSync(seedPath)) {
-      programs = [{ programId: "fbs-texas", institutionName: "Texas", staffUrl: "https://texassports.com/sports/football/coaches" }];
-    } else {
-      const seed = JSON.parse(fs.readFileSync(seedPath, "utf8")) as {
-        programs: SidearmSeedProgram[];
-      };
-      programs = seed.programs;
+      throw new Error(`Sidearm seed file missing: ${seedPath}`);
     }
+    const seed = JSON.parse(fs.readFileSync(seedPath, "utf8")) as {
+      programs: SidearmSeedProgram[];
+    };
+    programs = seed.programs;
   }
 
-  const delayMs = options?.delayMs ?? Number(process.env.SIDEARM_SCRAPE_DELAY_MS || 100);
+  const delayMs = options?.delayMs ?? Number(process.env.SIDEARM_SCRAPE_DELAY_MS || 2500);
   const databaseCoaches: DatabaseCoach[] = [];
   const errors: string[] = [];
 

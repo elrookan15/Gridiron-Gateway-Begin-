@@ -282,6 +282,7 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
       return res.status(200).json({
         status: "success",
         count: result.count,
+        coachesUpserted: result.count,
         coaches: result.databaseCoaches,
         scrapedAt: result.scrapedAt,
         missingEmailCount: result.missingEmailCount,
@@ -330,10 +331,9 @@ app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
     upsertPrograms(result.programs);
     upsertCoaches(result.coaches);
 
-    // 202 Accepted-style messaging while still performing the upsert synchronously.
-    return res.status(202).json({
-      status: "accepted",
-      message: "CSV import accepted and processed.",
+    return res.status(200).json({
+      status: "CSV_IMPORT_COMPLETE",
+      message: "CSV import processed.",
       importedAt: result.importedAt,
       programsUpserted: result.programsUpserted,
       coachesUpserted: result.coachesUpserted,
