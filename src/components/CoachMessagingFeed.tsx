@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { CoachView } from "../types";
 import { MOCK_COACH_VIEWS } from "../data/mockData";
 import { Eye, ShieldCheck, MessageSquare, Send, Calendar, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
@@ -22,6 +22,11 @@ export const CoachMessagingFeed: React.FC = () => {
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,12 +55,12 @@ export const CoachMessagingFeed: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 bg-emerald-500 text-slate-950 font-black text-[10px] rounded uppercase tracking-wider">
-                CURRENT NCAA PERIOD: CONTACT PERIOD
+                CHECK NCAA CALENDAR
               </span>
               <span className="text-xs text-slate-400">Class of 2026</span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
-              Direct phone, text, and in-person contact permitted by NCAA Division I legislation.
+              Direct phone, text, and in-person contact permitted by NCAA Division I legislation. Real-time compliance is enforced server-side on message dispatch.
             </p>
           </div>
         </div>
@@ -63,7 +68,7 @@ export const CoachMessagingFeed: React.FC = () => {
         <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs font-bold shrink-0">
           <button
             onClick={() => setActiveTab("views")}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
+            className={`px-3 py-2 min-h-[40px] rounded-lg transition-all ${
               activeTab === "views" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
             }`}
           >
@@ -71,7 +76,7 @@ export const CoachMessagingFeed: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab("messages")}
-            className={`px-3 py-1.5 rounded-lg transition-all ${
+            className={`px-3 py-2 min-h-[40px] rounded-lg transition-all ${
               activeTab === "messages" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
             }`}
           >
@@ -166,6 +171,7 @@ export const CoachMessagingFeed: React.FC = () => {
                 </span>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
 
           <form onSubmit={handleSendMessage} className="flex gap-2">
@@ -178,7 +184,7 @@ export const CoachMessagingFeed: React.FC = () => {
             />
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5"
+              className="px-5 py-2.5 min-h-[44px] rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5"
             >
               Send <Send className="w-3.5 h-3.5" />
             </button>

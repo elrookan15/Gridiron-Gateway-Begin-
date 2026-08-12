@@ -4,9 +4,9 @@ import { GridironLogo } from "./GridironLogo";
 
 interface NavbarProps {
   activeTab: string;
-  setActiveTab: (tab: any) => void;
-  userRole: any;
-  setUserRole: (role: any) => void;
+  setActiveTab: (tab: string) => void;
+  userRole: string;
+  setUserRole: (role: string) => void;
   athleteName?: string;
   gradClass?: number;
   position?: string;
@@ -45,9 +45,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-slate-400 text-[11px]">Mode:</span>
             <div className="flex bg-slate-900 rounded-lg p-0.5 border border-slate-800">
               <button
-                onClick={() => setUserRole("athlete")}
+                onClick={() => setUserRole("Athlete")}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "athlete"
+                  userRole === "Athlete"
                     ? "bg-emerald-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -55,9 +55,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Athlete / Parent
               </button>
               <button
-                onClick={() => setUserRole("coach")}
+                onClick={() => setUserRole("Coach")}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "coach"
+                  userRole === "Coach"
                     ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -65,9 +65,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 College Coach
               </button>
               <button
-                onClick={() => setUserRole("fan")}
+                onClick={() => setUserRole("Fan")}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "fan"
+                  userRole === "Fan"
                     ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}

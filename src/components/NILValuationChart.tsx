@@ -45,9 +45,9 @@ export const NILValuationChart: React.FC<NILValuationChartProps> = ({
       { name: "Dec", factor: 1.48 },
     ];
 
-    const baseValuation = totalValuation || 185000;
-    const currentFollowers = followerCount || 45000;
-    const engagement = engagementRate || 4.2;
+    const baseValuation = totalValuation ?? 185000;
+    const currentFollowers = followerCount ?? 45000;
+    const engagement = engagementRate ?? 4.2;
 
     // Split valuation: ~55% Collective, ~30% Social, ~15% Licensing
     const baseCollectiveRatio = 0.55;
@@ -55,8 +55,6 @@ export const NILValuationChart: React.FC<NILValuationChartProps> = ({
     const baseLicensingRatio = 0.15;
 
     const fullData = months.map((m, idx) => {
-      // Exponential social growth curve boosted by engagement rate
-      const growthCurve = Math.pow(1 + engagement / 100, idx * 0.4) * m.factor;
       
       const projectedFollowers = Math.round(currentFollowers * (0.65 + idx * 0.08) * (1 + engagement * 0.03));
       
@@ -235,7 +233,7 @@ export const NILValuationChart: React.FC<NILValuationChartProps> = ({
             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all border ${
               activeMetric === "all"
                 ? "bg-slate-800 border-slate-700 text-white"
-                : "bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200"
+                : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
             }`}
           >
             All Streams
@@ -245,7 +243,7 @@ export const NILValuationChart: React.FC<NILValuationChartProps> = ({
             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all border ${
               activeMetric === "social_only"
                 ? "bg-sky-500/20 border-sky-500/50 text-sky-300"
-                : "bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200"
+                : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
             }`}
           >
             Social Endorsements
@@ -255,7 +253,7 @@ export const NILValuationChart: React.FC<NILValuationChartProps> = ({
             className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all border ${
               activeMetric === "collective_only"
                 ? "bg-lime-500/20 border-lime-500/50 text-lime-300"
-                : "bg-slate-950 border-slate-850 text-slate-400 hover:text-slate-200"
+                : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
             }`}
           >
             Collective Roster

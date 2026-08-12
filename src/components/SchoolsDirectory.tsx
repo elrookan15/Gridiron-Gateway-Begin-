@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { SCHOOLS_DATABASE, SchoolEntry } from "../data/schoolsData";
 import { CollegeDivision } from "../types";
 import {
@@ -47,7 +47,17 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
-  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsCompareModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Divisions filter list
   const divisions = [
@@ -130,11 +140,11 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
     setTimeout(() => setActionNotice(null), 2500);
   };
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedText(label);
+  const copyToClipboard = (text: string, label: string, id: string) => {
+    navigator.clipboard.writeText(text).catch(() => {});
+    setCopiedId(id);
     triggerNotice(`Copied ${label} to clipboard!`);
-    setTimeout(() => setCopiedText(null), 2000);
+    setTimeout(() => setCopiedId(null), 2000);
   };
 
   const toggleSaveSchool = (id: string, name: string) => {
@@ -519,11 +529,11 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                         <span className="truncate">{school.recruitingEmail}</span>
                       </a>
                       <button
-                        onClick={() => copyToClipboard(school.recruitingEmail, "Email")}
+                        onClick={() => copyToClipboard(school.recruitingEmail, "Email", `${school.id}-email`)}
                         className="text-slate-500 hover:text-slate-300 p-1 rounded"
                         title="Copy email"
                       >
-                        {copiedText === "Email" ? (
+                        {copiedId === `${school.id}-email` ? (
                           <Check className="w-3 h-3 text-emerald-400" />
                         ) : (
                           <Copy className="w-3 h-3" />
@@ -540,11 +550,11 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                         <span>{school.recruitingPhone}</span>
                       </a>
                       <button
-                        onClick={() => copyToClipboard(school.recruitingPhone, "Phone")}
+                        onClick={() => copyToClipboard(school.recruitingPhone, "Phone", `${school.id}-phone`)}
                         className="text-slate-500 hover:text-slate-300 p-1 rounded"
                         title="Copy phone"
                       >
-                        {copiedText === "Phone" ? (
+                        {copiedId === `${school.id}-phone` ? (
                           <Check className="w-3 h-3 text-emerald-400" />
                         ) : (
                           <Copy className="w-3 h-3" />
@@ -675,8 +685,8 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
 
       {/* SIDE-BY-SIDE COMPARISON MODAL */}
       {isCompareModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-5xl w-full p-5 sm:p-8 space-y-6 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto">
+        <div onClick={() => setIsCompareModalOpen(false)} className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+          <div onClick={(e) => e.stopPropagation()} className="bg-slate-900 border border-slate-800 rounded-3xl max-w-5xl w-full p-5 sm:p-8 space-y-6 shadow-2xl relative my-auto max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div>

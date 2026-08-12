@@ -10,6 +10,12 @@ const SCHEMES: SchemeFitScoutAlert["matchedScheme"][] = [
   "Cover 3 Match",
 ];
 
+const MOCK_ATHLETE_NAMES = [
+  'DeAndre Jackson', 'Marcus Webb', 'Jaylen Booker',
+  'Tyrese Hamilton', 'Darius Cole', 'Keon Marshall',
+  'Jalen Pierce', 'Malik Thornton'
+];
+
 export const AutonomousScoutingAgent: React.FC = () => {
   const [alerts, setAlerts] = useState<SchemeFitScoutAlert[]>([
     {
@@ -33,7 +39,8 @@ export const AutonomousScoutingAgent: React.FC = () => {
   ]);
   const [dispatchedIds, setDispatchedIds] = useState<Set<string>>(new Set());
   const [toast, setToast] = useState<string | null>(null);
-  const isScanning = true;
+  const [isScanning, setIsScanning] = useState<boolean>(true);
+  const toastTimerRef = React.useRef<number | null>(null);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -41,7 +48,7 @@ export const AutonomousScoutingAgent: React.FC = () => {
       const newAlert: SchemeFitScoutAlert = {
         alertId: `alert-${Date.now()}`,
         athleteId: `rec-2026-00${Math.floor(Math.random() * 90 + 10)}`,
-        athleteName: 'DeAndre "Flash" Jackson',
+        athleteName: MOCK_ATHLETE_NAMES[Math.floor(Math.random() * MOCK_ATHLETE_NAMES.length)],
         confidenceScore: Math.floor(Math.random() * 10 + 90),
         matchedScheme,
         keyMetrics: {
@@ -53,7 +60,10 @@ export const AutonomousScoutingAgent: React.FC = () => {
       };
       setAlerts((prev) => [newAlert, ...prev].slice(0, 5));
     }, 15000);
-    return () => window.clearInterval(timer);
+    return () => {
+      window.clearInterval(timer);
+      if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   const dispatchToPositionCoach = (alert: SchemeFitScoutAlert) => {
@@ -61,7 +71,8 @@ export const AutonomousScoutingAgent: React.FC = () => {
     setToast(
       `Dossier dispatched to Position Coach workspace — ${alert.athleteName} × ${alert.matchedScheme} (${alert.confidenceScore}%).`
     );
-    window.setTimeout(() => setToast(null), 3500);
+    if (toastTimerRef.current) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => setToast(null), 3500);
   };
 
   return (
@@ -146,11 +157,11 @@ export const AutonomousScoutingAgent: React.FC = () => {
                 >
                   {dispatched ? (
                     <>
-                      <UserCheck className="w-4 h-4 text-emerald-400" /> Dispatched to Position Coach
+                      <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" /> Dispatched to Position Coach
                     </>
                   ) : (
                     <>
-                      Drop Alert into Coach Workspace <ChevronRight className="w-4 h-4" />
+                      Drop Alert into Coach Workspace <ChevronRight className="w-4 h-4 shrink-0" />
                     </>
                   )}
                 </button>

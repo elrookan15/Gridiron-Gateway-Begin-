@@ -29,6 +29,13 @@ const SEED_ENTRIES: VerifiedLaserCombineEntry[] = [
   },
 ];
 
+const ATHLETE_DISPLAY_NAMES: Record<string, string> = {
+  'rec-2026-001': 'Derrick Vance Jr.',
+  'rec_derrick_vance': 'Derrick Vance Jr.',
+  'rec_tariq_lawson': 'Tariq Lawson',
+  'rec_malik_sanders': 'Malik Sanders',
+};
+
 export const CombineLaserApiModule: React.FC = () => {
   const [entries, setEntries] = useState<VerifiedLaserCombineEntry[]>(SEED_ENTRIES);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -129,7 +136,9 @@ export const CombineLaserApiModule: React.FC = () => {
                 <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3 text-cyan-400" /> ⚡ Laser Verified — {entry.verifiedBy}
                 </span>
-                <h3 className="font-extrabold text-white text-lg mt-1 truncate">{entry.athleteId}</h3>
+                <h3 className="font-extrabold text-white text-lg mt-1 truncate">
+                  {ATHLETE_DISPLAY_NAMES[entry.athleteId] ?? entry.athleteId}
+                </h3>
                 <p className="text-xs text-slate-400 truncate">{entry.combineLocation}</p>
               </div>
               <span className="text-[10px] text-slate-400 font-mono shrink-0">{entry.date}</span>

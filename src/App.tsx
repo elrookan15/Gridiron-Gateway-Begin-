@@ -23,11 +23,18 @@ import { GridironGatewayDashboard } from "./components/GridironGatewayDashboard"
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
   const [theme, setTheme] = useState<"dark" | "light">(() => {
-    return (localStorage.getItem("gg_theme") as "dark" | "light") || "dark";
+    try {
+      const stored = localStorage.getItem("gg_theme");
+      return stored === "light" ? "light" : "dark";
+    } catch {
+      return "dark";
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem("gg_theme", theme);
+    try {
+      localStorage.setItem("gg_theme", theme);
+    } catch {}
     if (theme === "light") {
       document.documentElement.classList.add("light-theme");
       document.documentElement.classList.remove("dark");
@@ -77,9 +84,9 @@ export function App() {
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => setActiveTab(tab as any)}
         userRole={userRole}
-        setUserRole={setUserRole}
+        setUserRole={(role) => setUserRole(role as any)}
         onOpenOnboarding={() => setShowOnboarding(true)}
         theme={theme}
         onToggleTheme={toggleTheme}

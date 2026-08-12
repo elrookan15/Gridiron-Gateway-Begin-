@@ -40,7 +40,7 @@ const MOCK_TRUESPEED_RECORDS: TrueSpeedAnalysis[] = [
 
 export const TrueSpeedModule: React.FC = () => {
   const [records] = useState<TrueSpeedAnalysis[]>(MOCK_TRUESPEED_RECORDS);
-  const [selectedRecord, setSelectedRecord] = useState<TrueSpeedAnalysis>(MOCK_TRUESPEED_RECORDS[0]);
+  const [selectedRecord, setSelectedRecord] = useState<TrueSpeedAnalysis | null>(MOCK_TRUESPEED_RECORDS[0] ?? null);
   const [isScanning, setIsScanning] = useState(false);
 
   const handleScanVideo = () => {
@@ -85,8 +85,8 @@ export const TrueSpeedModule: React.FC = () => {
             key={r.id}
             onClick={() => setSelectedRecord(r)}
             className={`bg-slate-900 border rounded-2xl p-5 shadow-xl cursor-pointer transition-all space-y-4 ${
-              selectedRecord.id === r.id
-                ? "border-sky-500 shadow-sky-500/10 scale-102"
+              selectedRecord?.id === r.id
+                ? "border-sky-500 shadow-sky-500/10 scale-[1.02]"
                 : "border-slate-800 hover:border-slate-700"
             }`}
           >

@@ -1,6 +1,5 @@
 import React from "react";
 import { MultiTenantUser, UserRole } from "../types";
-import { ShieldCheck, UserCheck, Briefcase, Award, Lock, Sparkles, ChevronDown } from "lucide-react";
 
 export const MOCK_MULTI_TENANT_USERS: MultiTenantUser[] = [
   {
