@@ -278,6 +278,27 @@ export interface CoachPipelineProspect {
   avatarUrl: string;
 }
 
+/** Kanban stages for `RecruitingPipeline` (coach workspace). */
+export type RecruitingPipelineStage =
+  | "Evaluating"
+  | "Offered"
+  | "Official Visit"
+  | "Committed";
+
+/** Offer row enriched with athlete facts for the recruiting Kanban board. */
+export interface PipelineOffer {
+  id: string;
+  schoolId: string;
+  athleteId: string;
+  isOfficial: boolean;
+  offerDate: string;
+  commitmentStatus: string;
+  stage: RecruitingPipelineStage;
+  athleteName: string;
+  position: string;
+  starRating: number;
+}
+
 export interface TimelineEvent {
   id: string;
   date: string;
@@ -585,6 +606,40 @@ export interface DatabaseAthleteProfile {
   starRating: number;
   trueSpeedMph: number | null;
   cognitionScore: number | null;
+}
+
+/**
+ * Full athlete dossier — joins `athlete_profiles` + `users` + `athlete_media` +
+ * `scholarship_offers`→`schools` (MVP relational model in schema.sql).
+ */
+export interface AthleteFullProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  height_inches: number | null;
+  weight_lbs: number | null;
+  forty_yard_dash: number | null;
+  vertical_jump_inches: number | null;
+  position_tier: string | null;
+  star_rating: number | null;
+  media: {
+    twitter_handle: string | null;
+    instagram_handle: string | null;
+    hudl_link: string | null;
+    youtube_link: string | null;
+  } | null;
+  offers: {
+    id: string;
+    is_official: boolean;
+    offer_date: string;
+    commitment_status: string;
+    school: {
+      id: string;
+      name: string;
+      primary_color: string | null;
+      abbreviation: string | null;
+    } | null;
+  }[];
 }
 
 /** Map Sidearm/CSV ingress → relational `DatabaseCoach` contract. */
