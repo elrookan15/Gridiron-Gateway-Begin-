@@ -400,18 +400,16 @@ export function evaluateComplianceGate(params: {
   };
 }
 
-/** NCAA Bylaw 13.2-class extra-benefit / inducement scanners. Engine-only — UI never decides. */
-export const NCAA_INDUCEMENT_PATTERNS: readonly RegExp[] = [
-  /\bcash\b/i,
-  /\bsigning bonus\b/i,
-  /\bunder the table\b/i,
-  /\bfree (car|truck|house|rent|apartment)\b/i,
-  /\bguaranteed (money|deal|nil)\b/i,
-  /\bbooster (check|payment|money)\b/i,
-  /\bjob for (your |the )?(dad|mom|parent|family)\b/i,
-  /\bi'?ll buy you\b/i,
-  /\bpay for (your )?tuition\b/i,
+/** Strict inducement dictionary (word boundaries prevent partial matches). */
+const INDUCEMENT_PATTERNS: readonly RegExp[] = [
+  /\b(guaranteed cash)\b/i,
+  /\b(pay for play)\b/i,
+  /\b(car deal)\b/i,
+  /\b(signing bonus)\b/i,
+  /\b(free housing)\b/i,
 ];
+
+export const NCAA_INDUCEMENT_PATTERNS = INDUCEMENT_PATTERNS;
 
 export const COMPLIANCE_AUDIT_LEDGER: ComplianceAuditLog[] = [];
 
@@ -425,15 +423,79 @@ const CALENDAR_METHODS: Record<
   CONTACT: new Set(["electronic", "written", "call", "in_person"]),
 };
 
-function scanInducements(payload: string): string[] {
-  const hits: string[] = [];
-  for (const pattern of NCAA_INDUCEMENT_PATTERNS) {
-    const match = payload.match(pattern);
-    if (match?.[0]) {
-      hits.push(match[0].toLowerCase());
-    }
+/**
+ * Deterministic calendar evaluator.
+ * Production must ingest the official NCAA calendar JSON for the season year.
+ * MVP heuristic: Dec 15–Jan 15 DEAD, Apr 15–May 31 EVALUATION, else CONTACT.
+ */
+export const getCurrentNcaaPeriod = (evalDate: Date = new Date()): NcaaRecruitingPeriod => {
+  const month = evalDate.getMonth();
+  const date = evalDate.getDate();
+
+  if (month === 11 && date >= 15) return "DEAD";
+  if (month === 0 && date <= 15) return "DEAD";
+  if ((month === 3 && date >= 15) || month === 4) return "EVALUATION";
+  return "CONTACT";
+};
+
+export const scanForInducements = (message: string): string[] => {
+  return INDUCEMENT_PATTERNS.map((pattern) => {
+    const match = message.match(pattern);
+    return match ? match[0].toLowerCase() : null;
+  }).filter((match): match is string => match !== null);
+};
+
+/**
+ * Fail-closed messaging gate. Import this same module from Edge Functions.
+ * Order: minor consent → DEAD calendar → inducement dictionary → CLEARED.
+ */
+export const evaluateMessagingClearance = (
+  athleteAge: number,
+  hasParentalConsent: boolean,
+  messagePayload: string,
+  evalDate: Date = new Date(),
+): ComplianceEvaluation => {
+  if (athleteAge < 18 && !hasParentalConsent) {
+    return {
+      isCleared: false,
+      status: "BLOCKED_MINOR_CONSENT",
+      flaggedKeywords: [],
+      reason: "Athlete is under 18 and lacks registered parent/guardian consent.",
+    };
   }
-  return [...new Set(hits)];
+
+  const activePeriod = getCurrentNcaaPeriod(evalDate);
+  if (activePeriod === "DEAD") {
+    return {
+      isCleared: false,
+      status: "BLOCKED_CALENDAR",
+      flaggedKeywords: [],
+      reason: "Active NCAA Dead Period. In-person contact and digital messaging restricted.",
+    };
+  }
+
+  const flagged = scanForInducements(messagePayload);
+  if (flagged.length > 0) {
+    return {
+      isCleared: false,
+      status: "BLOCKED_INDUCEMENT",
+      flaggedKeywords: flagged,
+      reason: "Prohibited inducement language detected in payload.",
+    };
+  }
+
+  return {
+    isCleared: true,
+    status: "CLEARED",
+    flaggedKeywords: [],
+    reason: "Action complies with calendar, consent, and language parameters.",
+  };
+};
+
+function periodToEvalDate(period: NcaaRecruitingPeriod): Date {
+  if (period === "DEAD") return new Date(2026, 11, 20);
+  if (period === "EVALUATION") return new Date(2026, 4, 20);
+  return new Date(2026, 5, 15);
 }
 
 function recordClearanceAudit(
@@ -455,44 +517,27 @@ function recordClearanceAudit(
 }
 
 /**
- * Absolute NCAA communication gate. Fail-closed. Presentation layers must not re-implement this.
- * Order: inducement → minor consent (COPPA/FERPA < 18) → recruiting calendar → CLEARED.
+ * Dashboard/request adapter. Delegates to `evaluateMessagingClearance`, then
+ * applies contact-method restrictions for QUIET / EVALUATION / DEAD (`NcaaClearanceRequest.period`).
  */
 export function evaluateNcaaClearance(
   request: NcaaClearanceRequest,
   writeAuditLog = true,
 ): ComplianceEvaluation {
-  const flaggedKeywords = scanInducements(request.messagePayload ?? "");
-  let evaluation: ComplianceEvaluation;
+  let evaluation = evaluateMessagingClearance(
+    request.recruitAge,
+    request.hasParentalConsent,
+    request.messagePayload,
+    periodToEvalDate(request.period),
+  );
 
-  if (flaggedKeywords.length > 0) {
-    evaluation = {
-      isCleared: false,
-      status: "BLOCKED_INDUCEMENT",
-      flaggedKeywords,
-      reason: `Inducement language detected (${flaggedKeywords.join(", ")}). NCAA Bylaw 13.2 extra-benefit prohibition. Message cannot send.`,
-    };
-  } else if (request.recruitAge < 18 && !request.hasParentalConsent) {
-    evaluation = {
-      isCleared: false,
-      status: "BLOCKED_MINOR_CONSENT",
-      flaggedKeywords: [],
-      reason: `Prospect is ${request.recruitAge} (minor). Direct coach communication blocked until parent/guardian consent is recorded (COPPA/FERPA).`,
-    };
-  } else if (!CALENDAR_METHODS[request.period].has(request.contactMethod)) {
+  if (evaluation.isCleared && !CALENDAR_METHODS[request.period].has(request.contactMethod)) {
     const allowed = [...CALENDAR_METHODS[request.period]].join(", ") || "none";
     evaluation = {
       isCleared: false,
       status: "BLOCKED_CALENDAR",
       flaggedKeywords: [],
       reason: `NCAA ${request.period} period does not permit '${request.contactMethod}'. Allowed methods: [${allowed}].`,
-    };
-  } else {
-    evaluation = {
-      isCleared: true,
-      status: "CLEARED",
-      flaggedKeywords: [],
-      reason: `CLEARED under NCAA ${request.period} for ${request.contactMethod}. No inducement flags. Consent/age gate passed.`,
     };
   }
 

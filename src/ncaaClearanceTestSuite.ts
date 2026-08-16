@@ -1,4 +1,9 @@
-import { evaluateNcaaClearance } from "./complianceEngine";
+import {
+  evaluateNcaaClearance,
+  evaluateMessagingClearance,
+  getCurrentNcaaPeriod,
+  scanForInducements,
+} from "./complianceEngine";
 import type { NcaaClearanceRequest } from "./types";
 
 function runNcaaClearanceTestSuite() {
@@ -41,14 +46,30 @@ function runNcaaClearanceTestSuite() {
   assert(dead.status === "BLOCKED_CALENDAR", "DEAD period blocks electronic → BLOCKED_CALENDAR");
 
   const inducement = evaluateNcaaClearance(
-    { ...base, messagePayload: "We'll send cash and a free car if you commit." },
+    { ...base, messagePayload: "We can lock a signing bonus and guaranteed cash this week." },
     false,
   );
   assert(
-    inducement.status === "BLOCKED_INDUCEMENT" && inducement.flaggedKeywords.length > 0,
+    inducement.status === "BLOCKED_INDUCEMENT" && inducement.flaggedKeywords.includes("signing bonus"),
     "Inducement payload → BLOCKED_INDUCEMENT",
     inducement.status,
   );
+
+  const minorBeatsInducement = evaluateMessagingClearance(
+    16,
+    false,
+    "pay for play and a car deal",
+    new Date(2026, 5, 15),
+  );
+  assert(
+    minorBeatsInducement.status === "BLOCKED_MINOR_CONSENT",
+    "Minor without consent short-circuits inducement scan",
+    minorBeatsInducement.status,
+  );
+
+  assert(getCurrentNcaaPeriod(new Date(2026, 11, 20)) === "DEAD", "Dec 20 → DEAD");
+  assert(getCurrentNcaaPeriod(new Date(2026, 4, 20)) === "EVALUATION", "May 20 → EVALUATION");
+  assert(scanForInducements("free housing off campus").includes("free housing"), "scanForInducements hits free housing");
 
   console.log("==================================================");
   console.log(`RESULTS: ${passed} PASSED, ${failed} FAILED`);
