@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { AlertTriangle, CheckCircle2, FileSignature, Loader2, Shield } from "lucide-react";
 
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient";
+import { bindConsentAthleteIdToSession } from "../lib/parentalConsentBind";
 import {
   isParentalConsentPayloadValid,
   submitParentalConsent,
@@ -76,10 +77,10 @@ export const ParentConsentPortal: React.FC<ParentConsentPortalProps> = ({
 
     try {
       const { data: sessionData } = await supabase.auth.getUser();
-      const resolvedAthleteId = sessionData.user?.id ?? athleteId.trim();
+      bindConsentAthleteIdToSession(athleteId, sessionData.user?.id);
 
       await submitParentalConsent({
-        athleteId: resolvedAthleteId,
+        athleteId,
         parentName: form.parentName,
         parentEmail: form.parentEmail,
         relationship: form.relationship,
