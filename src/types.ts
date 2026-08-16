@@ -364,6 +364,31 @@ export interface CapGMRosterModel {
   players: RosterPlayerCapItem[];
 }
 
+/** House v. NCAA revenue-share cap in integer cents ($20.5M = 2_050_000_000). */
+export const CAP_GM_HARD_CAP_CENTS = 2_050_000_000;
+
+export type RetentionRiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+
+export interface CapGmPlayer {
+  id: string;
+  name: string;
+  position: string;
+  starRating: number;
+  marketValueCents: number;
+  allocatedCents: number;
+  baseEpa: number;
+  isRetained: boolean;
+  notes: string;
+}
+
+export interface CapGmState {
+  totalCapCents: number;
+  allocatedCents: number;
+  remainingCents: number;
+  projectedEpa: number;
+  globalRetentionRisk: RetentionRiskLevel;
+}
+
 export interface CognitiveProfile {
   id: string;
   athleteName: string;
