@@ -30,7 +30,6 @@ import {
   Sparkles,
   ChevronRight,
   ChevronLeft,
-  Sliders,
   DollarSign,
   Activity,
   Layers,
@@ -45,6 +44,7 @@ import {
   Database,
 } from "lucide-react";
 import { NILValuationChart } from "./NILValuationChart";
+import { NILCalculator } from "./NILCalculator";
 import { CapGMRosterSimulator } from "./CapGMRosterSimulator";
 import { CognitiveSchemeMatcher } from "./CognitiveSchemeMatcher";
 import { TrueSpeedModule } from "./TrueSpeedModule";
@@ -665,50 +665,12 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
   // --------------------------------------------------------------------------
   // TAB 3: NIL VALUATION ESTIMATOR CALCULATOR STATE
   // --------------------------------------------------------------------------
-  const [followerCount, setFollowerCount] = useState<number>(45000);
-  const [nilStarRating, setNilStarRating] = useState<number>(5);
-  const [positionTier, setPositionTier] = useState<"QB" | "SKILL" | "TRENCH" | "SPECIALIST">("QB");
-  const [conferencePower, setConferencePower] = useState<"Power4" | "GroupOf5" | "FCS_D2">("Power4");
-  const [engagementRate, setEngagementRate] = useState<number>(4.2);
-
-  const nilValuation = useMemo(() => {
-    // Base valuation by star rating
-    let baseVal = 20000;
-    if (nilStarRating === 3) baseVal = 45000;
-    if (nilStarRating === 4) baseVal = 180000;
-    if (nilStarRating === 5) baseVal = 550000;
-
-    // Social follower multiplier ($1.80 per follower baseline adjusted by engagement)
-    const socialValue = followerCount * 1.8 * (engagementRate / 3.0);
-
-    // Position Demand Multiplier
-    let posMult = 1.0;
-    if (positionTier === "QB") posMult = 1.85;
-    if (positionTier === "SKILL") posMult = 1.35; // WR, EDGE, RB, CB
-    if (positionTier === "TRENCH") posMult = 1.20; // OT, DT, LB
-    if (positionTier === "SPECIALIST") posMult = 0.65; // K, P, LS
-
-    // Conference Market Size Multiplier
-    let confMult = 1.0;
-    if (conferencePower === "Power4") confMult = 1.6;
-    if (conferencePower === "GroupOf5") confMult = 0.75;
-    if (conferencePower === "FCS_D2") confMult = 0.35;
-
-    const totalEstimated = Math.round((baseVal + socialValue) * posMult * confMult);
-    const lowRange = Math.round(totalEstimated * 0.85);
-    const highRange = Math.round(totalEstimated * 1.25);
-
-    return {
-      total: totalEstimated,
-      low: lowRange,
-      high: highRange,
-      breakdown: {
-        collectivePayout: Math.round(totalEstimated * 0.55),
-        socialEndorsements: Math.round(totalEstimated * 0.30),
-        merchAndLicensing: Math.round(totalEstimated * 0.15),
-      },
-    };
-  }, [followerCount, nilStarRating, positionTier, conferencePower, engagementRate]);
+  const [nilChartBind, setNilChartBind] = useState({
+    followerCount: 15000,
+    engagementRate: 4.5,
+    nilStarRating: 4,
+    totalValuation: 250574,
+  });
 
   // Division Tier Badge Helper
   const renderDivisionBadge = (tier: DivisionTier) => {
@@ -1401,220 +1363,23 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-              {/* SLIDERS & INPUTS PANEL */}
-              <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl">
-                <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-800">
-                  <Sliders className="w-4 h-4 text-emerald-400" />
-                  Valuation Model Parameters
-                </h2>
-
-                {/* Slider 1: Social Media Followers */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs font-extrabold">
-                    <span className="text-slate-300 uppercase">Social Media Followers (Instagram / X / TikTok)</span>
-                    <span className="text-emerald-400 font-black text-sm">
-                      {followerCount.toLocaleString()} <span className="text-[10px] text-slate-500 font-normal">Followers</span>
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min={2000}
-                    max={250000}
-                    step={1000}
-                    value={followerCount}
-                    onChange={(e) => setFollowerCount(Number(e.target.value))}
-                    className="w-full accent-emerald-400 bg-slate-950 rounded-lg cursor-pointer h-2"
-                  />
-                  <div className="flex justify-between text-[10px] font-extrabold text-slate-500">
-                    <span>2k</span>
-                    <span>50k</span>
-                    <span>100k</span>
-                    <span>250k+</span>
-                  </div>
-                </div>
-
-                {/* Slider 2: Star Rating */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs font-extrabold">
-                    <span className="text-slate-300 uppercase">Prospect Star Rating</span>
-                    <span className="text-amber-400 font-black text-sm flex items-center gap-1">
-                      {nilStarRating} Stars <Star className="w-3.5 h-3.5 fill-amber-400" />
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => setNilStarRating(star)}
-                        className={`py-2 rounded-xl text-xs font-extrabold border transition-all flex items-center justify-center gap-1 ${
-                          nilStarRating === star
-                            ? "bg-amber-400/20 border-amber-400/50 text-amber-300 shadow-sm"
-                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                        }`}
-                      >
-                        <span>{star} Stars</span>
-                        <Star className="w-3 h-3 fill-amber-400" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Select 3: Position Demand Tier */}
-                <div className="space-y-2">
-                  <span className="text-xs font-extrabold text-slate-300 uppercase block">
-                    Position Market Demand
-                  </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {[
-                      { label: "Quarterback (QB)", value: "QB" },
-                      { label: "Skill (WR/EDGE/RB/CB)", value: "SKILL" },
-                      { label: "Trench (OT/DT/LB)", value: "TRENCH" },
-                      { label: "Specialist (K/P/LS)", value: "SPECIALIST" },
-                    ].map((pos) => (
-                      <button
-                        key={pos.value}
-                        onClick={() => setPositionTier(pos.value as any)}
-                        className={`p-2.5 rounded-xl text-[11px] font-extrabold border transition-all text-center ${
-                          positionTier === pos.value
-                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
-                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                        }`}
-                      >
-                        {pos.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Select 4: Conference / Market Tier */}
-                <div className="space-y-2">
-                  <span className="text-xs font-extrabold text-slate-300 uppercase block">
-                    Conference / Market Tier
-                  </span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { label: "Power 4 Conference", value: "Power4" },
-                      { label: "Group of 5 Conference", value: "GroupOf5" },
-                      { label: "FCS / Division II / JUCO", value: "FCS_D2" },
-                    ].map((conf) => (
-                      <button
-                        key={conf.value}
-                        onClick={() => setConferencePower(conf.value as any)}
-                        className={`p-2.5 rounded-xl text-[11px] font-extrabold border transition-all text-center ${
-                          conferencePower === conf.value
-                            ? "bg-cyan-500/20 border-cyan-500/50 text-cyan-300"
-                            : "bg-slate-950 border-slate-800 text-slate-400 hover:text-white"
-                        }`}
-                      >
-                        {conf.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Slider 5: Engagement Rate */}
-                <div className="space-y-2 pt-2 border-t border-slate-800">
-                  <div className="flex items-center justify-between text-xs font-extrabold">
-                    <span className="text-slate-300 uppercase">Social Engagement Rate</span>
-                    <span className="text-purple-400 font-black text-sm">{engagementRate.toFixed(1)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min={1.0}
-                    max={10.0}
-                    step={0.1}
-                    value={engagementRate}
-                    onChange={(e) => setEngagementRate(Number(e.target.value))}
-                    className="w-full accent-purple-400 bg-slate-950 rounded-lg cursor-pointer h-2"
-                  />
-                </div>
-              </div>
-
-              {/* ODOMETER DISPLAY & BREAKDOWN DISPLAY PANEL */}
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 shadow-xl sticky top-24">
-                <div className="space-y-1 text-center border-b border-slate-800 pb-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">
-                    ESTIMATED ANNUAL NIL VALUE
-                  </span>
-                  {/* Odometer Style Counter Display */}
-                  <div className="text-4xl sm:text-5xl font-black text-white tracking-tight flex items-center justify-center gap-1 my-2">
-                    <span className="text-emerald-400">$</span>
-                    <span>{nilValuation.total.toLocaleString()}</span>
-                    <span className="text-xs text-slate-500 font-medium">/yr</span>
-                  </div>
-
-                  <p className="text-[11px] font-bold text-slate-400">
-                    Projected Range: ${nilValuation.low.toLocaleString()} - ${nilValuation.high.toLocaleString()}
-                  </p>
-                </div>
-
-                {/* Revenue Source Breakdown */}
-                <div className="space-y-3">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-400 block">
-                    Estimated Revenue Source Breakdown
-                  </span>
-
-                  <div className="space-y-2">
-                    {/* Collective Payout */}
-                    <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-300">Collective Roster Revenue</span>
-                        <span className="text-emerald-400 font-extrabold">
-                          ${nilValuation.breakdown.collectivePayout.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-400 rounded-full" style={{ width: "55%" }} />
-                      </div>
-                    </div>
-
-                    {/* Social Endorsements */}
-                    <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-300">Sponsored Posts & Media</span>
-                        <span className="text-cyan-300 font-extrabold">
-                          ${nilValuation.breakdown.socialEndorsements.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-400 rounded-full" style={{ width: "30%" }} />
-                      </div>
-                    </div>
-
-                    {/* Merch & Licensing */}
-                    <div className="bg-slate-950 p-3 rounded-2xl border border-slate-800 space-y-1">
-                      <div className="flex justify-between text-xs font-bold">
-                        <span className="text-slate-300">Jersey Sales & Licensing</span>
-                        <span className="text-purple-300 font-extrabold">
-                          ${nilValuation.breakdown.merchAndLicensing.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
-                        <div className="h-full bg-purple-400 rounded-full" style={{ width: "15%" }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 text-[11px] text-slate-400 leading-relaxed space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold text-slate-200">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>Gridiron Gateway Methodology</span>
-                  </div>
-                  <p>
-                    Projections are calculated dynamically using real-time market multipliers, verified combine metrics, and active collective roster distribution guidelines.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <NILCalculator
+              onEstimateChange={(payload) => {
+                setNilChartBind({
+                  followerCount: payload.followers,
+                  engagementRate: payload.engagementRate,
+                  nilStarRating: payload.stars,
+                  totalValuation: Math.round(payload.valuation.totalCents / 100),
+                });
+              }}
+            />
 
             {/* RECRUIT VALUATION TRENDS CHART SECTION */}
             <NILValuationChart
-              followerCount={followerCount}
-              engagementRate={engagementRate}
-              nilStarRating={nilStarRating}
-              totalValuation={nilValuation.total}
+              followerCount={nilChartBind.followerCount}
+              engagementRate={nilChartBind.engagementRate}
+              nilStarRating={nilChartBind.nilStarRating}
+              totalValuation={nilChartBind.totalValuation}
             />
           </div>
         )}
@@ -1641,9 +1406,12 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {/* ==================================================================== */}
         {activeTab === "nextgen_tech" && (
           <div className="space-y-12 animate-fadeIn">
-            <TrueSpeedModule />
+            <TrueSpeedModule
+              athleteId={MOCK_ATHLETE_DOSSIER.id}
+              onVerificationComplete={() => undefined}
+            />
             <BioScanTelemetryModule />
-            <RallySafeEscrowModule />
+            <RallySafeEscrowModule athleteId={MOCK_ATHLETE_DOSSIER.id} />
           </div>
         )}
         {/* ==================================================================== */}
@@ -1683,7 +1451,10 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {/* ==================================================================== */}
         {activeTab === "parent_portal" && (
           <div className="animate-fadeIn">
-            <ParentConsentPortal />
+            <ParentConsentPortal
+              athleteId={MOCK_ATHLETE_DOSSIER.id}
+              athleteName={MOCK_ATHLETE_DOSSIER.fullName}
+            />
           </div>
         )}
 

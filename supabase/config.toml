@@ -1,0 +1,15 @@
+# Gridiron Gateway — local Supabase project config
+# Link with: supabase link --project-ref <YOUR_PROJECT_ID>
+
+[api]
+enabled = true
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+
+[functions.cfbd-schools-seeder]
+# Service-role seeding; optional SEEDER_INVOKE_SECRET gate in function code.
+verify_jwt = true

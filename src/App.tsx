@@ -15,6 +15,8 @@ import { CoachesDirectory } from "./components/CoachesDirectory";
 import { SchoolsDirectory } from "./components/SchoolsDirectory";
 import { TransferPortalModule } from "./components/TransferPortalModule";
 import { CoachPipelineBoard } from "./components/CoachPipelineBoard";
+import { RecruitingPipeline } from "./components/RecruitingPipeline";
+import { AuthManager } from "./components/AuthManager";
 import { CoachWorkspace } from "./components/CoachWorkspace";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
 import { AthleteDossier } from "./components/AthleteDossier";
@@ -158,8 +160,17 @@ export function App() {
         )}
 
         {activeTab === "coach_pipeline" && (
-          <div className="max-w-6xl mx-auto px-4 py-8">
-            <CoachPipelineBoard />
+          <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+            <AuthManager />
+            <RecruitingPipeline schoolId="fbs-texas" />
+            <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <summary className="cursor-pointer text-xs font-bold text-slate-400 uppercase tracking-wider min-h-[44px] flex items-center">
+                Legacy mock pipeline board
+              </summary>
+              <div className="mt-4">
+                <CoachPipelineBoard />
+              </div>
+            </details>
           </div>
         )}
 

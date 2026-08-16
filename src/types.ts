@@ -11,7 +11,21 @@ export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION
 
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
 
-export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5';
+export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5' | 'FBS_IND';
+
+export interface SchoolEntry {
+  id: string;
+  name: string;
+  mascot?: string;
+  city: string;
+  state: string;
+  division: DivisionTier;
+  conference: string;
+  primaryRecruitingEmail?: string;
+  coachingPhone?: string;
+  topMajors?: string[];
+  programHighlights?: string[];
+}
 
 export interface CollegeProgram {
   id: string;
@@ -243,25 +257,29 @@ export interface CollegeCoachProfile {
   activeEndorsementsCount: number;
 }
 
+export type PortalStatus = "ACTIVE" | "WITHDRAWN" | "MATRICULATED";
+export type TransferType = "UNDERGRADUATE" | "GRADUATE";
+
 export interface TransferPortalAthlete {
   id: string;
-  fullName: string;
-  position: Position;
-  formerSchool: string;
-  formerDivision: CollegeDivision;
-  conference: string;
-  yearsEligibilityRemaining: number;
-  portalEntryDate: string;
-  status: "Active in Portal" | "Committed / Transferred" | "Withdrawn";
-  destinationSchool?: string;
-  height: string;
-  weight: number;
-  fortyTime: number;
-  gpa: number;
-  avatarUrl: string;
-  statsHighlights: string;
-  hudlUrl: string;
-  verifiedStats: boolean;
+  athleteId: string;
+  athleteName: string;
+  position: string;
+  starRating: number;
+  transferType: TransferType;
+  eligibilityRemaining: number;
+  originSchool: {
+    id: string;
+    name: string;
+    primaryColor: string;
+  };
+  destinationSchool: {
+    id: string;
+    name: string;
+    primaryColor: string;
+  } | null;
+  entryDate: string;
+  status: PortalStatus;
 }
 
 export interface CoachPipelineProspect {
@@ -276,6 +294,27 @@ export interface CoachPipelineProspect {
   notes: string;
   lastActivity: string;
   avatarUrl: string;
+}
+
+/** Kanban stages for `RecruitingPipeline` (coach workspace). */
+export type RecruitingPipelineStage =
+  | "Evaluating"
+  | "Offered"
+  | "Official Visit"
+  | "Committed";
+
+/** Offer row enriched with athlete facts for the recruiting Kanban board. */
+export interface PipelineOffer {
+  id: string;
+  schoolId: string;
+  athleteId: string;
+  isOfficial: boolean;
+  offerDate: string;
+  commitmentStatus: string;
+  stage: RecruitingPipelineStage;
+  athleteName: string;
+  position: string;
+  starRating: number;
 }
 
 export interface TimelineEvent {
@@ -352,6 +391,23 @@ export interface TrueSpeedAnalysis {
   trueSpeedConfidenceScore: number;
 }
 
+/** MediaPipe PoseLandmarker kinematic output mapped to Supabase TrueSpeed rows. */
+export type TrueSpeedVerificationStatus =
+  | "UNVERIFIED"
+  | "PROCESSING"
+  | "AUTHENTICATED"
+  | "REJECTED";
+
+export interface TrueSpeedTelemetry {
+  athleteId: string;
+  verifiedFortyTime: number | null;
+  peakVelocityMph: number | null;
+  averageStrideLengthInches: number | null;
+  confidenceScore: number;
+  verificationStatus: TrueSpeedVerificationStatus;
+  analyzedAt: string | null;
+}
+
 export interface BioScanTelemetry {
   id: string;
   athleteName: string;
@@ -369,16 +425,88 @@ export interface NilEscrowCampaign {
   campaignTitle: string;
   sponsorName: string;
   athleteName: string;
-  escrowTotalAmount: number;
-  disbursedAmount: number;
-  heldInEscrowAmount: number;
-  milestones: {
-    id: string;
-    description: string;
-    payoutAmount: number;
-    status: "Verified & Paid" | "Pending Fulfillment" | "Refunded on Transfer";
-  }[];
+  athleteId: string;
+  /** Integer cents — never float dollars. */
+  escrowTotalAmountCents: number;
+  disbursedAmountCents: number;
+  heldInEscrowAmountCents: number;
+  milestones: NilEscrowMilestone[];
   complianceAuditStatus: "SEC / Compliance Clear" | "Under Review";
+    clearinghouseStatus: ClearinghouseStatus;
+    stripeMilestoneVerified: boolean;
+    athleteInTransferPortal: boolean;
+    /** THIRD_PARTY_NIL_GO is RallySafe. INSTITUTIONAL_CAPS is CapGM only. */
+    regulatoryPlane: NilRegulatoryPlane;
+    payoutReleased: boolean;
+    vbpNotes: string | null;
+}
+
+export type ClearinghouseStatus =
+  | "PENDING"
+  | "CLEARED"
+  | "NOT_CLEARED"
+  | "FLAGGED_FOR_REVIEW";
+
+/** Row contract for `public.nil_transactions` (fail-closed CHECK on payout_released). */
+export interface NilTransaction {
+  id: string;
+  athleteId: string;
+  sponsorName: string;
+  dealAmountCents: number;
+  clearinghouseStatus: ClearinghouseStatus;
+  payoutReleased: boolean;
+  vbpNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NilRegulatoryPlane = "THIRD_PARTY_NIL_GO" | "INSTITUTIONAL_CAPS";
+
+export interface NilEscrowMilestone {
+  id: string;
+  description: string;
+  payoutAmountCents: number;
+  status: "Verified & Paid" | "Pending Fulfillment" | "Refunded on Transfer";
+  stripeMilestoneVerified: boolean;
+}
+
+export interface RallySafeReleaseSnapshot {
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  regulatoryPlane: NilRegulatoryPlane;
+  payoutReleased?: boolean;
+}
+
+/** Closed market set for the 2026 NIL estimator (House v. NCAA revenue-share tiers). */
+export type NilMarketDivision =
+  | "FBS_P4"
+  | "FBS_G5"
+  | "FCS"
+  | "D2"
+  | "D3"
+  | "NAIA"
+  | "JUCO"
+  | "PREP";
+
+export type NilPositionGroup = "QB" | "SKILL" | "DEFENSE" | "LINEMAN" | "SPECIAL";
+
+export type NilStarRating = 1 | 2 | 3 | 4 | 5;
+
+/** Integer-cents breakdown from `estimateNilValuationCents`. */
+export interface NilValuationCents {
+  athleticCents: number;
+  socialCents: number;
+  totalCents: number;
+}
+
+export interface NilValuationInput {
+  division: NilMarketDivision;
+  position: NilPositionGroup;
+  stars: NilStarRating;
+  followers: number;
+  /** Engagement percent in tenths (45 = 4.5%). */
+  engagementTenths: number;
 }
 
 // PHASE 3: AI HUDL FILM TAGGING ENGINE INTERFACES
@@ -459,11 +587,18 @@ export interface VerifiedLaserCombineEntry {
 
 export type MinorSafetyStatus = "PENDING_CONSENT" | "CONSENT_GRANTED" | "CONSENT_DENIED";
 
+export type GuardianRelationship = "MOTHER" | "FATHER" | "LEGAL_GUARDIAN";
+
 export interface ParentConsentRecord {
   consentId: string;
   athleteId: string;
   guardianName: string;
   guardianEmail: string;
+  relationship: GuardianRelationship;
+  coppaConsent: boolean;
+  messagingConsent: boolean;
+  biometricConsent: boolean;
+  digitalSignature: string;
   safetyStatus: MinorSafetyStatus;
   milestoneDisclosuresAgreed: boolean;
   coppaFerpaWaived: boolean;
@@ -587,6 +722,40 @@ export interface DatabaseAthleteProfile {
   cognitionScore: number | null;
 }
 
+/**
+ * Full athlete dossier — joins `athlete_profiles` + `users` + `athlete_media` +
+ * `scholarship_offers`→`schools` (MVP relational model in schema.sql).
+ */
+export interface AthleteFullProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  height_inches: number | null;
+  weight_lbs: number | null;
+  forty_yard_dash: number | null;
+  vertical_jump_inches: number | null;
+  position_tier: string | null;
+  star_rating: number | null;
+  media: {
+    twitter_handle: string | null;
+    instagram_handle: string | null;
+    hudl_link: string | null;
+    youtube_link: string | null;
+  } | null;
+  offers: {
+    id: string;
+    is_official: boolean;
+    offer_date: string;
+    commitment_status: string;
+    school: {
+      id: string;
+      name: string;
+      primary_color: string | null;
+      abbreviation: string | null;
+    } | null;
+  }[];
+}
+
 /** Map Sidearm/CSV ingress → relational `DatabaseCoach` contract. */
 export function toDatabaseCoach(staff: CanonicalCoachStaffRecord): DatabaseCoach {
   return {
@@ -654,6 +823,56 @@ export function toDatabaseSchool(program: CanonicalProgramRecord): DatabaseSchoo
     stadiumCapacity: program.stadiumCapacity,
     lastSyncedAt: program.lastSyncedAt,
   };
+}
+
+export type RecruitingPeriodType = "dead" | "quiet" | "contact" | "evaluation";
+export type NcaaRecruitingPeriod = "CONTACT" | "EVALUATION" | "QUIET" | "DEAD";
+
+export type ComplianceGateDecision = "ALLOWED" | "BLOCKED" | "FLAGGED_FOR_REVIEW";
+export type ClearanceStatus =
+  | "CLEARED"
+  | "BLOCKED_CALENDAR"
+  | "BLOCKED_MINOR_CONSENT"
+  | "BLOCKED_INDUCEMENT";
+
+export interface ComplianceGateContext {
+  coachId: string;
+  recruitId: string;
+  recruitAge: number;
+  hasParentalConsent: boolean;
+  contactMethod: "direct_message" | "email" | "phone_call" | "in_person";
+  messagePayload?: string;
+  evaluationDate?: string;
+}
+
+export interface ComplianceEvaluation {
+  isCleared: boolean;
+  status: ClearanceStatus;
+  flaggedKeywords: string[];
+  reason: string;
+}
+
+export interface ComplianceAuditLog {
+  id: string;
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  actionType: "DIRECT_MESSAGE" | "OFFER_EXTENSION" | "CAMP_INVITE";
+  clearanceStatus: ClearanceStatus;
+  notes: string;
+  createdAt: string;
+}
+
+export interface NcaaClearanceRequest {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  recruitAge: number;
+  hasParentalConsent: boolean;
+  period: NcaaRecruitingPeriod;
+  actionType: ComplianceAuditLog["actionType"];
+  contactMethod: "electronic" | "written" | "call" | "in_person";
+  messagePayload: string;
 }
 
 
