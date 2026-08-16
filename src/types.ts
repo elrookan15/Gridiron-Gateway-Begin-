@@ -11,7 +11,21 @@ export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION
 
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
 
-export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5';
+export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5' | 'FBS_IND';
+
+export interface SchoolEntry {
+  id: string;
+  name: string;
+  mascot?: string;
+  city: string;
+  state: string;
+  division: DivisionTier;
+  conference: string;
+  primaryRecruitingEmail?: string;
+  coachingPhone?: string;
+  topMajors?: string[];
+  programHighlights?: string[];
+}
 
 export interface CollegeProgram {
   id: string;
@@ -390,16 +404,88 @@ export interface NilEscrowCampaign {
   campaignTitle: string;
   sponsorName: string;
   athleteName: string;
-  escrowTotalAmount: number;
-  disbursedAmount: number;
-  heldInEscrowAmount: number;
-  milestones: {
-    id: string;
-    description: string;
-    payoutAmount: number;
-    status: "Verified & Paid" | "Pending Fulfillment" | "Refunded on Transfer";
-  }[];
+  athleteId: string;
+  /** Integer cents — never float dollars. */
+  escrowTotalAmountCents: number;
+  disbursedAmountCents: number;
+  heldInEscrowAmountCents: number;
+  milestones: NilEscrowMilestone[];
   complianceAuditStatus: "SEC / Compliance Clear" | "Under Review";
+    clearinghouseStatus: ClearinghouseStatus;
+    stripeMilestoneVerified: boolean;
+    athleteInTransferPortal: boolean;
+    /** THIRD_PARTY_NIL_GO is RallySafe. INSTITUTIONAL_CAPS is CapGM only. */
+    regulatoryPlane: NilRegulatoryPlane;
+    payoutReleased: boolean;
+    vbpNotes: string | null;
+}
+
+export type ClearinghouseStatus =
+  | "PENDING"
+  | "CLEARED"
+  | "NOT_CLEARED"
+  | "FLAGGED_FOR_REVIEW";
+
+/** Row contract for `public.nil_transactions` (fail-closed CHECK on payout_released). */
+export interface NilTransaction {
+  id: string;
+  athleteId: string;
+  sponsorName: string;
+  dealAmountCents: number;
+  clearinghouseStatus: ClearinghouseStatus;
+  payoutReleased: boolean;
+  vbpNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NilRegulatoryPlane = "THIRD_PARTY_NIL_GO" | "INSTITUTIONAL_CAPS";
+
+export interface NilEscrowMilestone {
+  id: string;
+  description: string;
+  payoutAmountCents: number;
+  status: "Verified & Paid" | "Pending Fulfillment" | "Refunded on Transfer";
+  stripeMilestoneVerified: boolean;
+}
+
+export interface RallySafeReleaseSnapshot {
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  regulatoryPlane: NilRegulatoryPlane;
+  payoutReleased?: boolean;
+}
+
+/** Closed market set for the 2026 NIL estimator (House v. NCAA revenue-share tiers). */
+export type NilMarketDivision =
+  | "FBS_P4"
+  | "FBS_G5"
+  | "FCS"
+  | "D2"
+  | "D3"
+  | "NAIA"
+  | "JUCO"
+  | "PREP";
+
+export type NilPositionGroup = "QB" | "SKILL" | "DEFENSE" | "LINEMAN" | "SPECIAL";
+
+export type NilStarRating = 1 | 2 | 3 | 4 | 5;
+
+/** Integer-cents breakdown from `estimateNilValuationCents`. */
+export interface NilValuationCents {
+  athleticCents: number;
+  socialCents: number;
+  totalCents: number;
+}
+
+export interface NilValuationInput {
+  division: NilMarketDivision;
+  position: NilPositionGroup;
+  stars: NilStarRating;
+  followers: number;
+  /** Engagement percent in tenths (45 = 4.5%). */
+  engagementTenths: number;
 }
 
 // PHASE 3: AI HUDL FILM TAGGING ENGINE INTERFACES
@@ -709,6 +795,56 @@ export function toDatabaseSchool(program: CanonicalProgramRecord): DatabaseSchoo
     stadiumCapacity: program.stadiumCapacity,
     lastSyncedAt: program.lastSyncedAt,
   };
+}
+
+export type RecruitingPeriodType = "dead" | "quiet" | "contact" | "evaluation";
+export type NcaaRecruitingPeriod = "CONTACT" | "EVALUATION" | "QUIET" | "DEAD";
+
+export type ComplianceGateDecision = "ALLOWED" | "BLOCKED" | "FLAGGED_FOR_REVIEW";
+export type ClearanceStatus =
+  | "CLEARED"
+  | "BLOCKED_CALENDAR"
+  | "BLOCKED_MINOR_CONSENT"
+  | "BLOCKED_INDUCEMENT";
+
+export interface ComplianceGateContext {
+  coachId: string;
+  recruitId: string;
+  recruitAge: number;
+  hasParentalConsent: boolean;
+  contactMethod: "direct_message" | "email" | "phone_call" | "in_person";
+  messagePayload?: string;
+  evaluationDate?: string;
+}
+
+export interface ComplianceEvaluation {
+  isCleared: boolean;
+  status: ClearanceStatus;
+  flaggedKeywords: string[];
+  reason: string;
+}
+
+export interface ComplianceAuditLog {
+  id: string;
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  actionType: "DIRECT_MESSAGE" | "OFFER_EXTENSION" | "CAMP_INVITE";
+  clearanceStatus: ClearanceStatus;
+  notes: string;
+  createdAt: string;
+}
+
+export interface NcaaClearanceRequest {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  recruitAge: number;
+  hasParentalConsent: boolean;
+  period: NcaaRecruitingPeriod;
+  actionType: ComplianceAuditLog["actionType"];
+  contactMethod: "electronic" | "written" | "call" | "in_person";
+  messagePayload: string;
 }
 
 

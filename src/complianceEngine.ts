@@ -1,3 +1,11 @@
+import type {
+  ClearanceStatus,
+  ComplianceAuditLog,
+  ComplianceEvaluation,
+  NcaaClearanceRequest,
+  NcaaRecruitingPeriod,
+} from "./types";
+
 export interface RecruitingPeriodRow {
   id: string;
   sport: string;
@@ -390,4 +398,120 @@ export function evaluateComplianceGate(params: {
     audit_log_id: auditId,
     message_id: messageId || undefined
   };
+}
+
+/** NCAA Bylaw 13.2-class extra-benefit / inducement scanners. Engine-only — UI never decides. */
+export const NCAA_INDUCEMENT_PATTERNS: readonly RegExp[] = [
+  /\bcash\b/i,
+  /\bsigning bonus\b/i,
+  /\bunder the table\b/i,
+  /\bfree (car|truck|house|rent|apartment)\b/i,
+  /\bguaranteed (money|deal|nil)\b/i,
+  /\bbooster (check|payment|money)\b/i,
+  /\bjob for (your |the )?(dad|mom|parent|family)\b/i,
+  /\bi'?ll buy you\b/i,
+  /\bpay for (your )?tuition\b/i,
+];
+
+export const COMPLIANCE_AUDIT_LEDGER: ComplianceAuditLog[] = [];
+
+const CALENDAR_METHODS: Record<
+  NcaaRecruitingPeriod,
+  ReadonlySet<"electronic" | "written" | "call" | "in_person">
+> = {
+  DEAD: new Set(),
+  QUIET: new Set(["electronic", "written"]),
+  EVALUATION: new Set(["electronic", "written"]),
+  CONTACT: new Set(["electronic", "written", "call", "in_person"]),
+};
+
+function scanInducements(payload: string): string[] {
+  const hits: string[] = [];
+  for (const pattern of NCAA_INDUCEMENT_PATTERNS) {
+    const match = payload.match(pattern);
+    if (match?.[0]) {
+      hits.push(match[0].toLowerCase());
+    }
+  }
+  return [...new Set(hits)];
+}
+
+function recordClearanceAudit(
+  request: NcaaClearanceRequest,
+  evaluation: ComplianceEvaluation,
+): ComplianceAuditLog {
+  const row: ComplianceAuditLog = {
+    id: `AUD-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    schoolId: request.schoolId,
+    coachId: request.coachId,
+    athleteId: request.athleteId,
+    actionType: request.actionType,
+    clearanceStatus: evaluation.status,
+    notes: evaluation.reason,
+    createdAt: new Date().toISOString(),
+  };
+  COMPLIANCE_AUDIT_LEDGER.unshift(row);
+  return row;
+}
+
+/**
+ * Absolute NCAA communication gate. Fail-closed. Presentation layers must not re-implement this.
+ * Order: inducement → minor consent (COPPA/FERPA < 18) → recruiting calendar → CLEARED.
+ */
+export function evaluateNcaaClearance(
+  request: NcaaClearanceRequest,
+  writeAuditLog = true,
+): ComplianceEvaluation {
+  const flaggedKeywords = scanInducements(request.messagePayload ?? "");
+  let evaluation: ComplianceEvaluation;
+
+  if (flaggedKeywords.length > 0) {
+    evaluation = {
+      isCleared: false,
+      status: "BLOCKED_INDUCEMENT",
+      flaggedKeywords,
+      reason: `Inducement language detected (${flaggedKeywords.join(", ")}). NCAA Bylaw 13.2 extra-benefit prohibition. Message cannot send.`,
+    };
+  } else if (request.recruitAge < 18 && !request.hasParentalConsent) {
+    evaluation = {
+      isCleared: false,
+      status: "BLOCKED_MINOR_CONSENT",
+      flaggedKeywords: [],
+      reason: `Prospect is ${request.recruitAge} (minor). Direct coach communication blocked until parent/guardian consent is recorded (COPPA/FERPA).`,
+    };
+  } else if (!CALENDAR_METHODS[request.period].has(request.contactMethod)) {
+    const allowed = [...CALENDAR_METHODS[request.period]].join(", ") || "none";
+    evaluation = {
+      isCleared: false,
+      status: "BLOCKED_CALENDAR",
+      flaggedKeywords: [],
+      reason: `NCAA ${request.period} period does not permit '${request.contactMethod}'. Allowed methods: [${allowed}].`,
+    };
+  } else {
+    evaluation = {
+      isCleared: true,
+      status: "CLEARED",
+      flaggedKeywords: [],
+      reason: `CLEARED under NCAA ${request.period} for ${request.contactMethod}. No inducement flags. Consent/age gate passed.`,
+    };
+  }
+
+  if (writeAuditLog) {
+    recordClearanceAudit(request, evaluation);
+  }
+
+  return evaluation;
+}
+
+export function mapMonthToNcaaPeriod(
+  month: "august" | "september" | "december" | "may",
+): NcaaRecruitingPeriod {
+  if (month === "september") return "DEAD";
+  if (month === "december") return "CONTACT";
+  if (month === "may") return "EVALUATION";
+  return "QUIET";
+}
+
+export function clearanceHttpStatus(status: ClearanceStatus): number {
+  return status === "CLEARED" ? 200 : 403;
 }

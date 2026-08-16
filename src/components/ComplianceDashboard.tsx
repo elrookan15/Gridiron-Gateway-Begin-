@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ShieldCheck,
   ShieldAlert,
@@ -24,21 +24,13 @@ import {
 } from "lucide-react";
 
 import { NILValuationChart } from "./NILValuationChart";
-
-interface AuditLogRow {
-  id: string;
-  attemptedAt: string;
-  coachName: string;
-  coachSchool: string;
-  recruitName: string;
-  recruitClass: string;
-  division: string;
-  contactMethod: string;
-  decision: "allowed" | "blocked" | "error";
-  periodType: string;
-  matchedPeriodId: string;
-  citation: string;
-}
+import {
+  evaluateNcaaClearance,
+  mapMonthToNcaaPeriod,
+  clearanceHttpStatus,
+  COMPLIANCE_AUDIT_LEDGER,
+} from "../complianceEngine";
+import type { ComplianceAuditLog } from "../types";
 
 // Sample State NIL Data
 const STATE_NIL_RULES: Record<
@@ -157,36 +149,29 @@ export const ComplianceDashboard: React.FC = () => {
   
   // Custom Message Draft
   const [messageDraft, setMessageDraft] = useState("Coach, checking in regarding my latest film from Friday night's scrimmage!");
-  const [auditLogs, setAuditLogs] = useState<AuditLogRow[]>([
-    {
-      id: "LOG-90281",
-      attemptedAt: "2026-08-01 17:10:04",
-      coachName: "Coach Marcus Freeman",
-      coachSchool: "Notre Dame (FBS)",
-      recruitName: "Travis Hunter II",
-      recruitClass: "Senior (2027)",
-      division: "FBS",
-      contactMethod: "electronic",
-      decision: "allowed",
-      periodType: "quiet",
-      matchedPeriodId: "PER-2026-FB-FBS-QUIET-08",
-      citation: "NCAA Div I Bylaw 13.17.4 - August Quiet Period (Electronic Contact Permitted)"
-    },
-    {
-      id: "LOG-90280",
-      attemptedAt: "2026-08-01 16:42:12",
-      coachName: "Coach Kirby Smart",
-      coachSchool: "Georgia (FBS)",
-      recruitName: "Malachi Nelson",
-      recruitClass: "Junior (2028)",
-      division: "FBS",
-      contactMethod: "in_person",
-      decision: "blocked",
-      periodType: "dead",
-      matchedPeriodId: "PER-2026-FB-FBS-DEAD-08",
-      citation: "NCAA Div I Bylaw 13.17.4 - Dead Period In-Person Restriction"
-    }
-  ]);
+  const [auditLogs, setAuditLogs] = useState<ComplianceAuditLog[]>([]);
+
+  const liveClearanceRequest = useMemo(
+    () => ({
+      schoolId: `sch-${simDivision.toLowerCase()}`,
+      coachId: "cch_sim_officer",
+      athleteId: `ath-${simRecruitClass}`,
+      recruitAge: simRecruitClass === "junior" ? 16 : simRecruitClass === "senior" ? 18 : 19,
+      hasParentalConsent: simRecruitClass !== "junior",
+      period: mapMonthToNcaaPeriod(simPeriodMonth),
+      actionType: "DIRECT_MESSAGE" as const,
+      contactMethod: simContactMethod,
+      messagePayload: messageDraft,
+    }),
+    [simDivision, simRecruitClass, simPeriodMonth, simContactMethod, messageDraft],
+  );
+
+  const liveEvaluation = useMemo(
+    () => evaluateNcaaClearance(liveClearanceRequest, false),
+    [liveClearanceRequest],
+  );
+
+  const liveHttpStatus = clearanceHttpStatus(liveEvaluation.status);
 
   // Hard Gate Checklist State
   const [checklist, setChecklist] = useState({
@@ -200,104 +185,12 @@ export const ComplianceDashboard: React.FC = () => {
     parentalConsentMechanism: true
   });
 
-  // Calculate Gating Logic Status based on simulator values
-  const getGateDecision = () => {
-    // Dead period logic simulation
-    if (simPeriodMonth === "september" && simContactMethod === "in_person") {
-      return {
-        decision: "blocked" as const,
-        periodType: "dead",
-        allowedMethods: ["none"],
-        reason: "NCAA Dead Period active. In-person contact strictly prohibited for all prospect categories.",
-        nextOpenDate: "2026-10-01",
-        citation: "NCAA Div I Football Recruiting Calendar Bylaw 13.17.4 (Dead Period)"
-      };
-    }
-
-    if (simPeriodMonth === "august") {
-      if (simContactMethod === "electronic" || simContactMethod === "written") {
-        return {
-          decision: "allowed" as const,
-          periodType: "quiet",
-          allowedMethods: ["electronic", "written"],
-          reason: "August Quiet Period active. Digital & written in-app messaging permitted.",
-          nextOpenDate: "2026-09-01",
-          citation: "NCAA Div I Football Calendar 2026 - Quiet Period Rule 13.4.1"
-        };
-      } else {
-        return {
-          decision: "blocked" as const,
-          periodType: "quiet",
-          allowedMethods: ["electronic", "written"],
-          reason: "August Quiet Period restricts off-campus in-person visits and unapproved phone calls.",
-          nextOpenDate: "2026-09-01",
-          citation: "NCAA Div I Football Calendar 2026 - Quiet Period Rule 13.4.1"
-        };
-      }
-    }
-
-    if (simPeriodMonth === "december") {
-      return {
-        decision: "allowed" as const,
-        periodType: "contact",
-        allowedMethods: ["electronic", "written", "call", "in_person"],
-        reason: "December Contact Period active. All contact methods authorized for coaches and verified recruits.",
-        nextOpenDate: "2027-01-10",
-        citation: "NCAA Div I Football Contact Window 13.17.4.1"
-      };
-    }
-
-    if (simPeriodMonth === "may") {
-      if (simContactMethod === "electronic" || simContactMethod === "written") {
-        return {
-          decision: "allowed" as const,
-          periodType: "evaluation",
-          allowedMethods: ["electronic", "written"],
-          reason: "May Evaluation Period active. Written and electronic contact permitted.",
-          nextOpenDate: "2027-06-01",
-          citation: "NCAA Div I Spring Evaluation Period Bylaw 13.17.4.2"
-        };
-      } else {
-        return {
-          decision: "blocked" as const,
-          periodType: "evaluation",
-          allowedMethods: ["electronic", "written"],
-          reason: "Spring Evaluation Period restricts off-campus contact to athletic evaluations only.",
-          nextOpenDate: "2027-06-01",
-          citation: "NCAA Div I Spring Evaluation Period Bylaw 13.17.4.2"
-        };
-      }
-    }
-
-    return {
-      decision: "allowed" as const,
-      periodType: "quiet",
-      allowedMethods: ["electronic", "written"],
-      reason: "Standard active window.",
-      nextOpenDate: "2026-09-01",
-      citation: "NCAA General Rules"
-    };
-  };
-
-  const gateResult = getGateDecision();
-
   const handleTestSendMessage = () => {
-    const newLog: AuditLogRow = {
-      id: `LOG-${Math.floor(10000 + Math.random() * 90000)}`,
-      attemptedAt: new Date().toISOString().replace("T", " ").substring(0, 19),
-      coachName: "Coach Dan Lanning",
-      coachSchool: `Oregon (${simDivision})`,
-      recruitName: "Arch Manning Jr.",
-      recruitClass: `${simRecruitClass.toUpperCase()}`,
-      division: simDivision,
-      contactMethod: simContactMethod,
-      decision: gateResult.decision,
-      periodType: gateResult.periodType,
-      matchedPeriodId: `PER-2026-FB-${simDivision}-${gateResult.periodType.toUpperCase()}`,
-      citation: gateResult.citation
-    };
-
-    setAuditLogs([newLog, ...auditLogs]);
+    evaluateNcaaClearance(liveClearanceRequest, true);
+    const latest = COMPLIANCE_AUDIT_LEDGER[0];
+    if (latest) {
+      setAuditLogs((prev) => [latest, ...prev]);
+    }
   };
 
   const selectedStateData = STATE_NIL_RULES[selectedState] || STATE_NIL_RULES.FL;
@@ -666,13 +559,13 @@ export const ComplianceDashboard: React.FC = () => {
               {/* Server-Side Gate Decision Banner */}
               <div
                 className={`p-6 rounded-2xl border shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all ${
-                  gateResult.decision === "allowed"
+                  liveEvaluation.isCleared
                     ? "bg-emerald-950/40 border-emerald-500/50 text-emerald-200"
                     : "bg-rose-950/40 border-rose-500/50 text-rose-200"
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  {gateResult.decision === "allowed" ? (
+                  {liveEvaluation.isCleared ? (
                     <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0 mt-0.5" />
                   ) : (
                     <XCircle className="w-8 h-8 text-rose-400 shrink-0 mt-0.5" />
@@ -684,25 +577,30 @@ export const ComplianceDashboard: React.FC = () => {
                       </span>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase ${
-                          gateResult.decision === "allowed"
+                          liveEvaluation.isCleared
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                             : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
                         }`}
                       >
-                        {gateResult.decision === "allowed" ? "STATUS 200 • ALLOWED" : "STATUS 403 • BLOCKED"}
+                        {liveEvaluation.isCleared ? `STATUS ${liveHttpStatus} • CLEARED` : `STATUS ${liveHttpStatus} • ${liveEvaluation.status}`}
                       </span>
                     </div>
-                    <h2 className="text-xl font-extrabold text-white mt-1 capitalize">
-                      Active Period: {gateResult.periodType} Window
+                    <h2 className="text-xl font-extrabold text-white mt-1 uppercase">
+                      Engine: {liveEvaluation.status.replace(/_/g, " ")} • {liveClearanceRequest.period}
                     </h2>
-                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">{gateResult.reason}</p>
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">{liveEvaluation.reason}</p>
+                    {liveEvaluation.flaggedKeywords.length > 0 && (
+                      <p className="text-[10px] font-mono text-rose-300 mt-1">
+                        Flags: {liveEvaluation.flaggedKeywords.join(", ")}
+                      </p>
+                    )}
                   </div>
                 </div>
 
                 <div className="text-right shrink-0 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
-                  <div className="text-[10px] text-slate-400 uppercase font-bold">Citation Source</div>
+                  <div className="text-[10px] text-slate-400 uppercase font-bold">HTTP</div>
                   <div className="text-[11px] font-mono text-amber-300 mt-0.5 max-w-[200px] truncate">
-                    {gateResult.citation}
+                    {liveHttpStatus} • src/complianceEngine.ts
                   </div>
                 </div>
               </div>
@@ -716,18 +614,18 @@ export const ComplianceDashboard: React.FC = () => {
 
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                      gateResult.decision === "allowed"
+                      liveEvaluation.isCleared
                         ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
                         : "bg-rose-500/20 text-rose-300 border border-rose-500/40"
                     }`}
                   >
-                    {gateResult.decision === "allowed" ? (
+                    {liveEvaluation.isCleared ? (
                       <>
                         <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Messaging Enabled
                       </>
                     ) : (
                       <>
-                        <Lock className="w-3.5 h-3.5 text-rose-400" /> Disabled Until {gateResult.nextOpenDate}
+                        <Lock className="w-3.5 h-3.5 text-rose-400" /> {liveEvaluation.status.replace(/_/g, " ")}
                       </>
                     )}
                   </span>
@@ -736,7 +634,6 @@ export const ComplianceDashboard: React.FC = () => {
                 <textarea
                   value={messageDraft}
                   onChange={(e) => setMessageDraft(e.target.value)}
-                  disabled={gateResult.decision === "blocked"}
                   rows={3}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   placeholder="Draft message to recruit..."
@@ -751,13 +648,13 @@ export const ComplianceDashboard: React.FC = () => {
                   <button
                     onClick={handleTestSendMessage}
                     className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition-all ${
-                      gateResult.decision === "allowed"
+                      liveEvaluation.isCleared
                         ? "bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-lg shadow-emerald-500/20 cursor-pointer"
                         : "bg-rose-950/60 text-rose-400 border border-rose-800/80 hover:bg-rose-900/60 cursor-pointer"
                     }`}
                   >
                     <Send className="w-3.5 h-3.5" />
-                    {gateResult.decision === "allowed" ? "Execute Send & Log Audit Trail" : "Attempt Blocked Send (Test Log)"}
+                    {liveEvaluation.isCleared ? "Execute Send & Log Audit Trail" : "Attempt Blocked Send (Test Log)"}
                   </button>
                 </div>
               </div>
@@ -769,19 +666,18 @@ export const ComplianceDashboard: React.FC = () => {
                   <span>Server Timestamp: 2026-08-01T17:10:00Z</span>
                 </div>
                 <pre className="text-slate-300 font-mono text-[11px] overflow-x-auto p-3 bg-slate-900 rounded-xl leading-relaxed">
-{`{
-  "coach_id": "cch_99214_freeman",
-  "recruit_id": "rec_88301_hunter",
-  "division": "${simDivision}",
-  "recruit_class": "${simRecruitClass}",
-  "decision": "${gateResult.decision}",
-  "matched_period": {
-    "period_type": "${gateResult.periodType}",
-    "contact_methods_allowed": ${JSON.stringify(gateResult.allowedMethods)},
-    "next_change_at": "${gateResult.nextOpenDate}",
-    "source_citation": "${gateResult.citation}"
-  }
-}`}
+{JSON.stringify(
+  {
+    source: "src/complianceEngine.ts",
+    ...liveEvaluation,
+    period: liveClearanceRequest.period,
+    recruitAge: liveClearanceRequest.recruitAge,
+    hasParentalConsent: liveClearanceRequest.hasParentalConsent,
+    httpStatus: liveHttpStatus,
+  },
+  null,
+  2,
+)}
                 </pre>
               </div>
             </div>
@@ -962,11 +858,11 @@ export const ComplianceDashboard: React.FC = () => {
                 <thead>
                   <tr className="border-b border-slate-800 bg-slate-950 text-slate-400 uppercase text-[10px]">
                     <th className="p-3">Log ID / Timestamp</th>
-                    <th className="p-3">Coach / School</th>
-                    <th className="p-3">Target Recruit</th>
-                    <th className="p-3">Contact Method</th>
-                    <th className="p-3">Decision</th>
-                    <th className="p-3">Matched Period & Citation</th>
+                    <th className="p-3">School / Coach</th>
+                    <th className="p-3">Athlete</th>
+                    <th className="p-3">Action</th>
+                    <th className="p-3">Clearance</th>
+                    <th className="p-3">Engine Notes</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/80">
@@ -974,31 +870,31 @@ export const ComplianceDashboard: React.FC = () => {
                     <tr key={log.id} className="hover:bg-slate-950/40 font-mono">
                       <td className="p-3 whitespace-nowrap">
                         <span className="text-white font-bold block">{log.id}</span>
-                        <span className="text-[10px] text-slate-500">{log.attemptedAt}</span>
+                        <span className="text-[10px] text-slate-500">{log.createdAt}</span>
                       </td>
                       <td className="p-3 font-sans">
-                        <span className="text-slate-200 font-bold block">{log.coachName}</span>
-                        <span className="text-[11px] text-slate-400">{log.coachSchool}</span>
+                        <span className="text-slate-200 font-bold block truncate">{log.schoolId}</span>
+                        <span className="text-[11px] text-slate-400">{log.coachId}</span>
                       </td>
                       <td className="p-3 font-sans">
-                        <span className="text-white font-bold block">{log.recruitName}</span>
-                        <span className="text-[11px] text-emerald-400">{log.recruitClass}</span>
+                        <span className="text-white font-bold block">{log.athleteId}</span>
                       </td>
-                      <td className="p-3 capitalize font-sans">{log.contactMethod}</td>
+                      <td className="p-3 font-sans">{log.actionType.replace(/_/g, " ")}</td>
                       <td className="p-3">
                         <span
                           className={`px-2 py-1 rounded text-[10px] font-extrabold uppercase ${
-                            log.decision === "allowed"
+                            log.clearanceStatus === "CLEARED"
                               ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
-                              : "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                              : log.clearanceStatus === "BLOCKED_INDUCEMENT"
+                                ? "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                                : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
                           }`}
                         >
-                          {log.decision}
+                          {log.clearanceStatus.replace(/_/g, " ")}
                         </span>
                       </td>
-                      <td className="p-3 font-sans text-[11px] text-slate-300 max-w-xs truncate">
-                        <span className="font-bold text-amber-300 block">{log.matchedPeriodId}</span>
-                        <span className="text-slate-400 truncate block">{log.citation}</span>
+                      <td className="p-3 font-sans text-[11px] text-slate-300 max-w-xs">
+                        <span className="text-slate-400 line-clamp-2">{log.notes}</span>
                       </td>
                     </tr>
                   ))}

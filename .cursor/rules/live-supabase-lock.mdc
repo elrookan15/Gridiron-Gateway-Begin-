@@ -1,0 +1,14 @@
+---
+description: Live Supabase PostgreSQL is source of truth — never revert to mock arrays
+alwaysApply: true
+---
+
+# Live backend lock
+
+Gridiron Gateway is **not** a database-free mock command center.
+
+- Schools / leaderboard / pipeline: `src/services/schoolsApi.ts` → Supabase PostgreSQL.
+- Auth: `src/components/AuthManager.tsx` + `src/lib/supabaseClient.ts` (anon key, persisted session).
+- Spec: `@docs/dashboard-spec.md`. Persona: Federov (Vite + React 19 SPA + shadcn/ui + Supabase RLS). Not Next.js. Not mock arrays.
+- Forbidden: ripping out RLS, injecting `SUPABASE_SERVICE_ROLE_KEY` into the SPA, expanding `src/data/mockData.ts` as the product database, inventing coach emails.
+- Residual mocks are migration debt. New features fetch live data.

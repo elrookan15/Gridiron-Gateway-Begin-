@@ -956,3 +956,7 @@ CREATE INDEX idx_college_coaches_email ON college_coaches (email) WHERE email IS
 
 COMMENT ON TABLE college_coaches IS 'Legacy ingest mirror. Production deployments should use schema.production.sql.';
 
+-- RallySafe third-party NIL Go ledger (fail-closed clearinghouse). Apply:
+-- supabase/migrations/20260814120000_nil_transactions.sql
+-- CapGM institutional revenue-share must never be written to public.nil_transactions.
+

@@ -28,7 +28,14 @@ import {
   type SidearmSeedProgram,
 } from "./src/sidearmDirectoryScraper";
 import { parseSchoolsCsv } from "./src/schoolsCsvImport";
-import type { CanonicalProgramRecord, DatabaseCoach } from "./src/types";
+import type {
+  CanonicalProgramRecord,
+  ClearinghouseStatus,
+  DatabaseCoach,
+  NilEscrowCampaign,
+  NilRegulatoryPlane,
+} from "./src/types";
+import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
 
 dotenv.config();
 
@@ -66,11 +73,14 @@ interface EscrowCampaign {
   title?: string;
   sponsor?: string;
   athlete?: string;
-  escrowTotal?: number;
-  disbursed?: number;
-  held?: number;
+  disbursedCents?: number;
+  heldCents?: number;
   complianceStatus?: string;
   id?: string;
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  regulatoryPlane: NilRegulatoryPlane;
 }
 
 interface RolePermissions {
@@ -109,11 +119,11 @@ const PORTAL_FLAGGED_ATHLETE_IDS = new Set<string>(["ath_portal_flagged_demo"]);
 
 const ESCROW_CAMPAIGNS_DB: EscrowCampaign[] = [
   {
-    id: "esc-1",
-    campaignId: "esc-1",
+    id: "esc-pending",
+    campaignId: "esc-pending",
     sponsorId: "spn_austin_auto",
     athleteId: "ath_derrick_vance",
-    amountUsdCents: 5000000,
+    amountUsdCents: 5_000_000,
     amountUsdFormatted: "$50,000.00",
     milestoneConditions: [],
     stripeClientSecret: "pi_seed_redacted",
@@ -122,12 +132,108 @@ const ESCROW_CAMPAIGNS_DB: EscrowCampaign[] = [
     title: "Austin Local Business Auto Group Endorsement",
     sponsor: "Austin Auto Group Collective",
     athlete: "Derrick Vance Jr.",
-    escrowTotal: 50000,
-    disbursed: 20000,
-    held: 30000,
+    disbursedCents: 2_000_000,
+    heldCents: 3_000_000,
+    complianceStatus: "Under Review",
+    clearinghouseStatus: "PENDING",
+    stripeMilestoneVerified: false,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
+  },
+  {
+    id: "esc-cleared",
+    campaignId: "esc-cleared",
+    sponsorId: "spn_cleared_brand",
+    athleteId: "ath_malik_sanders",
+    amountUsdCents: 2_500_000,
+    amountUsdFormatted: "$25,000.00",
+    milestoneConditions: [],
+    stripeClientSecret: "pi_seed_redacted",
+    escrowStatus: "FUNDED",
+    created_at: new Date().toISOString(),
+    title: "National Apparel Appearance (CSC Cleared)",
+    sponsor: "Independent Brand Partner",
+    athlete: "Malik Sanders",
+    disbursedCents: 1_000_000,
+    heldCents: 1_500_000,
     complianceStatus: "SEC / Compliance Clear",
+    clearinghouseStatus: "CLEARED",
+    stripeMilestoneVerified: true,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
+  },
+  {
+    id: "esc-not-cleared",
+    campaignId: "esc-not-cleared",
+    sponsorId: "spn_collective_flag",
+    athleteId: "ath_eligibility_risk",
+    amountUsdCents: 8_000_000,
+    amountUsdFormatted: "$80,000.00",
+    milestoneConditions: [],
+    stripeClientSecret: "pi_seed_redacted",
+    escrowStatus: "FUNDED",
+    created_at: new Date().toISOString(),
+    title: "Associated Collective Appearance — CSC Not Cleared",
+    sponsor: "Booster-Funded Collective",
+    athlete: "Jordan Hale",
+    disbursedCents: 0,
+    heldCents: 8_000_000,
+    complianceStatus: "Under Review",
+    clearinghouseStatus: "NOT_CLEARED",
+    stripeMilestoneVerified: true,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
   },
 ];
+
+function toNilEscrowCampaign(c: EscrowCampaign): NilEscrowCampaign {
+  const total = c.amountUsdCents;
+  const disbursed = c.disbursedCents ?? 0;
+  const held = c.heldCents ?? total - disbursed;
+  const pendingId = `${c.campaignId}-pending`;
+  return {
+    id: c.campaignId,
+    campaignTitle: c.title ?? c.campaignId,
+    sponsorName: c.sponsor ?? c.sponsorId,
+    athleteName: c.athlete ?? c.athleteId,
+    athleteId: c.athleteId,
+    escrowTotalAmountCents: total,
+    disbursedAmountCents: disbursed,
+    heldInEscrowAmountCents: held,
+    milestones: [
+      ...(disbursed > 0
+        ? [
+            {
+              id: `${c.campaignId}-paid`,
+              description: "Prior verified milestone disbursement",
+              payoutAmountCents: disbursed,
+              status: "Verified & Paid" as const,
+              stripeMilestoneVerified: true,
+            },
+          ]
+        : []),
+      ...(held > 0
+        ? [
+            {
+              id: pendingId,
+              description: "Next fulfillment milestone",
+              payoutAmountCents: held,
+              status: "Pending Fulfillment" as const,
+              stripeMilestoneVerified: c.stripeMilestoneVerified,
+            },
+          ]
+        : []),
+    ],
+    complianceAuditStatus:
+      c.clearinghouseStatus === "CLEARED" ? "SEC / Compliance Clear" : "Under Review",
+    clearinghouseStatus: c.clearinghouseStatus,
+    stripeMilestoneVerified: c.stripeMilestoneVerified,
+    athleteInTransferPortal: c.athleteInTransferPortal,
+    regulatoryPlane: c.regulatoryPlane,
+    payoutReleased: c.escrowStatus === "RELEASED",
+    vbpNotes: null,
+  };
+}
 
 const PERMISSIONS_MAP: Record<string, RolePermissions> = {
   HEAD_COACH_GM: {
@@ -911,18 +1017,38 @@ app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, (req, res) => {
     stripeClientSecret,
     escrowStatus: "AWAITING_FUNDING",
     created_at: new Date().toISOString(),
+    disbursedCents: 0,
+    heldCents: amountUsd,
+    complianceStatus: "Under Review",
+    clearinghouseStatus: "PENDING",
+    stripeMilestoneVerified: false,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
   };
 
   ESCROW_CAMPAIGNS_DB.push(newCampaign);
 
   console.log(
-    `[RallySafe FinTech] Campaign ${campaignId} created for sponsor ${sponsorId} ($${(amountUsd / 100).toFixed(2)})`
+    `[RallySafe FinTech] Campaign ${campaignId} created PENDING (CSC NIL Go). Sponsor ${sponsorId} ($${(amountUsd / 100).toFixed(2)})`
   );
 
   return res.status(201).json({
     campaignId,
     stripeClientSecret,
     escrowStatus: "AWAITING_FUNDING",
+    clearinghouseStatus: "PENDING",
+    message:
+      "Deal defaulted to PENDING. Third-party NIL ≥ $600 aggregate must be reported to NIL Go within 5 business days. RallySafe will not release until CLEARED.",
+  });
+});
+
+app.get("/api/v1/rallysafe/campaigns", (_req, res) => {
+  return res.json({
+    plane: "THIRD_PARTY_NIL_GO",
+    excludedPlane: "INSTITUTIONAL_CAPS",
+    campaigns: ESCROW_CAMPAIGNS_DB.filter((c) => c.regulatoryPlane === "THIRD_PARTY_NIL_GO").map(
+      toNilEscrowCampaign,
+    ),
   });
 });
 
@@ -959,24 +1085,42 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (re
     return res.status(404).json({ error: "CAMPAIGN_NOT_FOUND", campaignId });
   }
 
-  // Server-side portal check only — ignore client isPortalFlagged
-  const athleteId = campaign.athleteId;
-  const isAthleteInPortal =
-    PORTAL_FLAGGED_ATHLETE_IDS.has(athleteId) || campaignId.includes("flagged");
+  const portalLocked =
+    PORTAL_FLAGGED_ATHLETE_IDS.has(campaign.athleteId) || campaignId.includes("flagged");
+  if (portalLocked) {
+    campaign.athleteInTransferPortal = true;
+  }
 
-  if (isAthleteInPortal) {
+  const gate = canReleaseNilEscrow({
+    clearinghouseStatus: campaign.clearinghouseStatus,
+    stripeMilestoneVerified: campaign.stripeMilestoneVerified,
+    athleteInTransferPortal: campaign.athleteInTransferPortal,
+    regulatoryPlane: campaign.regulatoryPlane,
+  });
+
+  if (gate.ok === false) {
+    const eligibilityCrisis = gate.code === "CSC_NOT_CLEARED";
     console.warn(
-      `[RallySafe FinTech] Payout rejected for campaign ${campaignId}: Athlete in Transfer Portal`
+      `[RallySafe] FAIL_CLOSED release blocked campaign=${campaignId} code=${gate.code}`,
     );
     return res.status(403).json({
-      error: "TRANSFER_REJECTED",
-      reason: "Transfer rejected: Athlete currently flagged in TransferPortalModule.",
+      error: "ESCROW_RELEASE_BLOCKED",
+      code: gate.code,
+      eligibilityCrisis,
+      message: eligibilityCrisis
+        ? "CSC NIL Go returned NOT_CLEARED. This is an eligibility event — RallySafe will not move capital. Remediate within the CSC window; AI cannot override."
+        : `Escrow release blocked (${gate.code}). Requires CLEARED + Stripe HMAC-verified milestone, NIL Go plane, and no portal lock.`,
       campaignId,
       milestoneId,
+      clearinghouseStatus: campaign.clearinghouseStatus,
     });
   }
 
   const stripeTransferId = `tr_mock_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  const held = campaign.heldCents ?? campaign.amountUsdCents;
+  campaign.disbursedCents = (campaign.disbursedCents ?? 0) + held;
+  campaign.heldCents = 0;
+  campaign.escrowStatus = "RELEASED";
 
   const auditEntry = {
     event: "ESCROW_MILESTONE_RELEASE",
@@ -984,19 +1128,20 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (re
     milestoneId,
     verificationProofUrl,
     complianceOfficerId:
-      typeof complianceOfficerId === "string" ? complianceOfficerId : "SYSTEM_AI_VERIFIER",
+      typeof complianceOfficerId === "string" ? complianceOfficerId : "UNASSIGNED",
     stripeTransferId,
     timestamp: new Date().toISOString(),
     status: "RELEASED",
+    clearinghouseStatus: campaign.clearinghouseStatus,
   };
 
   console.log(
-    `[RallySafe FinTech] Escrow funds released for campaign ${campaignId} via ${stripeTransferId}`
+    `[RallySafe FinTech] Escrow funds released for campaign ${campaignId} via ${stripeTransferId} (CSC CLEARED + HMAC)`,
   );
 
   return res.status(200).json({
     status: "RELEASED",
-    message: "Funds released via Stripe Transfer. Transaction logged in ComplianceDashboard.",
+    message: "Funds released via Stripe Transfer after CSC CLEARED + HMAC milestone verification.",
     campaignId,
     milestoneId,
     stripeTransferId,
@@ -1019,14 +1164,34 @@ app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, (req, res) =>
     `[Stripe Connect Webhook] Processing event ${id} (${type}) verified=${verified}`
   );
 
+  const campaignId =
+    typeof data?.object?.metadata?.campaignId === "string"
+      ? data.object.metadata.campaignId
+      : undefined;
+  const campaign = campaignId
+    ? ESCROW_CAMPAIGNS_DB.find((c) => c.campaignId === campaignId || c.id === campaignId)
+    : undefined;
+
   let eventOutcome = "PROCESSED";
 
   switch (type) {
     case "payment_intent.succeeded":
       eventOutcome = "ESCROW_FUNDED_SUCCESS";
+      if (verified && campaign) {
+        campaign.stripeMilestoneVerified = true;
+        campaign.escrowStatus = "FUNDED";
+      }
       console.log(
-        `[Stripe Webhook] Escrow funded successfully for PaymentIntent ${data?.object?.id || id}`
+        `[Stripe Webhook] Escrow funded for PaymentIntent ${data?.object?.id || id} hmac=${verified}`
       );
+      break;
+
+    case "checkout.session.completed":
+    case "transfer.created":
+      eventOutcome = verified ? "MILESTONE_HMAC_VERIFIED" : "MILESTONE_HMAC_MISSING";
+      if (verified && campaign) {
+        campaign.stripeMilestoneVerified = true;
+      }
       break;
 
     case "payout.failed":
