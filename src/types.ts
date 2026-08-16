@@ -257,25 +257,29 @@ export interface CollegeCoachProfile {
   activeEndorsementsCount: number;
 }
 
+export type PortalStatus = "ACTIVE" | "WITHDRAWN" | "MATRICULATED";
+export type TransferType = "UNDERGRADUATE" | "GRADUATE";
+
 export interface TransferPortalAthlete {
   id: string;
-  fullName: string;
-  position: Position;
-  formerSchool: string;
-  formerDivision: CollegeDivision;
-  conference: string;
-  yearsEligibilityRemaining: number;
-  portalEntryDate: string;
-  status: "Active in Portal" | "Committed / Transferred" | "Withdrawn";
-  destinationSchool?: string;
-  height: string;
-  weight: number;
-  fortyTime: number;
-  gpa: number;
-  avatarUrl: string;
-  statsHighlights: string;
-  hudlUrl: string;
-  verifiedStats: boolean;
+  athleteId: string;
+  athleteName: string;
+  position: string;
+  starRating: number;
+  transferType: TransferType;
+  eligibilityRemaining: number;
+  originSchool: {
+    id: string;
+    name: string;
+    primaryColor: string;
+  };
+  destinationSchool: {
+    id: string;
+    name: string;
+    primaryColor: string;
+  } | null;
+  entryDate: string;
+  status: PortalStatus;
 }
 
 export interface CoachPipelineProspect {
@@ -385,6 +389,23 @@ export interface TrueSpeedAnalysis {
   yardLineCalibrationRatio: number;
   framerateManipulationFound: boolean;
   trueSpeedConfidenceScore: number;
+}
+
+/** MediaPipe PoseLandmarker kinematic output mapped to Supabase TrueSpeed rows. */
+export type TrueSpeedVerificationStatus =
+  | "UNVERIFIED"
+  | "PROCESSING"
+  | "AUTHENTICATED"
+  | "REJECTED";
+
+export interface TrueSpeedTelemetry {
+  athleteId: string;
+  verifiedFortyTime: number | null;
+  peakVelocityMph: number | null;
+  averageStrideLengthInches: number | null;
+  confidenceScore: number;
+  verificationStatus: TrueSpeedVerificationStatus;
+  analyzedAt: string | null;
 }
 
 export interface BioScanTelemetry {
@@ -566,11 +587,18 @@ export interface VerifiedLaserCombineEntry {
 
 export type MinorSafetyStatus = "PENDING_CONSENT" | "CONSENT_GRANTED" | "CONSENT_DENIED";
 
+export type GuardianRelationship = "MOTHER" | "FATHER" | "LEGAL_GUARDIAN";
+
 export interface ParentConsentRecord {
   consentId: string;
   athleteId: string;
   guardianName: string;
   guardianEmail: string;
+  relationship: GuardianRelationship;
+  coppaConsent: boolean;
+  messagingConsent: boolean;
+  biometricConsent: boolean;
+  digitalSignature: string;
   safetyStatus: MinorSafetyStatus;
   milestoneDisclosuresAgreed: boolean;
   coppaFerpaWaived: boolean;

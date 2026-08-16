@@ -661,3 +661,4 @@ export {
   fetchNilTransactionsForAthlete,
   releaseNilEscrowPayout,
 } from "./nilTransactionsApi";
+export { getTransferPortalAthletes } from "./transferPortalApi";

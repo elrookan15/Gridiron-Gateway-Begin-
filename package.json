@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
+    "@mediapipe/tasks-vision": "^0.10.21",
     "@radix-ui/react-slider": "^1.4.7",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",

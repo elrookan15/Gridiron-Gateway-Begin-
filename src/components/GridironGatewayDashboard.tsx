@@ -1406,7 +1406,10 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {/* ==================================================================== */}
         {activeTab === "nextgen_tech" && (
           <div className="space-y-12 animate-fadeIn">
-            <TrueSpeedModule />
+            <TrueSpeedModule
+              athleteId={MOCK_ATHLETE_DOSSIER.id}
+              onVerificationComplete={() => undefined}
+            />
             <BioScanTelemetryModule />
             <RallySafeEscrowModule athleteId={MOCK_ATHLETE_DOSSIER.id} />
           </div>
@@ -1448,7 +1451,10 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {/* ==================================================================== */}
         {activeTab === "parent_portal" && (
           <div className="animate-fadeIn">
-            <ParentConsentPortal />
+            <ParentConsentPortal
+              athleteId={MOCK_ATHLETE_DOSSIER.id}
+              athleteName={MOCK_ATHLETE_DOSSIER.fullName}
+            />
           </div>
         )}
 
