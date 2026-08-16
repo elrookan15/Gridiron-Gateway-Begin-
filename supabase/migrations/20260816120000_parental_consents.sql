@@ -108,7 +108,8 @@ CREATE POLICY "authenticated_insert_parental_consents"
   FOR INSERT
   TO authenticated
   WITH CHECK (
-    coppa_consent = TRUE
+    athlete_id = auth.uid()::text
+    AND coppa_consent = TRUE
     AND messaging_consent = TRUE
     AND biometric_consent = TRUE
     AND lower(btrim(digital_signature)) = lower(btrim(parent_name))

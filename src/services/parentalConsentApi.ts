@@ -1,5 +1,8 @@
 import type { GuardianRelationship, ParentConsentRecord } from "../types";
+import { bindConsentAthleteIdToSession } from "../lib/parentalConsentBind";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
+
+export { bindConsentAthleteIdToSession } from "../lib/parentalConsentBind";
 
 export interface ParentalConsentSubmitInput {
   athleteId: string;
@@ -73,10 +76,16 @@ export async function submitParentalConsent(
   }
 
   const supabase = getSupabaseClient();
+  const { data: sessionData, error: sessionError } = await supabase.auth.getUser();
+  if (sessionError) {
+    throw new Error(sessionError.message);
+  }
+  const boundAthleteId = bindConsentAthleteIdToSession(input.athleteId, sessionData.user?.id);
+
   const { data, error } = await supabase
     .from("parental_consents")
     .insert({
-      athlete_id: input.athleteId.trim(),
+      athlete_id: boundAthleteId,
       parent_name: input.parentName.trim(),
       parent_email: input.parentEmail.trim().toLowerCase(),
       relationship: input.relationship,
