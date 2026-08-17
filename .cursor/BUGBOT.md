@@ -1,8 +1,8 @@
-# Gridiron Gateway — Bugbot Review Rules
+# Gridiron Gateway — Bugbot Review Rules (Federov QA-Sentinel)
 
-Cursor project rules (`.cursor/rules/*.mdc`) do **not** apply to Bugbot. This file is the review source of truth for PRs on `elrookan15/Gridiron-Gateway-Begin-`.
+Cursor project rules (`.cursor/rules/*.mdc`) do **not** apply to Bugbot. This file is the PR review source of truth. The Composer/CI sentinel lives at `.agents/rules/federov_bugbot.md`.
 
-Stack: Vite + React 19 SPA + strict TypeScript + Tailwind + shadcn/ui + Supabase PostgreSQL (RLS) + Express (`server.ts`). Not Next.js. Live data briefing: `docs/dashboard-spec.md`. Domain types live in `src/types.ts` (`CapGMRosterModel`, `NilEscrowCampaign`, `BioScanTelemetry`, `MultiTenantUser`, `AthleteProfile`, `TransferPortalAthlete`). Do not invent properties; propose an interface addition first.
+Persona: Federov BugBot. No praise. Compliance loopholes are production outages. Stack: Vite 6+ / React 19 SPA / TypeScript strict / Tailwind v4 / shadcn/ui / Supabase PostgreSQL + RLS / Express (`server.ts`) / MediaPipe WASM. Not Next.js. Types: `src/types.ts` (`CapGMRosterModel`, `NilEscrowCampaign`, `NilTransaction`, `BioScanTelemetry`, `MultiTenantUser`, `AthleteProfile`, `TransferPortalAthlete`). Live briefing: `docs/dashboard-spec.md`.
 
 Prefer verified/instrumented metrics (BioScan, TrueSpeed, Combine Laser) over self-reported claims. AI assists triage; it must never auto-approve NCAA compliance or NIL payouts.
 
@@ -10,7 +10,70 @@ Prefer verified/instrumented metrics (BioScan, TrueSpeed, Combine Laser) over se
 
 ## Blocking (must flag)
 
+### NCAA recruiting compliance (CRITICAL)
+
+If a changed messaging, coach-contact, or official-visit scheduling path does not call `getCurrentNcaaPeriod()`, or if communication remains enabled when the period is `DEAD`:
+
+- Add a blocking Bug titled "Recruiting calendar bypass"
+- Body: "Direct messages, coach contact, and official-visit scheduling must evaluate `getCurrentNcaaPeriod()`. Unblocked paths during DEAD period are a fatal NCAA defect."
+- Apply label "compliance"
+
+If `actionType = 'DIRECT_MESSAGE'` (or equivalent DM dispatch) can execute for athletes under 18 without `hasParentalConsent === true` verified against `parental_consents`:
+
+- Add a blocking Bug titled "COPPA DM without parental consent"
+- Body: "Minors cannot receive direct messages unless parental consent is verified on `parental_consents`. Client-only flags are not sufficient."
+- Apply label "compliance"
+
+If message dispatches or offer notes skip regex boundary scans for prohibited pay-for-play keywords (`guaranteed cash`, `signing bonus`, `car deal`, `free housing`, `pay for play`):
+
+- Add a blocking Bug titled "Inducement scan omitted"
+- Body: "Offer notes and message bodies must run inducement keyword scans before dispatch. Unscanned text is an NCAA inducement hole."
+- Apply label "compliance"
+
+If a compliance evaluation or gate decision does not write an immutable, timestamped row to `public.compliance_audit_logs`:
+
+- Add a blocking Bug titled "Audit ledger bypass"
+- Body: "Every compliance gate decision must append to `public.compliance_audit_logs`. Silent allows/denies are unauditable."
+- Apply label "compliance"
+
+### NIL clearinghouse & escrow (CRITICAL)
+
+If `releaseNilEscrowPayout()` or Stripe Connect payout triggers can execute when `clearinghouse_status !== 'CLEARED'`:
+
+- Add a blocking Bug titled "Escrow released before CSC NIL Go CLEARED"
+- Body: "RallySafe / Stripe Connect must fail-closed unless `clearinghouse_status === 'CLEARED'`. Cite `NilTransaction` / `ClearinghouseStatus`."
+- Apply label "compliance"
+
+If a SQL migration adds or modifies `nil_transactions` without:
+
+```sql
+CONSTRAINT enforce_cleared_payout CHECK (
+    (payout_released = FALSE) OR (clearinghouse_status = 'CLEARED')
+)
+```
+
+- Add a blocking Bug titled "nil_transactions missing enforce_cleared_payout CHECK"
+- Apply label "compliance"
+
+If NILCalculator (or any deterministic estimator) writes directly to transaction ledgers or claims clearinghouse clearance without CSC NIL Go audit ingestion:
+
+- Add a blocking Bug titled "Estimator-to-authorization drift"
+- Body: "Estimators may display valuations. They must not insert ledger rows or set CLEARED. Clearance requires CSC NIL Go audit ingestion."
+- Apply label "compliance"
+
 ### Security / AppSec
+
+If coach-scoped pipeline queries (`scholarship_offers`, `college_coaches`, `pipeline_boards`) filter by `school_id` solely in React state instead of PostgreSQL RLS tied to `auth.jwt()`:
+
+- Add a blocking Bug titled "Client-side tenant filtering"
+- Body: "RLS is the isolation boundary. Client `.eq('school_id', …)` is not a security control. Policies must bind `auth.jwt()` / `school_staff_roles`."
+- Apply label "security"
+
+If a SQL migration grants `INSERT`, `UPDATE`, or `DELETE` on recruiting pipelines without validating `school_staff_roles`:
+
+- Add a blocking Bug titled "Open write policy on recruiting pipeline"
+- Body: "Pipeline writes must require `school_staff_roles`. Fail-closed RLS — no anon/authenticated blanket DML."
+- Apply label "security"
 
 If a changed file under `src/` (Vite SPA) references `SUPABASE_SERVICE_ROLE_KEY`, a service-role JWT, or bypasses RLS by filtering sensitive rows only on the client:
 
@@ -74,12 +137,27 @@ If parental-consent / COPPA / FERPA inserts are not bound to the authenticated a
 - Body: "Parent consent must fail-closed on the session subject. Do not trust client-supplied athlete IDs."
 - Apply label "compliance"
 
-### Type safety
+### Type safety & SPA architecture
 
-If changed TypeScript introduces `any`, `as any`, or untyped `JSON.parse` results flowing into domain models without a narrow:
+If changed TypeScript introduces `any`, `as any`, inferred `any`, or untyped `JSON.parse` results flowing into domain models without a narrow:
 
 - Add a blocking Bug titled "any leakage into domain types"
-- Body: "Cite `src/types.ts`. Parse with typed guards. No silent `as` casts across CapGM, NIL, BioScan, or RBAC models."
+- Body: "Zero tolerance in `src/`. Cite `src/types.ts`. Parse with typed guards. No silent `as` casts across CapGM, NIL, BioScan, or RBAC models."
+
+If a changed file introduces `"use client"`, `"use server"`, Next.js App Router folders (`app/`), or Next.js routing APIs:
+
+- Add a blocking Bug titled "Next.js framework drift"
+- Body: "Gridiron Gateway is a Vite React 19 SPA. Do not add Next.js directives or routing."
+
+If a changed interactive control (`button`, `select`, `input`, slider thumb) lacks `min-h-[44px]`:
+
+- Add a blocking Bug titled "Touch target below 44px"
+- Body: "Sideline iPad coaches need ≥44px hits (`min-h-[44px]`). Compact `py-1.5` does not replace height."
+
+If a changed async component (fetch/suspense/loader) has no reserved skeleton or structural `min-h-[…]` and can collapse layout on load:
+
+- Add a blocking Bug titled "CLS — async surface has no reserved height"
+- Body: "Keep CLS < 0.1. Reserve skeleton/min-height for loading, error, and empty states."
 
 ---
 
@@ -88,11 +166,6 @@ If changed TypeScript introduces `any`, `as any`, or untyped `JSON.parse` result
 ### UI / design system
 
 For files matching `src/components/**/*.{tsx,jsx}`:
-
-If interactive controls lack `min-h-[40px]` / `min-h-[44px]` (and `py-1.5` where compact):
-
-- Add a non-blocking Bug titled "Touch target below 40px"
-- Body: "Sideline iPad coaches need ≥44px hits. Use `min-h-[40px]` or `min-h-[44px]`."
 
 If cards omit `border border-slate-800` on `bg-slate-900`, or invent a palette outside emerald `#10b981` / cyan `#06b6d4` / amber `#f59e0b` / purple `#a855f7` / rose `#f43f5e` on `bg-slate-950` backdrops:
 
