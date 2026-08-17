@@ -51,7 +51,7 @@ STRIDE + OWASP: neutralize XSS in React renders; JWT persist + auto-refresh; fai
 | Third-party NIL | CSC NIL Go (VBP / RoC). Report ≥ $600 aggregate within 5 business days | `public.nil_transactions` + RallySafe |
 | Institutional revenue share | CAPS reporting | CapGM only — **not** `nil_transactions` |
 
-`clearinghouse_status` enum: `PENDING` (default), `CLEARED`, `NOT_CLEARED`, `FLAGGED_FOR_REVIEW`. Postgres trigger + `private.release_nil_escrow` block release unless `CLEARED` AND `stripe_milestone_verified` AND not in the transfer portal. Client RLS: SELECT scoped via `school_staff_roles`; no client INSERT/UPDATE/DELETE. UI renders **Release Funds** only when that gate passes. `NOT_CLEARED` is an eligibility crisis — AI cannot override.
+`clearinghouse_status` enum: `PENDING` (default), `CLEARED`, `NOT_CLEARED`, `FLAGGED_FOR_REVIEW`. Postgres trigger `fn_lock_nil_clearinghouse_status` + CHECK `enforce_cleared_payout` make the SPA unable to flip clearance. CSC NIL Go posts HMAC-signed webhooks to Edge Function `csc-nil-go-sync` (`x-csc-signature` over the raw body, `verify_jwt = false`). The function uses `SUPABASE_SERVICE_ROLE_KEY` to update `public.nil_transactions` and append `compliance_audit_logs` (`action_type = NIL_CLEARANCE_SYNC`). `private.release_nil_escrow` / RallySafe still block payout unless `CLEARED` AND `stripe_milestone_verified` AND not in the transfer portal. UI renders **Release Funds** only when that gate passes. `NOT_CLEARED` is an eligibility crisis — AI cannot override.
 
 ## FAQ
 

@@ -834,7 +834,10 @@ export type ClearanceStatus =
   | "BLOCKED_CALENDAR"
   | "BLOCKED_MINOR_CONSENT"
   | "BLOCKED_INDUCEMENT"
-  | "BLOCKED_AUDIT_LEDGER";
+  | "BLOCKED_AUDIT_LEDGER"
+  | "NIL_PENDING"
+  | "NIL_FLAGGED"
+  | "NIL_NOT_CLEARED";
 
 export interface ComplianceGateContext {
   coachId: string;
@@ -860,7 +863,7 @@ export interface ComplianceAuditLog {
   schoolId: string;
   coachId: string;
   athleteId: string;
-  actionType: "DIRECT_MESSAGE" | "OFFER_EXTENSION" | "CAMP_INVITE";
+  actionType: "DIRECT_MESSAGE" | "OFFER_EXTENSION" | "CAMP_INVITE" | "NIL_CLEARANCE_SYNC";
   clearanceStatus: ClearanceStatus;
   notes: string;
   flaggedKeywords: string[];

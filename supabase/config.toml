@@ -13,3 +13,7 @@ enabled = true
 [functions.cfbd-schools-seeder]
 # Service-role seeding; optional SEEDER_INVOKE_SECRET gate in function code.
 verify_jwt = true
+
+[functions.csc-nil-go-sync]
+# CSC sends HMAC (x-csc-signature), not a Supabase JWT.
+verify_jwt = false
