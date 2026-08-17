@@ -558,6 +558,37 @@ export interface FilmBreakdownSession {
   tags: FilmTagItem[];
 }
 
+export type PlayTagCategory = "ROUTE_TREE" | "COVERAGE" | "BLOCKING_SCHEME" | "PENALTY";
+
+export type FilmAnalysisStatus = "IDLE" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+/**
+ * Temporal film tag: a kinematic sequence (route breaks, DB hip orientation),
+ * not a single-frame object detection.
+ */
+export interface FilmTag {
+  id: string;
+  videoId: string;
+  timestampSeconds: number;
+  category: PlayTagCategory;
+  label: string;
+  confidenceScore: number;
+  boundingBox?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface FilmAnalysisSession {
+  videoId: string;
+  status: FilmAnalysisStatus;
+  tags: FilmTag[];
+  processedFrames: number;
+  totalFrames: number;
+}
+
 // PHASE 3: MULTI-TENANT RBAC PERMISSIONS INTERFACES
 
 export interface RolePermissionConfig {
