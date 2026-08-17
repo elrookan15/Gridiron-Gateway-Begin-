@@ -5,11 +5,13 @@ export type Position =
   | "CB" | "S" | "ATH" 
   | "K" | "P" | "LS";
 
-export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029;
+export type PitchTone = "NFL_DEVELOPMENT" | "IMMEDIATE_IMPACT" | "ACADEMIC_EXCELLENCE" | "HOMETOWN_HERO";
 
 export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION_COACH" | "COMPLIANCE_OFFICER" | "ATHLETE_RECRUIT";
 
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
+
+export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029 | 2030 | number;
 
 export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5' | 'FBS_IND';
 

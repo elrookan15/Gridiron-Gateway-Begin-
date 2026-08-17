@@ -13,3 +13,7 @@ enabled = true
 [functions.cfbd-schools-seeder]
 # Service-role seeding; optional SEEDER_INVOKE_SECRET gate in function code.
 verify_jwt = true
+
+[functions.gemini-assistant]
+# GEMINI_API_KEY lives only in Edge secrets. Browser must send a user JWT.
+verify_jwt = true
