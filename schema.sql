@@ -266,6 +266,9 @@ CREATE TABLE communication_audit_logs (
 
 COMMENT ON TABLE communication_audit_logs IS 'Append-only regulatory audit log recording all communication attempts and compliance gating actions.';
 
+-- NCAA messaging gate ledger (append-only, service_role insert):
+-- supabase/migrations/20260817120000_compliance_audit_logs.sql (`public.compliance_audit_logs`)
+
 -- -----------------------------------------------------------------------------
 -- 4. AUTOMATED UPDATED_AT TRIGGERS
 -- -----------------------------------------------------------------------------

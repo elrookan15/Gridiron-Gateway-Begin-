@@ -7,8 +7,10 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import {
   evaluateComplianceGate,
+  executeAndLogComplianceGate,
   MESSAGE_SEND_ATTEMPTS_DB,
   RECRUITING_PERIODS_DB,
+  setComplianceAuditPersister,
 } from "./src/complianceEngine";
 import { runComplianceTestSuite } from "./src/complianceTestSuite";
 import {
@@ -36,12 +38,27 @@ import type {
   NilRegulatoryPlane,
 } from "./src/types";
 import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
+import {
+  isComplianceAuditPostgresConfigured,
+  persistComplianceAuditToPostgres,
+} from "./src/lib/complianceAuditPersist";
+import type { ComplianceGateDispatchRequest } from "./src/types";
 
 dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const IS_PROD = process.env.NODE_ENV === "production";
+
+setComplianceAuditPersister(async (input) => {
+  if (isComplianceAuditPostgresConfigured()) {
+    return persistComplianceAuditToPostgres(input);
+  }
+  if (IS_PROD) {
+    return { ok: false, error: "compliance_audit_logs writer not configured in production." };
+  }
+  return { ok: true, id: `DEV-${Date.now()}` };
+});
 
 app.use(express.json({ limit: "2mb" }));
 
@@ -499,7 +516,7 @@ app.get("/api/compliance/status", (req, res) => {
   });
 });
 
-app.post("/api/messages/send", mutateRateLimit, (req, res) => {
+app.post("/api/messages/send", mutateRateLimit, async (req, res) => {
   const { coach_id, recruit_id, contact_method, message_text } = req.body ?? {};
 
   if (typeof coach_id !== "string" || typeof recruit_id !== "string" || !coach_id || !recruit_id) {
@@ -516,7 +533,29 @@ app.post("/api/messages/send", mutateRateLimit, (req, res) => {
 
   const safeText = clampMessageText(message_text);
 
-  // Ignore any client compliance override fields — gate re-evaluates server-side
+  const messagingGate = await executeAndLogComplianceGate({
+    schoolId: typeof req.body?.school_id === "string" ? req.body.school_id : "unspecified",
+    coachId: coach_id,
+    athleteId: recruit_id,
+    athleteAge: typeof req.body?.athlete_age === "number" ? req.body.athlete_age : 0,
+    hasParentalConsent: req.body?.has_parental_consent === true,
+    messagePayload: safeText,
+    actionType: "DIRECT_MESSAGE",
+  });
+
+  if (!messagingGate.isCleared) {
+    return res.status(403).json({
+      error: "MESSAGE_BLOCKED_BY_COMPLIANCE_GATE",
+      decision: "blocked",
+      reason: messagingGate.reason,
+      status: messagingGate.status,
+      flagged_keywords: messagingGate.flaggedKeywords,
+      audit_log_id: messagingGate.auditLogId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Ignore any client compliance override fields — period table re-evaluates server-side
   const result = evaluateComplianceGate({
     coach_id,
     recruit_id,
@@ -544,6 +583,55 @@ app.post("/api/messages/send", mutateRateLimit, (req, res) => {
     audit_log_id: result.audit_log_id,
     matched_period_id: result.matched_period_id,
     reason: result.reason,
+  });
+});
+
+function isComplianceActionType(
+  value: unknown,
+): value is ComplianceGateDispatchRequest["actionType"] {
+  return value === "DIRECT_MESSAGE" || value === "OFFER_EXTENSION" || value === "CAMP_INVITE";
+}
+
+app.post("/api/v1/compliance/messaging-clearance", mutateRateLimit, async (req, res) => {
+  const body = req.body ?? {};
+  const schoolId = typeof body.schoolId === "string" ? body.schoolId.trim() : "";
+  const coachId = typeof body.coachId === "string" ? body.coachId.trim() : "";
+  const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : "";
+  const athleteAge = typeof body.athleteAge === "number" ? body.athleteAge : Number.NaN;
+  const messagePayload = typeof body.messagePayload === "string" ? body.messagePayload : "";
+  const actionType = body.actionType;
+
+  if (!schoolId || !coachId || !athleteId || !Number.isFinite(athleteAge)) {
+    return res.status(400).json({
+      error: "INVALID_CLEARANCE_REQUEST",
+      message: "schoolId, coachId, athleteId, and athleteAge are required.",
+    });
+  }
+
+  if (!isComplianceActionType(actionType)) {
+    return res.status(400).json({
+      error: "INVALID_ACTION_TYPE",
+      message: "actionType must be DIRECT_MESSAGE, OFFER_EXTENSION, or CAMP_INVITE.",
+    });
+  }
+
+  const evaluation = await executeAndLogComplianceGate({
+    schoolId,
+    coachId,
+    athleteId,
+    athleteAge,
+    hasParentalConsent: body.hasParentalConsent === true,
+    messagePayload: clampMessageText(messagePayload),
+    actionType,
+    evalDate: typeof body.evalDate === "string" ? body.evalDate : undefined,
+  });
+
+  return res.status(evaluation.isCleared ? 200 : 403).json({
+    isCleared: evaluation.isCleared,
+    status: evaluation.status,
+    flaggedKeywords: evaluation.flaggedKeywords,
+    reason: evaluation.reason,
+    auditLogId: evaluation.auditLogId ?? null,
   });
 });
 
