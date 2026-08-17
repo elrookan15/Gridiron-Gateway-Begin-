@@ -1,7 +1,10 @@
 import type {
   ClearanceStatus,
   ComplianceAuditLog,
+  ComplianceAuditPersistInput,
+  ComplianceAuditPersistResult,
   ComplianceEvaluation,
+  ComplianceGateDispatchRequest,
   NcaaClearanceRequest,
   NcaaRecruitingPeriod,
 } from "./types";
@@ -413,6 +416,28 @@ export const NCAA_INDUCEMENT_PATTERNS = INDUCEMENT_PATTERNS;
 
 export const COMPLIANCE_AUDIT_LEDGER: ComplianceAuditLog[] = [];
 
+const AUDIT_LEDGER_FAILURE: ComplianceEvaluation = {
+  isCleared: false,
+  status: "BLOCKED_AUDIT_LEDGER",
+  flaggedKeywords: [],
+  reason: "SYSTEM FAILURE: Unable to record mandatory compliance audit log.",
+};
+
+export type ComplianceAuditPersister = (
+  input: ComplianceAuditPersistInput,
+) => Promise<ComplianceAuditPersistResult>;
+
+let remoteAuditPersister: ComplianceAuditPersister | null = null;
+
+/** Register the server Postgres writer. SPA must not call this. */
+export function setComplianceAuditPersister(persister: ComplianceAuditPersister | null): void {
+  remoteAuditPersister = persister;
+}
+
+export function resetComplianceAuditLedger(): void {
+  COMPLIANCE_AUDIT_LEDGER.length = 0;
+}
+
 const CALENDAR_METHODS: Record<
   NcaaRecruitingPeriod,
   ReadonlySet<"electronic" | "written" | "call" | "in_person">
@@ -446,7 +471,9 @@ export const scanForInducements = (message: string): string[] => {
 };
 
 /**
- * Fail-closed messaging gate. Import this same module from Edge Functions.
+ * Deterministic messaging gate (pure). Import for unit tests and Edge math.
+ * Dispatch / send paths MUST use `executeAndLogComplianceGate` — a CLEARED
+ * result with no `compliance_audit_logs` row is not NCAA-defensible.
  * Order: minor consent → DEAD calendar → inducement dictionary → CLEARED.
  */
 export const evaluateMessagingClearance = (
@@ -499,7 +526,7 @@ function periodToEvalDate(period: NcaaRecruitingPeriod): Date {
 }
 
 function recordClearanceAudit(
-  request: NcaaClearanceRequest,
+  request: Pick<NcaaClearanceRequest, "schoolId" | "coachId" | "athleteId" | "actionType">,
   evaluation: ComplianceEvaluation,
 ): ComplianceAuditLog {
   const row: ComplianceAuditLog = {
@@ -510,11 +537,61 @@ function recordClearanceAudit(
     actionType: request.actionType,
     clearanceStatus: evaluation.status,
     notes: evaluation.reason,
+    flaggedKeywords: [...evaluation.flaggedKeywords],
     createdAt: new Date().toISOString(),
   };
   COMPLIANCE_AUDIT_LEDGER.unshift(row);
   return row;
 }
+
+/**
+ * Production dispatch gate. Evaluates, then persists to the immutable ledger
+ * BEFORE returning clearance. Ledger failure revokes clearance (fail-closed).
+ */
+export const executeAndLogComplianceGate = async (
+  request: ComplianceGateDispatchRequest,
+): Promise<ComplianceEvaluation> => {
+  const evaluation = evaluateMessagingClearance(
+    request.athleteAge,
+    request.hasParentalConsent,
+    request.messagePayload,
+    request.evalDate ? new Date(request.evalDate) : new Date(),
+  );
+
+  if (remoteAuditPersister) {
+    try {
+      const remote = await remoteAuditPersister({
+        schoolId: request.schoolId,
+        coachId: request.coachId,
+        athleteId: request.athleteId,
+        actionType: request.actionType,
+        evaluation,
+      });
+      if (!remote.ok) {
+        const failure = { ...AUDIT_LEDGER_FAILURE };
+        recordClearanceAudit(request, failure);
+        return failure;
+      }
+      const logged: ComplianceEvaluation = { ...evaluation, auditLogId: remote.id };
+      recordClearanceAudit(request, logged);
+      return logged;
+    } catch {
+      const failure = { ...AUDIT_LEDGER_FAILURE };
+      recordClearanceAudit(request, failure);
+      return failure;
+    }
+  }
+
+  const isProd = typeof process !== "undefined" && process.env.NODE_ENV === "production";
+  if (isProd) {
+    const failure = { ...AUDIT_LEDGER_FAILURE };
+    recordClearanceAudit(request, failure);
+    return failure;
+  }
+
+  const memoryRow = recordClearanceAudit(request, evaluation);
+  return { ...evaluation, auditLogId: memoryRow.id };
+};
 
 /**
  * Dashboard/request adapter. Delegates to `evaluateMessagingClearance`, then

@@ -41,6 +41,7 @@ function mapCommunicationAuditRow(row: CommunicationAuditRow): ComplianceAuditLo
     actionType: "DIRECT_MESSAGE",
     clearanceStatus: mapMessageStatus(row),
     notes: row.reason ?? row.action_taken,
+    flaggedKeywords: [],
     createdAt: row.timestamp,
   };
 }

@@ -1,12 +1,16 @@
 import {
   evaluateNcaaClearance,
   evaluateMessagingClearance,
+  executeAndLogComplianceGate,
   getCurrentNcaaPeriod,
+  resetComplianceAuditLedger,
   scanForInducements,
+  setComplianceAuditPersister,
+  COMPLIANCE_AUDIT_LEDGER,
 } from "./complianceEngine";
 import type { NcaaClearanceRequest } from "./types";
 
-function runNcaaClearanceTestSuite() {
+async function runNcaaClearanceTestSuite() {
   console.log("==================================================");
   console.log("NCAA CLEARANCE ENGINE (fail-closed)");
   console.log("==================================================");
@@ -71,10 +75,47 @@ function runNcaaClearanceTestSuite() {
   assert(getCurrentNcaaPeriod(new Date(2026, 4, 20)) === "EVALUATION", "May 20 → EVALUATION");
   assert(scanForInducements("free housing off campus").includes("free housing"), "scanForInducements hits free housing");
 
+  resetComplianceAuditLedger();
+  setComplianceAuditPersister(null);
+  const logged = await executeAndLogComplianceGate({
+    schoolId: base.schoolId,
+    coachId: base.coachId,
+    athleteId: base.athleteId,
+    athleteAge: base.recruitAge,
+    hasParentalConsent: base.hasParentalConsent,
+    messagePayload: base.messagePayload,
+    actionType: base.actionType,
+    evalDate: "2026-06-15T12:00:00.000Z",
+  });
+  assert(logged.isCleared === true && Boolean(logged.auditLogId), "executeAndLogComplianceGate CLEARED writes auditLogId");
+  assert(
+    COMPLIANCE_AUDIT_LEDGER[0]?.athleteId === base.athleteId &&
+      COMPLIANCE_AUDIT_LEDGER[0]?.clearanceStatus === "CLEARED",
+    "executeAndLogComplianceGate appends compliance audit ledger row",
+  );
+
+  setComplianceAuditPersister(async () => ({ ok: false, error: "forced ledger outage" }));
+  const ledgerDown = await executeAndLogComplianceGate({
+    schoolId: base.schoolId,
+    coachId: base.coachId,
+    athleteId: base.athleteId,
+    athleteAge: 18,
+    hasParentalConsent: true,
+    messagePayload: "Clean check-in.",
+    actionType: "DIRECT_MESSAGE",
+    evalDate: "2026-06-15T12:00:00.000Z",
+  });
+  assert(
+    ledgerDown.isCleared === false && ledgerDown.status === "BLOCKED_AUDIT_LEDGER",
+    "Ledger write failure revokes clearance (fail-closed)",
+    ledgerDown.status,
+  );
+  setComplianceAuditPersister(null);
+
   console.log("==================================================");
   console.log(`RESULTS: ${passed} PASSED, ${failed} FAILED`);
   console.log("==================================================");
   if (failed > 0) process.exit(1);
 }
 
-runNcaaClearanceTestSuite();
+void runNcaaClearanceTestSuite();

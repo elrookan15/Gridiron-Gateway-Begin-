@@ -833,7 +833,8 @@ export type ClearanceStatus =
   | "CLEARED"
   | "BLOCKED_CALENDAR"
   | "BLOCKED_MINOR_CONSENT"
-  | "BLOCKED_INDUCEMENT";
+  | "BLOCKED_INDUCEMENT"
+  | "BLOCKED_AUDIT_LEDGER";
 
 export interface ComplianceGateContext {
   coachId: string;
@@ -850,6 +851,8 @@ export interface ComplianceEvaluation {
   status: ClearanceStatus;
   flaggedKeywords: string[];
   reason: string;
+  /** Present only after a successful `compliance_audit_logs` persist. */
+  auditLogId?: string;
 }
 
 export interface ComplianceAuditLog {
@@ -860,8 +863,32 @@ export interface ComplianceAuditLog {
   actionType: "DIRECT_MESSAGE" | "OFFER_EXTENSION" | "CAMP_INVITE";
   clearanceStatus: ClearanceStatus;
   notes: string;
+  flaggedKeywords: string[];
   createdAt: string;
 }
+
+export interface ComplianceGateDispatchRequest {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  athleteAge: number;
+  hasParentalConsent: boolean;
+  messagePayload: string;
+  actionType: ComplianceAuditLog["actionType"];
+  evalDate?: string;
+}
+
+export interface ComplianceAuditPersistInput {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  actionType: ComplianceAuditLog["actionType"];
+  evaluation: ComplianceEvaluation;
+}
+
+export type ComplianceAuditPersistResult =
+  | { ok: true; id: string }
+  | { ok: false; error: string };
 
 export interface NcaaClearanceRequest {
   schoolId: string;
