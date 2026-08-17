@@ -52,8 +52,10 @@ export async function fetchNilTransactionsForAthlete(athleteId: string): Promise
 }
 
 /**
- * Sets payout_released = true. Postgres `enforce_cleared_payout` rejects this
- * unless clearinghouse_status = CLEARED. RLS blocks non-compliance JWTs.
+ * Sets payout_released = true. Does **not** set clearinghouse_status —
+ * CSC NIL Go webhook (`csc-nil-go-sync`) is the only writer for clearance.
+ * Postgres `enforce_cleared_payout` rejects payout unless CLEARED.
+ * Trigger `fn_lock_nil_clearinghouse_status` rejects SPA clearance flips.
  * Optimistic UI is forbidden — only persist after a returned row.
  */
 export async function releaseNilEscrowPayout(transactionId: string): Promise<NilTransaction> {

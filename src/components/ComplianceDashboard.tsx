@@ -50,7 +50,7 @@ function getStatusConfig(status: ClearanceStatus) {
   if (status === "CLEARED") {
     return { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", icon: ShieldCheck };
   }
-  if (status === "BLOCKED_INDUCEMENT") {
+  if (status === "BLOCKED_INDUCEMENT" || status === "NIL_NOT_CLEARED" || status === "NIL_FLAGGED") {
     return { color: "text-rose-400 bg-rose-500/10 border-rose-500/20", icon: AlertTriangle };
   }
   return { color: "text-amber-400 bg-amber-500/10 border-amber-500/20", icon: ShieldAlert };
