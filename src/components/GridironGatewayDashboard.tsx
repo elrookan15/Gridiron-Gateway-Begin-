@@ -50,6 +50,7 @@ import { CognitiveSchemeMatcher } from "./CognitiveSchemeMatcher";
 import { TrueSpeedModule } from "./TrueSpeedModule";
 import { BioScanTelemetryModule } from "./BioScanTelemetryModule";
 import { RallySafeEscrowModule } from "./RallySafeEscrowModule";
+import { AIFilmStudio } from "./AIFilmStudio";
 import { AiFilmTaggingStudio } from "./AiFilmTaggingStudio";
 import { MultiTenantRoleSelector, MOCK_MULTI_TENANT_USERS } from "./MultiTenantRoleSelector";
 import { AutonomousScoutingAgent } from "./AutonomousScoutingAgent";
@@ -1418,8 +1419,16 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {/* TAB 7: AI HUDL PLAY-BY-PLAY AUTOMATED FILM TAGGING STUDIO             */}
         {/* ==================================================================== */}
         {activeTab === "film_studio" && (
-          <div className="animate-fadeIn">
-            <AiFilmTaggingStudio />
+          <div className="animate-fadeIn space-y-8">
+            <AIFilmStudio videoId={MOCK_ATHLETE_DOSSIER.id} />
+            <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <summary className="cursor-pointer text-xs font-bold text-slate-400 uppercase tracking-wider min-h-[44px] flex items-center">
+                Legacy HUDL play-card studio
+              </summary>
+              <div className="mt-4">
+                <AiFilmTaggingStudio />
+              </div>
+            </details>
           </div>
         )}
 
