@@ -1,73 +1,62 @@
 ---
 name: source-control
-description: Automated source control management, branch strategies, compliance diff auditing, and conventional commit generation for Gridiron Gateway.
+description: Automated source control management, Web3 smart contract sentinel checks, statutory compliance auditing, and CI/CD gatekeeper workflows for Gridiron Gateway & RoundBlock.
 ---
 
-# 🐙 Source Control Agent Skill (Gridiron Gateway)
+# 🐙 Source Control Agent Skill (Gridiron Gateway & RoundBlock)
 
 ## Overview
-This skill equips Antigravity AI agents with standardized workflows for managing source control tasks in Gridiron Gateway, enforcing strict NCAA compliance safeguards, Conventional Commits, and scoped repository changes.
+This skill equips Antigravity AI agents with automated source control management, enforcing Web3 cryptographic determinism, NCAA fail-closed compliance, strict type safety, and GitHub Actions CI/CD orchestration.
 
-## Non-Negotiable Source Control Rules
+## Core Directives
 
 1. **Automated Commit Execution Post-Verification:**
-   - Always run pre-flight quality verification (`npx tsc --noEmit`, scoped diff inspection, compliance audit).
+   - Run strict type compilation (`tsc --noEmit`) and statutory compliance test suite (`npm run test:compliance`).
    - Automatically execute `git commit` with a standardized Conventional Commit message once verification passes.
 
-2. **Scoped File Isolation & Audit Reporting:**
-   - Explicitly list touched vs. un-touched files when reporting completed tasks.
-   - Never bundle unrelated fixes into a feature commit.
+2. **Web3 Smart Contract Sentinel (RoundBlock Protocol):**
+   - Verify Anchor signer authorization (`#[account(mut, signer)]`) and PDA seed/bump derivations.
+   - Mandate checked arithmetic (`checked_add`, `checked_sub`, `checked_mul`) on all token/lamport state mutations.
 
-3. **Compliance-Sensitive Diff Auditing:**
-   - Flags changes to `complianceEngine.ts`, `server.ts` compliance endpoints, or minor consent workflows (`ParentConsentPortal.tsx`).
-   - Requires fail-closed default behavior on ambiguous inputs.
+3. **Statutory Compliance & Financial Math Safeguards:**
+   - Verify fail-closed NCAA recruiting gatekeeper rules.
+   - Enforce integer-cents math for CapGM salary cap and NIL escrow calculations (zero floating-point math in financial contexts).
 
-4. **Pre-Commit Quality Gate:**
-   - Verify TypeScript compilation via `npx tsc --noEmit` before staging changes.
-   - Verify zero leakage of `any` types.
+4. **Scoped File Isolation & Audit Reporting:**
+   - Explicitly report touched vs. un-touched files for every completed task.
+   - Maintain zero `any` type leakage across all API and database models.
 
 5. **Conventional Commit Standard:**
    ```text
    <type>(<scope>): <short description>
 
-   [optional body explaining why this change was made]
+   [technical rationale body]
 
-   [optional footnote flagging compliance re-verification if applicable]
+   [compliance or cryptographic audit footnote if applicable]
    ```
    - **Types:** `feat`, `fix`, `refactor`, `style`, `docs`, `test`, `chore`, `ci`
-   - **Scopes:** `compliance`, `capgm`, `nil`, `leaderboard`, `film`, `bioscan`, `truespeed`, `cognition`, `types`, `rbac`
+   - **Scopes:** `compliance`, `web3`, `capgm`, `nil`, `leaderboard`, `film`, `bioscan`, `truespeed`, `cognition`, `types`, `rbac`
 
 ## Standard Execution Workflow
 
-### Step 1: Pre-Flight Status & Diff Audit
+### Step 1: Pre-Flight Status & Scoped Diff Audit
 ```bash
-# Check modified and untracked files
 git status
-
-# Inspect precise changes
 git diff
 ```
 
-### Step 2: Quality & Type Verification
+### Step 2: Type Compilation & Compliance Test Suite
 ```bash
-# Run strict TypeScript verification
-npx tsc --noEmit
+cmd /c npx tsc --noEmit
+cmd /c npx tsx scripts/runComplianceTests.ts
 ```
 
-### Step 3: Compliance Scan
-Check if any of the following sensitive paths were modified:
-- `src/complianceEngine.ts`
-- `src/complianceTestSuite.ts`
-- `server.ts` (messaging / compliance / minor endpoints)
-- `src/components/ParentConsentPortal.tsx`
-
-If touched, include a **🛡️ Compliance & Audit Note** in the report.
-
-### Step 4: Staging Scoped Files
-Only stage files related to the specific feature/fix:
+### Step 3: Staging Scoped Files
 ```bash
-git add src/components/SpecificComponent.tsx src/types.ts
+git add <target_files>
 ```
 
-### Step 5: Draft Commit & Present to User
-Provide the exact diagnosis, staged files, and proposed commit message for user review before running `git commit`.
+### Step 4: Automated Commit Execution
+```bash
+git commit -m "<type>(<scope>): <summary>" -m "<rationale>"
+```

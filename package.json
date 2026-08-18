@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "clean": "rm -rf dist server.cjs",
     "lint": "tsc --noEmit",
+    "test:compliance": "tsx scripts/runComplianceTests.ts",
+    "test:pre-commit": "tsc --noEmit && tsx scripts/runComplianceTests.ts",
     "ingest:cfbd": "tsx scripts/ingestion/cfbdTeamsSync.ts",
     "ingest:sidearm": "tsx scripts/ingestion/sidearmStaffScraper.ts",
     "ingest:juco-csv": "tsx scripts/ingestion/jucoPrepCsvImport.ts data/ingestion/templates/juco_prep_programs.template.csv",

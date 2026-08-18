@@ -1,0 +1,34 @@
+name: Gridiron Gateway CI Gatekeeper
+
+on:
+  push:
+    branches: [ main, master, "cursor/**" ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  pre-commit-gate:
+    name: Pre-Commit & Statutory Compliance Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Strict TypeScript Compilation Check
+        run: npm run lint
+
+      - name: NCAA Statutory Compliance Test Suite (10/10 Fail-Closed Audit)
+        run: npm run test:compliance
+
+      - name: Production Bundle Verification
+        run: npm run build
