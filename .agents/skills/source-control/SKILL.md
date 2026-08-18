@@ -10,9 +10,9 @@ This skill equips Antigravity AI agents with standardized workflows for managing
 
 ## Non-Negotiable Source Control Rules
 
-1. **Explicit User Consent for Commits:**
-   - **DO NOT** execute `git commit` unless explicitly instructed by the user.
-   - Always present a preliminary diagnosis, staged file list, and draft commit message first.
+1. **Automated Commit Execution Post-Verification:**
+   - Always run pre-flight quality verification (`npx tsc --noEmit`, scoped diff inspection, compliance audit).
+   - Automatically execute `git commit` with a standardized Conventional Commit message once verification passes.
 
 2. **Scoped File Isolation & Audit Reporting:**
    - Explicitly list touched vs. un-touched files when reporting completed tasks.

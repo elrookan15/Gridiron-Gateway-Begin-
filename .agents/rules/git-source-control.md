@@ -3,9 +3,9 @@
 ## Agent Source Control Directives
 When handling git or source control operations:
 
-1. **Commit Authorization:**
-   - Never run `git commit` or `git push` without explicit user instruction.
-   - Always present a draft commit message and list of changed files for review first.
+1. **Automated Commit Execution:**
+   - Always run pre-flight quality verification (`npx tsc --noEmit`, scoped diff inspection, compliance audit).
+   - Automatically execute `git commit` with a standardized Conventional Commit message once verification passes.
 
 2. **Conventional Commit Standard:**
    - Structure commits as `type(scope): summary` followed by a rationale body.
