@@ -961,6 +961,7 @@ COMMENT ON TABLE college_coaches IS 'Legacy ingest mirror. Production deployment
 
 -- RallySafe third-party NIL Go ledger (fail-closed clearinghouse). Apply:
 -- supabase/migrations/20260814120000_nil_transactions.sql
+-- supabase/migrations/20260818110000_csc_nil_go_monotonic_sync.sql
 -- CapGM institutional revenue-share must never be written to public.nil_transactions.
 -- COPPA minor contact lock: supabase/migrations/20260816120000_parental_consents.sql
 -- Transfer portal ticker: supabase/migrations/20260816140000_transfer_portal_entries.sql

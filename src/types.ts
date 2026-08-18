@@ -447,6 +447,20 @@ export type ClearinghouseStatus =
   | "NOT_CLEARED"
   | "FLAGGED_FOR_REVIEW";
 
+/**
+ * Monotonic CSC NIL Go webhook apply decision (`src/lib/cscNilGoSync.ts`).
+ * Postgres `apply_csc_nil_go_sync` is the authoritative lock.
+ */
+export type CscNilGoSyncDecision = "APPLY" | "STALE" | "IDEMPOTENT";
+
+/** Inputs for `decideCscNilGoSync` — mirrors `nil_transactions.csc_event_at` + status. */
+export interface CscNilGoSyncComparison {
+  storedEventAtMs: number | null;
+  storedStatus: ClearinghouseStatus;
+  incomingEventAtMs: number;
+  incomingStatus: ClearinghouseStatus;
+}
+
 /** Row contract for `public.nil_transactions` (fail-closed CHECK on payout_released). */
 export interface NilTransaction {
   id: string;

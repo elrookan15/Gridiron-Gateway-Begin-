@@ -2,7 +2,7 @@
  * Gridiron Gateway — CSC NIL Go clearinghouse webhook ingress
  *
  * Server-to-server only. HMAC SHA-256 on the raw body, then service_role
- * update of public.nil_transactions.clearinghouse_status.
+ * RPC `apply_csc_nil_go_sync` (monotonic event_at + atomic audit insert).
  *
  * Secrets (Dashboard → Edge Functions → Secrets, or `supabase secrets set`):
  *   CSC_WEBHOOK_SECRET — shared HMAC key from College Sports Commission
@@ -28,17 +28,22 @@ const REPLAY_WINDOW_MS = 5 * 60 * 1000;
 
 type CscClearanceStatus = "PENDING" | "FLAGGED_FOR_REVIEW" | "CLEARED" | "NOT_CLEARED";
 
-type ComplianceClearanceStatus =
-  | "CLEARED"
-  | "NIL_PENDING"
-  | "NIL_FLAGGED"
-  | "NIL_NOT_CLEARED";
-
 interface CscWebhookPayload {
   transactionId: string;
   clearinghouseStatus: CscClearanceStatus;
   vbpNotes: string;
   timestamp: string;
+}
+
+interface CscSyncRpcResult {
+  ok?: boolean;
+  applied?: boolean;
+  stale?: boolean;
+  idempotent?: boolean;
+  code?: string;
+  id?: string;
+  athlete_id?: string;
+  clearinghouse_status?: string;
 }
 
 const CSC_STATUSES = new Set<CscClearanceStatus>([
@@ -119,13 +124,6 @@ function parsePayload(raw: string): CscWebhookPayload | null {
   };
 }
 
-function mapAuditClearance(status: CscClearanceStatus): ComplianceClearanceStatus {
-  if (status === "CLEARED") return "CLEARED";
-  if (status === "FLAGGED_FOR_REVIEW") return "NIL_FLAGGED";
-  if (status === "NOT_CLEARED") return "NIL_NOT_CLEARED";
-  return "NIL_PENDING";
-}
-
 function isReplay(timestampIso: string, nowMs: number): boolean {
   const eventMs = Date.parse(timestampIso);
   return Math.abs(nowMs - eventMs) > REPLAY_WINDOW_MS;
@@ -174,15 +172,14 @@ Deno.serve(async (req: Request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  const { data, error } = await supabaseAdmin
-    .from("nil_transactions")
-    .update({
-      clearinghouse_status: payload.clearinghouseStatus,
-      vbp_notes: payload.vbpNotes,
-    })
-    .eq("id", payload.transactionId)
-    .select("id, athlete_id, clearinghouse_status")
-    .maybeSingle();
+  // Atomic monotonic apply: stale CLEARED retries must not overwrite a newer
+  // NOT_CLEARED, and audit insert must roll back with the status mutation.
+  const { data, error } = await supabaseAdmin.rpc("apply_csc_nil_go_sync", {
+    p_transaction_id: payload.transactionId,
+    p_clearinghouse_status: payload.clearinghouseStatus,
+    p_vbp_notes: payload.vbpNotes,
+    p_event_at: payload.timestamp,
+  });
 
   if (error) {
     const checkViolation =
@@ -199,34 +196,35 @@ Deno.serve(async (req: Request) => {
         409,
       );
     }
-    console.error(`Database update failed for TX ${payload.transactionId}`, error);
+    console.error(`Database sync failed for TX ${payload.transactionId}`, error);
     return jsonResponse({ error: "Internal system failure during state sync" }, 500);
   }
 
-  if (!data) {
+  const result = (data ?? {}) as CscSyncRpcResult;
+  if (result.ok === false && result.code === "NOT_FOUND") {
     return jsonResponse({ error: "Unknown NIL transactionId", transactionId: payload.transactionId }, 404);
   }
-
-  const { error: auditError } = await supabaseAdmin.from("compliance_audit_logs").insert({
-    school_id: "SYSTEM_CSC",
-    coach_id: "SYSTEM_WEBHOOK",
-    athlete_id: String(data.athlete_id),
-    action_type: "NIL_CLEARANCE_SYNC",
-    clearance_status: mapAuditClearance(payload.clearinghouseStatus),
-    notes: `CSC NIL Go webhook sync (${payload.clearinghouseStatus}): ${payload.vbpNotes}`,
-    flagged_keywords: [],
-  });
-
-  if (auditError) {
-    console.error(`Audit ledger insert failed for TX ${payload.transactionId}`, auditError);
+  if (result.ok === false && result.code === "CHECK_ENFORCE_CLEARED_PAYOUT") {
+    return jsonResponse(
+      {
+        error: "Cannot apply CSC status: payout already released requires CLEARED",
+        transactionId: payload.transactionId,
+      },
+      409,
+    );
+  }
+  if (result.ok !== true || !result.id || !result.clearinghouse_status) {
+    console.error(`Unexpected CSC sync RPC payload for TX ${payload.transactionId}`, result);
     return jsonResponse({ error: "Internal system failure during state sync" }, 500);
   }
 
   return jsonResponse(
     {
       success: true,
-      transactionId: data.id,
-      clearinghouseStatus: data.clearinghouse_status,
+      transactionId: result.id,
+      clearinghouseStatus: result.clearinghouse_status,
+      applied: result.applied === true,
+      stale: result.stale === true,
     },
     200,
   );
