@@ -21,8 +21,12 @@ try {
   execSync("npx tsx src/capGmTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("5️⃣ Executing Parental Consent & COPPA Minor Protection Suite (8/8 Fail-Closed)...");
+  execSync("npx tsx src/parentalConsentTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, CAPGM & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {
