@@ -30,5 +30,8 @@ jobs:
       - name: NCAA Statutory Compliance Test Suite (10/10 Fail-Closed Audit)
         run: npm run test:compliance
 
+      - name: RallySafe NIL Escrow Clearinghouse Gate (6/6 Fail-Closed Audit)
+        run: npm run test:rallysafe
+
       - name: Production Bundle Verification
         run: npm run build
