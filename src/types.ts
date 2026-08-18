@@ -933,4 +933,59 @@ export interface NcaaClearanceRequest {
   messagePayload: string;
 }
 
+export interface OpponentTendency {
+  downAndDistance: string;
+  preferredCoverage: string;
+  blitzFrequencyPercent: number;
+  vulnerableRoute: string;
+  notes: string;
+}
+
+export interface PlaycallWristbandCard {
+  playNumber: number;
+  codeName: string;
+  personnelGroup: string;
+  targetMatchup: string;
+  expectedSuccessRate: number;
+}
+
+export interface OpponentScoutingDossier {
+  opponentId: string;
+  opponentName: string;
+  opponentMascot: string;
+  conference: string;
+  primaryColor: string;
+  defensiveBaseScheme: string;
+  blitzRateOverall: number;
+  filmSessionsAnalyzed: number;
+  tendencies: OpponentTendency[];
+  recommendedWristbandPlays: PlaycallWristbandCard[];
+}
+
+export type TradeEscrowStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'RECLAIMED';
+
+export interface TokenizedAssetAssetPointer {
+  mintAddress: string;
+  assetName: string;
+  assetType: 'PLAYER_CARD_NFT' | 'FUTURE_DRAFT_PICK';
+  draftYear?: number;
+  starRating?: number;
+  position?: string;
+}
+
+export interface ExplodingTradeEscrow {
+  tradeAddress: string;
+  senderPublicKey: string;
+  recipientPublicKey: string;
+  leaguePublicKey: string;
+  senderOfferedAssets: TokenizedAssetAssetPointer[];
+  recipientRequestedAssets: TokenizedAssetAssetPointer[];
+  expiresAtUnix: number;
+  durationSeconds: number;
+  status: TradeEscrowStatus;
+  collateralUsdcCents: number;
+  requiresDynastyCollateral: boolean;
+  createdAtUnix: number;
+}
+
 

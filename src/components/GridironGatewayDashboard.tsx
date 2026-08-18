@@ -42,6 +42,8 @@ import {
   Bot,
   ShieldCheck,
   Database,
+  FileSpreadsheet,
+  Coins,
 } from "lucide-react";
 import { NILValuationChart } from "./NILValuationChart";
 import { NILCalculator } from "./NILCalculator";
@@ -57,6 +59,8 @@ import { AutonomousScoutingAgent } from "./AutonomousScoutingAgent";
 import { CombineLaserApiModule } from "./CombineLaserApiModule";
 import { ParentConsentPortal } from "./ParentConsentPortal";
 import { SchoolsCsvImporter } from "./SchoolsCsvImporter";
+import { AiGameplanGeneratorModule } from "./AiGameplanGeneratorModule";
+import { RoundBlockTradeEscrowModule } from "./RoundBlockTradeEscrowModule";
 
 // ============================================================================
 // TYPES & DATA MODELS
@@ -575,6 +579,8 @@ export const GridironGatewayDashboard: React.FC = () => {
     | "nil_calculator"
     | "cap_gm"
     | "cognition"
+    | "gameplan"
+    | "roundblock"
     | "nextgen_tech"
     | "film_studio"
     | "autonomous_scout"
@@ -901,6 +907,30 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             >
               <Brain className="w-4 h-4 text-purple-300" />
               <span className="hidden md:inline">Cognition IQ</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("gameplan")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === "gameplan"
+                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <FileSpreadsheet className="w-4 h-4 text-purple-400" />
+              <span className="hidden md:inline">Gameplan AI</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("roundblock")}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+                activeTab === "roundblock"
+                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+              }`}
+            >
+              <Coins className="w-4 h-4 text-emerald-400" />
+              <span className="hidden md:inline">RoundBlock Trade</span>
             </button>
 
             <button
@@ -1433,7 +1463,25 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         )}
 
         {/* ==================================================================== */}
-        {/* TAB 8: NEXT-GEN SCOUTING & AUTONOMOUS AGENT (PHASE 4)                 */}
+        {/* TAB 8: AI GAMEPLAN & WEEKLY OPPONENT CALL SHEET GENERATOR             */}
+        {/* ==================================================================== */}
+        {activeTab === "gameplan" && (
+          <div className="animate-fadeIn">
+            <AiGameplanGeneratorModule />
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB 8.2: ROUNDBLOCK PROTOCOL SOLANA TRADE ESCROW MODULE               */}
+        {/* ==================================================================== */}
+        {activeTab === "roundblock" && (
+          <div className="animate-fadeIn">
+            <RoundBlockTradeEscrowModule />
+          </div>
+        )}
+
+        {/* ==================================================================== */}
+        {/* TAB 8.5: NEXT-GEN SCOUTING & AUTONOMOUS AGENT (PHASE 4)              */}
         {/* ==================================================================== */}
         {activeTab === "autonomous_scout" && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fadeIn">
