@@ -1,7 +1,7 @@
 import { execSync } from "child_process";
 
 console.log("⚡ ==================================================");
-console.log("⚡ GRIDIRON GATEWAY & RALLYSAFE PRE-COMMIT SUITE");
+console.log("⚡ GRIDIRON GATEWAY, CAPGM & RALLYSAFE PRE-COMMIT SUITE");
 console.log("⚡ ==================================================\n");
 
 try {
@@ -13,12 +13,16 @@ try {
   execSync("npx tsx scripts/runComplianceTests.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("3️⃣ Executing RallySafe NIL Escrow Clearinghouse Test Suite...");
+  console.log("3️⃣ Executing RallySafe NIL Escrow Clearinghouse Test Suite (6/6 Fail-Closed)...");
   execSync("npx tsx src/rallySafeClearinghouseTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("4️⃣ Executing CapGM $20.5M Integer-Cents Salary Cap Test Suite (11/11 Math Audit)...");
+  execSync("npx tsx src/capGmTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, CAPGM & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

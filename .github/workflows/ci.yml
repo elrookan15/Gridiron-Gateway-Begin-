@@ -33,5 +33,8 @@ jobs:
       - name: RallySafe NIL Escrow Clearinghouse Gate (6/6 Fail-Closed Audit)
         run: npm run test:rallysafe
 
+      - name: CapGM $20.5M Integer-Cents Salary Cap Gate (11/11 Math Audit)
+        run: npm run test:capgm
+
       - name: Production Bundle Verification
         run: npm run build
