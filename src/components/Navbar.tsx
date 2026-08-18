@@ -1,5 +1,5 @@
 import React from "react";
-import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Building2, FileCheck, Sun, Moon } from "lucide-react";
+import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Building2, FileCheck, Sun, Moon, GitBranch } from "lucide-react";
 import { GridironLogo } from "./GridironLogo";
 
 interface NavbarProps {
@@ -294,6 +294,18 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Code className="w-4 h-4 text-sky-400" />
               Arch Specs
+            </button>
+
+            <button
+              onClick={() => setActiveTab("source_control")}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+                activeTab === "source_control"
+                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  : "text-slate-300 hover:text-white hover:bg-slate-900"
+              }`}
+            >
+              <GitBranch className="w-4 h-4 text-emerald-400" />
+              Source Control
             </button>
           </nav>
 
