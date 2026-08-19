@@ -1021,6 +1021,17 @@ export const COLLEGE_PROGRAMS: CollegeProgram[] = [
     brandColors: { primary: "#502D79", secondary: "#FFC72C" },
     stadiumCapacity: 5000,
   },
+  {
+    id: "d3-dean-college",
+    institutionName: "Dean College",
+    mascot: "Bulldogs",
+    abbreviation: "DEAN",
+    tier: "D3",
+    conference: "MASCAC / ECFC",
+    location: { city: "Franklin", state: "MA" },
+    brandColors: { primary: "#800020", secondary: "#FFFFFF" },
+    stadiumCapacity: 2500,
+  },
 
   // =========================================================================
   // 6. JUCO (JUNIOR COLLEGE POWERHOUSES)

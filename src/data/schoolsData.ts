@@ -959,6 +959,24 @@ export const SCHOOLS_DATABASE: SchoolEntry[] = [
     programHighlights: "#1 National Liberal Arts College academic ranking, historic 'The Walk' traditional Rivalry.",
     isFeatured: false,
   },
+  {
+    id: "d3-mascac-dean",
+    name: "Dean College Bulldogs",
+    mascot: "Bulldogs",
+    division: "DIII",
+    divisionLabel: "Division 3 (DIII)",
+    conference: "MASCAC / ECFC",
+    cityState: "Franklin, MA",
+    primaryColor: "#800020",
+    secondaryColor: "#FFFFFF",
+    logoUrl: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=120&auto=format&fit=crop&q=80",
+    recruitingEmail: "footballrecruiting@dean.edu",
+    recruitingPhone: "(508) 541-1500",
+    totalActiveRecruits: 18,
+    topMajors: ["Sports Management", "Business Administration", "Communications", "Criminal Justice"],
+    programHighlights: "New England DIII program, strong practical learning, dedicated athletic tradition in Franklin, MA.",
+    isFeatured: true,
+  },
 
   // =========================================================================
   // DIVISION 4 / NAIA (SUN, GPAC, HEART, MSFA, FRONTIER, AAC)
