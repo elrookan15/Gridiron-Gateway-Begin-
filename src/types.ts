@@ -1017,3 +1017,24 @@ export interface ExplodingTradeEscrow {
   requiresDynastyCollateral: boolean;
   createdAtUnix: number;
 }
+
+export interface GcsSignedUrlRequest {
+  athleteId: string;
+  athleteAge: number;
+  parentalConsentSigned: boolean;
+  objectPath: string;
+  httpMethod: 'GET' | 'PUT';
+  contentType: string;
+  expiresInSeconds?: number;
+  bucketName?: string;
+}
+
+export interface GcsSignedUrlResponse {
+  isAllowed: boolean;
+  signedUrl?: string;
+  bucketName: string;
+  objectPath: string;
+  expiresAtIso?: string;
+  denyReason?: string;
+  coppaStatus: 'VERIFIED' | 'MINOR_CONSENT_REQUIRED_FAIL_CLOSED' | 'NOT_APPLICABLE';
+}

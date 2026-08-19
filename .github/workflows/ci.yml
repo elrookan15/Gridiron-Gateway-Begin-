@@ -48,5 +48,8 @@ jobs:
       - name: Gemini AI School Generator Gate (9/9 Schema Audit)
         run: npm run test:gemini-school
 
+      - name: GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)
+        run: npm run test:gcs-signed-url
+
       - name: Production Bundle Verification
         run: npm run build

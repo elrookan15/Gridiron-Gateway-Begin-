@@ -37,8 +37,12 @@ try {
   execSync("npx tsx src/geminiSchoolGeneratorTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("9️⃣ Executing GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)...");
+  execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {
