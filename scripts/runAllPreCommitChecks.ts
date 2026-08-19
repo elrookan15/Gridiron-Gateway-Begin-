@@ -33,8 +33,12 @@ try {
   execSync("npx tsx src/combineLaserTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("8️⃣ Executing Gemini AI School Generator & Database Suite (9/9 Schema Audit)...");
+  execSync("npx tsx src/geminiSchoolGeneratorTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {
