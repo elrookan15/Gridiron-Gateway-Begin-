@@ -36,8 +36,11 @@ jobs:
       - name: CapGM $20.5M Integer-Cents Salary Cap Gate (11/11 Math Audit)
         run: npm run test:capgm
 
-      - name: Parental Consent & COPPA Minor Protection Gate (8/8 Fail-Closed Audit)
+      - name: Parental Consent & COPPA Minor Protection Gate (13/13 Fail-Closed Audit)
         run: npm run test:parental-consent
+
+      - name: Autonomous Scouting AI Scheme Fit Gate (7/7 Metric Audit)
+        run: npm run test:scouting
 
       - name: Production Bundle Verification
         run: npm run build

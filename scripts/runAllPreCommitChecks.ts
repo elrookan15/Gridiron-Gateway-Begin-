@@ -21,12 +21,16 @@ try {
   execSync("npx tsx src/capGmTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("5️⃣ Executing Parental Consent & COPPA Minor Protection Suite (8/8 Fail-Closed)...");
+  console.log("5️⃣ Executing Parental Consent & COPPA Minor Protection Suite (13/13 Fail-Closed)...");
   execSync("npx tsx src/parentalConsentTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("6️⃣ Executing Autonomous Scouting AI Scheme Fit Suite (7/7 Metric Audit)...");
+  execSync("npx tsx src/autonomousScoutingTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

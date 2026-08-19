@@ -14,6 +14,7 @@
     "test:rallysafe": "tsx src/rallySafeClearinghouseTestSuite.ts",
     "test:capgm": "tsx src/capGmTestSuite.ts",
     "test:parental-consent": "tsx src/parentalConsentTestSuite.ts",
+    "test:scouting": "tsx src/autonomousScoutingTestSuite.ts",
     "test:pre-commit": "tsx scripts/runAllPreCommitChecks.ts",
     "ingest:cfbd": "tsx scripts/ingestion/cfbdTeamsSync.ts",
     "ingest:sidearm": "tsx scripts/ingestion/sidearmStaffScraper.ts",
