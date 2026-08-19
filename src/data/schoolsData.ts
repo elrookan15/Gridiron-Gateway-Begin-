@@ -356,6 +356,24 @@ export const SCHOOLS_DATABASE: SchoolEntry[] = [
     programHighlights: "High-scoring offensive system, top Tier-1 academic institution in ACC.",
     isFeatured: false,
   },
+  {
+    id: "fbs-acc-5",
+    name: "Boston College Eagles",
+    mascot: "Eagles",
+    division: "FBS",
+    divisionLabel: "Division 1 FBS",
+    conference: "ACC",
+    cityState: "Chestnut Hill, MA",
+    primaryColor: "#800020",
+    secondaryColor: "#DAA520",
+    logoUrl: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=120&auto=format&fit=crop&q=80",
+    recruitingEmail: "bceaglesrecruiting@bc.edu",
+    recruitingPhone: "(617) 552-3000",
+    totalActiveRecruits: 24,
+    topMajors: ["Finance", "Biology", "Economics", "Communication"],
+    programHighlights: "Historic ACC Power 4 program, elite Catholic education, tough New England physical tradition.",
+    isFeatured: true,
+  },
 
   // --- Big 12 ---
   {

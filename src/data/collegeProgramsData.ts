@@ -563,6 +563,17 @@ export const COLLEGE_PROGRAMS: CollegeProgram[] = [
 
   // --- ACC ---
   {
+    id: "fbs-acc-boston-college",
+    institutionName: "Boston College",
+    mascot: "Eagles",
+    abbreviation: "BC",
+    tier: "FBS_POWER_4",
+    conference: "ACC",
+    location: { city: "Chestnut Hill", state: "MA" },
+    brandColors: { primary: "#800020", secondary: "#DAA520" },
+    stadiumCapacity: 44500,
+  },
+  {
     id: "fbs-acc-clemson",
     institutionName: "Clemson University",
     mascot: "Tigers",
