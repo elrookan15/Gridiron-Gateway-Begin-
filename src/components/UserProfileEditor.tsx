@@ -8,6 +8,7 @@ import {
   type GradYear,
   type Position,
 } from "../types";
+import { parseGradYear } from "../lib/gradYear";
 import { GraduationCap, Ruler, Timer, Link2, User, X, Save } from "lucide-react";
 
 type EditorSection = "identity" | "physical" | "combine" | "academics" | "media";
@@ -39,7 +40,7 @@ const POSITIONS: Position[] = [
   "LS",
 ];
 
-const GRAD_YEARS: GradYear[] = [2025, 2026, 2027, 2028, 2029];
+const GRAD_YEARS: GradYear[] = [2025, 2026, 2027, 2028, 2029, 2030];
 
 const SECTION_META: { id: EditorSection; label: string; icon: React.ReactNode }[] = [
   { id: "identity", label: "Identity", icon: <User className="w-3.5 h-3.5 shrink-0" /> },
@@ -216,7 +217,7 @@ export const UserProfileEditor: React.FC<UserProfileEditorProps> = ({
                     <FieldSelect
                       id="gradClass"
                       value={draft.gradClass}
-                      onChange={(e) => patch("gradClass", Number(e.target.value) as GradYear)}
+                      onChange={(e) => patch("gradClass", parseGradYear(e.target.value))}
                     >
                       {GRAD_YEARS.map((y) => (
                         <option key={y} value={y}>

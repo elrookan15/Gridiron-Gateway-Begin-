@@ -107,7 +107,7 @@ const POSITIONS: readonly Position[] = [
   "LS",
 ] as const;
 
-const GRAD_YEARS: readonly GradYear[] = [2025, 2026, 2027, 2028, 2029] as const;
+const GRAD_YEARS: readonly GradYear[] = [2025, 2026, 2027, 2028, 2029, 2030] as const;
 
 function mapSchoolRow(row: SchoolRow): DatabaseSchool {
   return {

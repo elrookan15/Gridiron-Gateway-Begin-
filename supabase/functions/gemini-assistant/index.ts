@@ -77,16 +77,15 @@ serve(async (req) => {
           secondaryColor: { type: Type.STRING, description: "Hex color code e.g. #1E293B" },
           topMajors: { type: Type.ARRAY, items: { type: Type.STRING } },
           programHighlights: { type: Type.STRING },
-          recruitingEmail: { type: Type.STRING },
-          recruitingPhone: { type: Type.STRING },
         },
         required: ["name", "mascot", "division", "conference", "cityState", "primaryColor", "programHighlights"],
       };
 
       const prompt = `You are an elite college football recruiting database curator.
-Generate structured, accurate data for the college football program matching "${schoolQuery}".
+Generate structured, accurate public program metadata for the college football program matching "${schoolQuery}".
 Return exact division as one of: FBS, FCS, D2, D3, NAIA, JUCO.
-Return valid hex codes for primaryColor and secondaryColor.`;
+Return valid hex codes for primaryColor and secondaryColor.
+Never invent recruiting emails, phone numbers, or staff directories. Contacts are filled only from verified Sidearm/CSV ingestion.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -103,7 +102,8 @@ Return valid hex codes for primaryColor and secondaryColor.`;
         return jsonResponse({ error: "Gemini returned invalid school JSON." }, 502);
       }
 
-      return jsonResponse({ school: schoolJson }, 200);
+      const { recruitingEmail: _dropEmail, recruitingPhone: _dropPhone, ...publicSchool } = schoolJson;
+      return jsonResponse({ school: publicSchool }, 200);
     }
 
     // Default action: Recruiting outreach draft

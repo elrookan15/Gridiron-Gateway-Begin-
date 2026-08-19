@@ -1,5 +1,6 @@
 import type { SchoolEntry } from "../data/schoolsData";
 import type { CollegeDivision } from "../types";
+import { CONTACT_NOT_VERIFIED } from "./verifiedContact";
 
 export interface GenerateSchoolPromptPayload {
   schoolQuery: string;
@@ -50,8 +51,8 @@ export function validateSchoolEntry(entry: Partial<SchoolEntry>): { isValid: boo
     primaryColor: entry.primaryColor && /^#[0-9A-Fa-f]{6}$/.test(entry.primaryColor) ? entry.primaryColor : "#0f172a",
     secondaryColor: entry.secondaryColor && /^#[0-9A-Fa-f]{6}$/.test(entry.secondaryColor) ? entry.secondaryColor : "#1e293b",
     logoUrl: entry.logoUrl || "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=120&auto=format&fit=crop&q=80",
-    recruitingEmail: entry.recruitingEmail || `recruiting@${idSlug}.edu`,
-    recruitingPhone: entry.recruitingPhone || "(555) 019-2026",
+    recruitingEmail: CONTACT_NOT_VERIFIED,
+    recruitingPhone: CONTACT_NOT_VERIFIED,
     totalActiveRecruits: typeof entry.totalActiveRecruits === "number" ? entry.totalActiveRecruits : 12,
     topMajors: Array.isArray(entry.topMajors) && entry.topMajors.length > 0 ? entry.topMajors : ["Sports Management", "Business", "Kinesiology"],
     programHighlights: typeof entry.programHighlights === "string" ? entry.programHighlights : "Generated via Gemini AI Recruiting Intelligence.",

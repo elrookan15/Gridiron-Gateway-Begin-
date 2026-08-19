@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AthleteProfile, UserRole } from "./types";
+import { AppNavTab, AthleteProfile, UserRole } from "./types";
 import { INITIAL_ATHLETE_PROFILE } from "./data/mockData";
 import { Navbar } from "./components/Navbar";
 import { OnboardingWizard } from "./components/OnboardingWizard";
@@ -44,25 +44,7 @@ export function App() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  const [activeTab, setActiveTab] = useState<
-    | "gateway_center"
-    | "profile"
-    | "dossier"
-    | "top250"
-    | "highlights"
-    | "coaches"
-    | "schools"
-    | "transfer_portal"
-    | "coach_pipeline"
-    | "coach_workspace"
-    | "camps"
-    | "ai_assistant"
-    | "ncaa"
-    | "coach_views"
-    | "compliance"
-    | "tech_docs"
-    | "source_control"
-  >("profile");
+  const [activeTab, setActiveTab] = useState<AppNavTab>("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("Athlete");
 

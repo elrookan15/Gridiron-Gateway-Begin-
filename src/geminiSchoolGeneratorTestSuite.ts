@@ -46,7 +46,7 @@ export function runGeminiSchoolGeneratorTestSuite() {
   assert(res3.isValid === false && res3.error === "Mascot is required.", "Missing mascot rejected");
 
   // Test 4: Invalid Division Rejection
-  const res4 = validateSchoolEntry({ ...validD2, division: "INVALID" as any });
+  const res4 = validateSchoolEntry({ ...validD2, division: undefined });
   assert(res4.isValid === false, "Invalid division label rejected");
 
   // Test 5: Fallback Colors and Default Attributes
@@ -60,7 +60,8 @@ export function runGeminiSchoolGeneratorTestSuite() {
   const res5 = validateSchoolEntry(minimalSchool);
   assert(res5.isValid === true, "Minimal school entry validated with fallbacks");
   assert(res5.school?.primaryColor === "#0f172a", "Default fallback primary color (#0f172a) assigned");
-  assert(res5.school?.recruitingEmail.includes("@ferris-state-bulldogs.edu"), "Fallback recruiting email generated");
+  assert(res5.school?.recruitingEmail === "Contact not verified", "LLM school generation never invents recruiting email");
+  assert(res5.school?.recruitingPhone === "Contact not verified", "LLM school generation never invents recruiting phone");
 
   console.log("==================================================");
   console.log(`📊 TEST RESULTS SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);

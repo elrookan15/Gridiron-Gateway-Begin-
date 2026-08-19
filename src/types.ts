@@ -9,9 +9,28 @@ export type PitchTone = "NFL_DEVELOPMENT" | "IMMEDIATE_IMPACT" | "ACADEMIC_EXCEL
 
 export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION_COACH" | "COMPLIANCE_OFFICER" | "ATHLETE_RECRUIT";
 
+export type AppNavTab =
+  | "gateway_center"
+  | "profile"
+  | "dossier"
+  | "top250"
+  | "highlights"
+  | "coaches"
+  | "schools"
+  | "transfer_portal"
+  | "coach_pipeline"
+  | "coach_workspace"
+  | "camps"
+  | "ai_assistant"
+  | "ncaa"
+  | "coach_views"
+  | "compliance"
+  | "tech_docs"
+  | "source_control";
+
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
 
-export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029 | 2030 | number;
+export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029 | 2030;
 
 export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5' | 'FBS_IND';
 
@@ -290,7 +309,7 @@ export interface CoachPipelineProspect {
   position: Position;
   highSchoolOrSchool: string;
   state: string;
-  gradClass: number;
+  gradClass: GradYear;
   stage: "Identified" | "Contacted" | "Offered" | "Committed";
   rating: number; // 1-5
   notes: string;

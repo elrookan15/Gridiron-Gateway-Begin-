@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { SCHOOLS_DATABASE, SchoolEntry } from "../data/schoolsData";
 import { CollegeDivision } from "../types";
 import { generateSchoolWithGemini } from "../services/geminiAssistantApi";
-import { validateSchoolEntry } from "../lib/geminiSchoolGeneratorEngine";
+import { CONTACT_NOT_VERIFIED, isVerifiedEmail, isVerifiedPhone } from "../lib/verifiedContact";
 import {
   Building2,
   Search,
@@ -180,29 +180,11 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
     setAiGeneratorError(null);
 
     try {
-      let generatedSchool: SchoolEntry;
-      try {
-        generatedSchool = await generateSchoolWithGemini(aiSchoolQuery);
-      } catch (_edgeErr) {
-        // Fallback generator when edge function or network key is unreachable
-        const fallbackRes = validateSchoolEntry({
-          name: aiSchoolQuery.trim(),
-          mascot: "Wildcats",
-          division: "FBS",
-          conference: "Independent",
-          cityState: "Austin, TX",
-          primaryColor: "#0f172a",
-          programHighlights: "Generated via Gemini AI Recruiting Intelligence.",
-        });
-        if (!fallbackRes.isValid || !fallbackRes.school) {
-          throw new Error(fallbackRes.error || "Failed to validate school payload.");
-        }
-        generatedSchool = fallbackRes.school;
-      }
+      const generatedSchool = await generateSchoolWithGemini(aiSchoolQuery);
 
       setSchools((prev) => [generatedSchool, ...prev]);
       setSavedSchoolIds((prev) => [...prev, generatedSchool.id]);
-      triggerNotice(`Gemini AI generated & added ${generatedSchool.name} to program directory!`);
+      triggerNotice(`Gemini drafted public metadata for ${generatedSchool.name}. Staff contacts stay unverified until Sidearm/CSV ingest.`);
       setAiSchoolQuery("");
       setIsAiGeneratorOpen(false);
     } catch (err) {
@@ -568,47 +550,67 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
 
                   {/* Contact Info (Email & Phone) */}
                   <div className="bg-slate-950/90 rounded-2xl p-3 border border-slate-800/80 space-y-2 text-xs">
-                    <div className="flex items-center justify-between gap-2">
-                      <a
-                        href={`mailto:${school.recruitingEmail}`}
-                        className="text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
-                        title={school.recruitingEmail}
-                      >
-                        <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span className="truncate">{school.recruitingEmail}</span>
-                      </a>
-                      <button
-                        onClick={() => copyToClipboard(school.recruitingEmail, "Email")}
-                        className="text-slate-500 hover:text-slate-300 p-1 rounded"
-                        title="Copy email"
-                      >
-                        {copiedText === "Email" ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      {isVerifiedEmail(school.recruitingEmail) ? (
+                        <>
+                          <a
+                            href={`mailto:${school.recruitingEmail}`}
+                            className="text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px] min-w-0"
+                            title={school.recruitingEmail}
+                          >
+                            <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span className="truncate">{school.recruitingEmail}</span>
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(school.recruitingEmail, "Email")}
+                            className="text-slate-500 hover:text-slate-300 p-1 rounded min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                            title="Copy email"
+                          >
+                            {copiedText === "Email" ? (
+                              <Check className="w-3 h-3 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-slate-500 font-medium truncate flex items-center gap-1.5 text-[11px]">
+                          <Mail className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                          {CONTACT_NOT_VERIFIED}
+                        </span>
+                      )}
                     </div>
 
-                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-                      <a
-                        href={`tel:${school.recruitingPhone}`}
-                        className="text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
-                      >
-                        <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span>{school.recruitingPhone}</span>
-                      </a>
-                      <button
-                        onClick={() => copyToClipboard(school.recruitingPhone, "Phone")}
-                        className="text-slate-500 hover:text-slate-300 p-1 rounded"
-                        title="Copy phone"
-                      >
-                        {copiedText === "Phone" ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
+                    <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60 min-w-0">
+                      {isVerifiedPhone(school.recruitingPhone) ? (
+                        <>
+                          <a
+                            href={`tel:${school.recruitingPhone}`}
+                            className="text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px] truncate"
+                          >
+                            <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            <span className="truncate">{school.recruitingPhone}</span>
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(school.recruitingPhone, "Phone")}
+                            className="text-slate-500 hover:text-slate-300 p-1 rounded min-h-[44px] min-w-[44px] flex items-center justify-center shrink-0"
+                            title="Copy phone"
+                          >
+                            {copiedText === "Phone" ? (
+                              <Check className="w-3 h-3 text-emerald-400" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-slate-500 font-medium flex items-center gap-1.5 text-[11px]">
+                          <Phone className="w-3.5 h-3.5 text-slate-600 shrink-0" />
+                          {CONTACT_NOT_VERIFIED}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -812,12 +814,16 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <td className="py-3 px-4 text-slate-400 font-bold">Recruiting Email</td>
                       {comparedSchools.map((school) => (
                         <td key={school.id} className="py-3 px-4 text-center">
-                          <a
-                            href={`mailto:${school.recruitingEmail}`}
-                            className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
-                          >
-                            {school.recruitingEmail}
-                          </a>
+                          {isVerifiedEmail(school.recruitingEmail) ? (
+                            <a
+                              href={`mailto:${school.recruitingEmail}`}
+                              className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
+                            >
+                              {school.recruitingEmail}
+                            </a>
+                          ) : (
+                            <span className="text-slate-500 text-[11px]">{CONTACT_NOT_VERIFIED}</span>
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -827,7 +833,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <td className="py-3 px-4 text-slate-400 font-bold">Recruiting Phone</td>
                       {comparedSchools.map((school) => (
                         <td key={school.id} className="py-3 px-4 text-center text-slate-200">
-                          {school.recruitingPhone}
+                          {isVerifiedPhone(school.recruitingPhone) ? school.recruitingPhone : CONTACT_NOT_VERIFIED}
                         </td>
                       ))}
                     </tr>

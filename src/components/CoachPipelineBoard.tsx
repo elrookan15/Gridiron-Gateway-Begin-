@@ -23,7 +23,10 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { MOCK_COACH_PIPELINE_PROSPECTS } from "../data/mockData";
-import { CoachPipelineProspect } from "../types";
+import { parseGradYear } from "../lib/gradYear";
+import type { CoachPipelineProspect, GradYear, Position } from "../types";
+
+const PIPELINE_ADD_POSITIONS = ["QB", "WR", "RB", "EDGE", "CB", "OT"] as const satisfies readonly Position[];
 
 export const CoachPipelineBoard: React.FC = () => {
   const [prospects, setProspects] = useState<CoachPipelineProspect[]>(MOCK_COACH_PIPELINE_PROSPECTS);
@@ -43,10 +46,10 @@ export const CoachPipelineBoard: React.FC = () => {
 
   const [newProspect, setNewProspect] = useState({
     athleteName: "",
-    position: "QB",
+    position: "QB" as Position,
     highSchoolOrSchool: "",
     state: "TX",
-    gradClass: 2026,
+    gradClass: 2026 as GradYear,
     stage: "Identified" as CoachPipelineProspect["stage"],
     notes: "",
   });
@@ -249,7 +252,7 @@ export const CoachPipelineBoard: React.FC = () => {
     const created: CoachPipelineProspect = {
       id: `pip-${Date.now()}`,
       athleteName: newProspect.athleteName,
-      position: newProspect.position as any,
+      position: newProspect.position,
       highSchoolOrSchool: newProspect.highSchoolOrSchool || "High School",
       state: newProspect.state,
       gradClass: newProspect.gradClass,
@@ -801,7 +804,11 @@ export const CoachPipelineBoard: React.FC = () => {
                   <label className="block text-slate-400 mb-1">Position</label>
                   <select
                     value={newProspect.position}
-                    onChange={(e) => setNewProspect({ ...newProspect, position: e.target.value as any })}
+                    onChange={(e) => {
+                      const next = e.target.value;
+                      if (!(PIPELINE_ADD_POSITIONS as readonly string[]).includes(next)) return;
+                      setNewProspect({ ...newProspect, position: next as Position });
+                    }}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-purple-500"
                   >
                     <option value="QB">QB</option>
@@ -817,7 +824,7 @@ export const CoachPipelineBoard: React.FC = () => {
                   <input
                     type="number"
                     value={newProspect.gradClass}
-                    onChange={(e) => setNewProspect({ ...newProspect, gradClass: parseInt(e.target.value) })}
+                    onChange={(e) => setNewProspect({ ...newProspect, gradClass: parseGradYear(e.target.value) })}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-white focus:outline-none focus:border-purple-500"
                   />
                 </div>

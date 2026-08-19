@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { AthleteProfile, Position, GradYear, CollegeOffer, CollegeDivision } from "../types";
+import { AthleteProfile, Position, CollegeOffer, CollegeDivision } from "../types";
+import { parseGradYear } from "../lib/gradYear";
 import { CheckCircle2, ChevronRight, ChevronLeft, Sparkles, Plus, Trash2, ShieldCheck, Dumbbell, BookOpen, Video, Award, Target, User } from "lucide-react";
 
 import { X } from "lucide-react";
@@ -288,7 +289,7 @@ export const OnboardingWizard: React.FC<OnboardingWizardProps> = ({
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Q3. Graduation Class Year *</label>
                 <select
                   value={formData.gradClass}
-                  onChange={(e) => updateField("gradClass", Number(e.target.value) as GradYear)}
+                  onChange={(e) => updateField("gradClass", parseGradYear(e.target.value))}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
                 >
                   <option value={2025}>Class of 2025 (Senior)</option>
