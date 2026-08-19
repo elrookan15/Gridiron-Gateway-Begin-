@@ -41,8 +41,12 @@ try {
   execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("🔟 Executing Leaderboard TrueSpeed 40-Yard Unit Gate...");
+  execSync("npx tsx src/leaderboardMetricsTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS, LEADERBOARD & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

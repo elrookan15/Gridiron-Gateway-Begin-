@@ -51,5 +51,8 @@ jobs:
       - name: GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)
         run: npm run test:gcs-signed-url
 
+      - name: Leaderboard TrueSpeed 40-Yard Unit Gate
+        run: npm run test:leaderboard-metrics
+
       - name: Production Bundle Verification
         run: npm run build

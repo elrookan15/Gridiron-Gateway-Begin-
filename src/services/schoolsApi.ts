@@ -14,6 +14,7 @@ import {
   type RecruitingPipelineStage,
 } from "../types";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
+import { fortyYardSecondsFromMph } from "../lib/trueSpeedForty";
 
 export type { AthleteFullProfile };
 
@@ -205,11 +206,8 @@ function toLeaderboardRecruit(
         })
       : [];
 
-  // Forty estimate from verified TrueSpeed when laser/GPS present; else null→placeholder 0 for UI.
-  const fortyTime =
-    athlete.trueSpeedMph != null && athlete.trueSpeedMph > 0
-      ? Number((40 / (athlete.trueSpeedMph * 1.46667)).toFixed(2))
-      : 0;
+  // Forty estimate from verified TrueSpeed when laser/GPS present; else 0 → UI em-dash.
+  const fortyTime = fortyYardSecondsFromMph(athlete.trueSpeedMph ?? 0);
 
   return {
     id: athlete.athleteId,
