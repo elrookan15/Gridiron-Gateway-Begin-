@@ -29,8 +29,12 @@ try {
   execSync("npx tsx src/autonomousScoutingTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("7️⃣ Executing Combine Laser Hardware Ingestion Suite (8/8 Metric Audit)...");
+  execSync("npx tsx src/combineLaserTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

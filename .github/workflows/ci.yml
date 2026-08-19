@@ -42,5 +42,8 @@ jobs:
       - name: Autonomous Scouting AI Scheme Fit Gate (7/7 Metric Audit)
         run: npm run test:scouting
 
+      - name: Combine Laser Hardware Ingestion Gate (8/8 Metric Audit)
+        run: npm run test:laser
+
       - name: Production Bundle Verification
         run: npm run build
