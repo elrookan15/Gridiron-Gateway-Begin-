@@ -18,6 +18,7 @@
     "test:laser": "tsx src/combineLaserTestSuite.ts",
     "test:gemini-school": "tsx src/geminiSchoolGeneratorTestSuite.ts",
     "test:gcs-signed-url": "tsx src/gcsSignedUrlTestSuite.ts",
+    "test:leaderboard-metrics": "tsx src/leaderboardMetricsTestSuite.ts",
     "test:pre-commit": "tsx scripts/runAllPreCommitChecks.ts",
     "ingest:cfbd": "tsx scripts/ingestion/cfbdTeamsSync.ts",
     "ingest:sidearm": "tsx scripts/ingestion/sidearmStaffScraper.ts",
