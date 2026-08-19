@@ -1,0 +1,10 @@
+{
+  "description": "Sample Sidearm athletics staff URLs mapped to CFBD program ids. Replace with production URLs after CFBD sync. Never commit scraped PII dumps without review.",
+  "programs": [
+    {
+      "programId": "cfbd-REPLACE_WITH_CFBD_ID",
+      "institutionName": "Example University",
+      "staffUrl": "https://example.edu/sports/football/coaches/index"
+    }
+  ]
+}

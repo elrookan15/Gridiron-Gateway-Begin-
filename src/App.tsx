@@ -15,10 +15,13 @@ import { CoachesDirectory } from "./components/CoachesDirectory";
 import { SchoolsDirectory } from "./components/SchoolsDirectory";
 import { TransferPortalModule } from "./components/TransferPortalModule";
 import { CoachPipelineBoard } from "./components/CoachPipelineBoard";
+import { RecruitingPipeline } from "./components/RecruitingPipeline";
+import { AuthManager } from "./components/AuthManager";
 import { CoachWorkspace } from "./components/CoachWorkspace";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
 import { AthleteDossier } from "./components/AthleteDossier";
 import { GridironGatewayDashboard } from "./components/GridironGatewayDashboard";
+import { SourceControlPanel } from "./components/SourceControlPanel";
 
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
@@ -58,6 +61,7 @@ export function App() {
     | "coach_views"
     | "compliance"
     | "tech_docs"
+    | "source_control"
   >("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("Athlete");
@@ -158,8 +162,17 @@ export function App() {
         )}
 
         {activeTab === "coach_pipeline" && (
-          <div className="max-w-6xl mx-auto px-4 py-8">
-            <CoachPipelineBoard />
+          <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+            <AuthManager />
+            <RecruitingPipeline schoolId="fbs-texas" />
+            <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
+              <summary className="cursor-pointer text-xs font-bold text-slate-400 uppercase tracking-wider min-h-[44px] flex items-center">
+                Legacy mock pipeline board
+              </summary>
+              <div className="mt-4">
+                <CoachPipelineBoard />
+              </div>
+            </details>
           </div>
         )}
 
@@ -182,6 +195,8 @@ export function App() {
         {activeTab === "compliance" && <ComplianceDashboard />}
 
         {activeTab === "tech_docs" && <TechDocsView />}
+
+        {activeTab === "source_control" && <SourceControlPanel />}
       </main>
 
       {/* 25-30 QUESTION ONBOARDING WIZARD MODAL OVERLAY */}

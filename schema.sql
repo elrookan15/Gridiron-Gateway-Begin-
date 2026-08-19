@@ -1,8 +1,54 @@
 -- =============================================================================
--- GRIDIRON GATEWAY — MVP DATABASE SCHEMA
--- Target Platform: Supabase (PostgreSQL 15+)
+-- GRIDIRON GATEWAY — PRODUCTION RELATIONAL SCHEMA
+-- Target Platform: Supabase / PostgreSQL 15+
 -- Philosophy: Fail-Closed Security, Complete Data Integrity & NCAA Compliance
 -- =============================================================================
+
+CREATE TYPE division_tier_enum AS ENUM ('FBS_POWER_4', 'FBS_GROUP_OF_5', 'FCS', 'D2', 'D3', 'NAIA', 'JUCO', 'PREP');
+
+CREATE TABLE IF NOT EXISTS schools (
+    school_id VARCHAR(100) PRIMARY KEY,
+    institution_name VARCHAR(255) NOT NULL,
+    mascot VARCHAR(100),
+    abbreviation VARCHAR(50),
+    tier division_tier_enum NOT NULL,
+    conference VARCHAR(100),
+    city VARCHAR(100),
+    state VARCHAR(50),
+    primary_color VARCHAR(7),
+    secondary_color VARCHAR(7),
+    stadium_capacity INTEGER,
+    last_synced_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS college_coaches (
+    coach_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id VARCHAR(100) REFERENCES schools(school_id) ON DELETE CASCADE,
+    full_name VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    office_phone VARCHAR(50),
+    twitter_handle VARCHAR(100),
+    source_url VARCHAR(500),
+    last_verified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS athlete_profiles (
+    athlete_id VARCHAR(100) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    grad_year INTEGER NOT NULL,
+    primary_position VARCHAR(10) NOT NULL,
+    state VARCHAR(50),
+    star_rating INTEGER DEFAULT 0,
+    true_speed_mph DECIMAL(5,2),
+    cognition_score INTEGER
+);
+
+-- Optimize queries for the Autonomous Scouting Agent and Leaderboard
+CREATE INDEX IF NOT EXISTS idx_schools_tier ON schools(tier);
+CREATE INDEX IF NOT EXISTS idx_coaches_school ON college_coaches(school_id);
+CREATE INDEX IF NOT EXISTS idx_athletes_position_year ON athlete_profiles(primary_position, grad_year);
 
 -- -----------------------------------------------------------------------------
 -- 1. STRICT DOMAIN ENUMS
@@ -83,7 +129,7 @@ CREATE TABLE users (
 COMMENT ON TABLE users IS 'Primary profile table linked to auth.users with self-referencing guardian linkage for minors.';
 COMMENT ON COLUMN users.guardian_id IS 'Self-referencing FK linking minor athletes to verified parent/guardian user account.';
 
--- Colleges, Universities & Prep Programs Directory
+-- Colleges, Universities & Prep Programs Directory (legacy MVP UUID model)
 CREATE TABLE schools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -219,6 +265,9 @@ CREATE TABLE communication_audit_logs (
 );
 
 COMMENT ON TABLE communication_audit_logs IS 'Append-only regulatory audit log recording all communication attempts and compliance gating actions.';
+
+-- NCAA messaging gate ledger (append-only, service_role insert):
+-- supabase/migrations/20260817120000_compliance_audit_logs.sql (`public.compliance_audit_logs`)
 
 -- -----------------------------------------------------------------------------
 -- 4. AUTOMATED UPDATED_AT TRIGGERS
@@ -813,4 +862,106 @@ INSERT INTO schools (
     ARRAY['Multiple Heisman Trophy alumni', 'National championship high school'],
     'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=120&auto=format&fit=crop&q=80'
 );
+
+-- =============================================================================
+-- AUTOMATED INGESTION PIPELINE (CFBD + SIDEARM + CSV)
+-- Programs/coaches must come from verified ingress — never LLM-hallucinated staff.
+-- =============================================================================
+
+CREATE TYPE program_data_source AS ENUM (
+  'cfbd',
+  'sidearm_scrape',
+  'csv_bulk',
+  'manual'
+);
+
+CREATE TYPE coach_staff_role AS ENUM (
+  'Head Coach',
+  'Offensive Coordinator',
+  'Defensive Coordinator',
+  'Position Coach',
+  'Recruiting Coordinator',
+  'Other'
+);
+
+CREATE TABLE program_directory (
+  id TEXT PRIMARY KEY,
+  cfbd_id INTEGER UNIQUE,
+  institution_name TEXT NOT NULL,
+  mascot TEXT,
+  abbreviation TEXT,
+  conference TEXT,
+  classification TEXT NOT NULL CHECK (
+    classification IN ('fbs', 'fcs', 'ii', 'iii', 'juco', 'prep', 'naia', 'unknown')
+  ),
+  city TEXT,
+  state TEXT,
+  stadium_capacity INTEGER,
+  primary_color_hex TEXT,
+  secondary_color_hex TEXT,
+  athletics_base_url TEXT,
+  data_source program_data_source NOT NULL,
+  last_synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_program_directory_classification ON program_directory (classification);
+CREATE INDEX idx_program_directory_conference ON program_directory (conference);
+
+CREATE TABLE coaching_staff (
+  id TEXT PRIMARY KEY,
+  program_id TEXT NOT NULL REFERENCES program_directory(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  role_category coach_staff_role NOT NULL DEFAULT 'Other',
+  -- Nullable by design: never invent contacts when Sidearm omits them
+  email TEXT,
+  phone TEXT,
+  twitter_handle TEXT,
+  staff_page_url TEXT NOT NULL,
+  source program_data_source NOT NULL CHECK (source IN ('sidearm_scrape', 'csv_bulk', 'manual')),
+  last_verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (program_id, full_name, title)
+);
+
+CREATE INDEX idx_coaching_staff_program ON coaching_staff (program_id);
+CREATE INDEX idx_coaching_staff_email ON coaching_staff (email) WHERE email IS NOT NULL;
+CREATE INDEX idx_coaching_staff_active ON coaching_staff (is_active);
+
+COMMENT ON TABLE program_directory IS 'CFBD-synced NCAA programs + CSV-imported JUCO/Prep — source of truth for SchoolsDirectory.';
+COMMENT ON TABLE coaching_staff IS 'Verified coach contacts from Sidearm scrape or CSV. Maps to TypeScript DatabaseCoach (coachId=id, schoolId=program_id).';
+COMMENT ON COLUMN coaching_staff.email IS 'Must be extracted from published athletics pages or verified CSV — never LLM-generated. Nullable when unpublished.';
+COMMENT ON COLUMN coaching_staff.twitter_handle IS 'Optional public handle; null until verified from staff page or CSV.';
+
+-- Application-facing coach directory (legacy TEXT ids). Prefer schema.production.sql
+-- college_coaches (UUID + schools.school_id FK) for new Supabase deployments.
+CREATE TABLE college_coaches (
+  coach_id TEXT PRIMARY KEY,
+  school_id TEXT NOT NULL REFERENCES program_directory(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  email TEXT,
+  office_phone TEXT,
+  twitter_handle TEXT,
+  source_url TEXT,
+  last_verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_college_coaches_school ON college_coaches (school_id);
+CREATE INDEX idx_college_coaches_email ON college_coaches (email) WHERE email IS NOT NULL;
+
+COMMENT ON TABLE college_coaches IS 'Legacy ingest mirror. Production deployments should use schema.production.sql.';
+
+-- RallySafe third-party NIL Go ledger (fail-closed clearinghouse). Apply:
+-- supabase/migrations/20260814120000_nil_transactions.sql
+-- CapGM institutional revenue-share must never be written to public.nil_transactions.
+-- COPPA minor contact lock: supabase/migrations/20260816120000_parental_consents.sql
+-- Transfer portal ticker: supabase/migrations/20260816140000_transfer_portal_entries.sql
 

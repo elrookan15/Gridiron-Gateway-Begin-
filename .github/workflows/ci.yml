@@ -1,0 +1,55 @@
+name: Gridiron Gateway CI Gatekeeper
+
+on:
+  push:
+    branches: [ main, master, "cursor/**" ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  pre-commit-gate:
+    name: Pre-Commit & Statutory Compliance Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Strict TypeScript Compilation Check
+        run: npm run lint
+
+      - name: NCAA Statutory Compliance Test Suite (10/10 Fail-Closed Audit)
+        run: npm run test:compliance
+
+      - name: RallySafe NIL Escrow Clearinghouse Gate (6/6 Fail-Closed Audit)
+        run: npm run test:rallysafe
+
+      - name: CapGM $20.5M Integer-Cents Salary Cap Gate (11/11 Math Audit)
+        run: npm run test:capgm
+
+      - name: Parental Consent & COPPA Minor Protection Gate (13/13 Fail-Closed Audit)
+        run: npm run test:parental-consent
+
+      - name: Autonomous Scouting AI Scheme Fit Gate (7/7 Metric Audit)
+        run: npm run test:scouting
+
+      - name: Combine Laser Hardware Ingestion Gate (8/8 Metric Audit)
+        run: npm run test:laser
+
+      - name: Gemini AI School Generator Gate (9/9 Schema Audit)
+        run: npm run test:gemini-school
+
+      - name: GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)
+        run: npm run test:gcs-signed-url
+
+      - name: Production Bundle Verification
+        run: npm run build

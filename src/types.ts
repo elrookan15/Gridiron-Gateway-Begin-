@@ -5,13 +5,29 @@ export type Position =
   | "CB" | "S" | "ATH" 
   | "K" | "P" | "LS";
 
-export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029;
+export type PitchTone = "NFL_DEVELOPMENT" | "IMMEDIATE_IMPACT" | "ACADEMIC_EXCELLENCE" | "HOMETOWN_HERO";
 
 export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION_COACH" | "COMPLIANCE_OFFICER" | "ATHLETE_RECRUIT";
 
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
 
-export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5';
+export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029 | 2030 | number;
+
+export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5' | 'FBS_IND';
+
+export interface SchoolEntry {
+  id: string;
+  name: string;
+  mascot?: string;
+  city: string;
+  state: string;
+  division: DivisionTier;
+  conference: string;
+  primaryRecruitingEmail?: string;
+  coachingPhone?: string;
+  topMajors?: string[];
+  programHighlights?: string[];
+}
 
 export interface CollegeProgram {
   id: string;
@@ -243,25 +259,29 @@ export interface CollegeCoachProfile {
   activeEndorsementsCount: number;
 }
 
+export type PortalStatus = "ACTIVE" | "WITHDRAWN" | "MATRICULATED";
+export type TransferType = "UNDERGRADUATE" | "GRADUATE";
+
 export interface TransferPortalAthlete {
   id: string;
-  fullName: string;
-  position: Position;
-  formerSchool: string;
-  formerDivision: CollegeDivision;
-  conference: string;
-  yearsEligibilityRemaining: number;
-  portalEntryDate: string;
-  status: "Active in Portal" | "Committed / Transferred" | "Withdrawn";
-  destinationSchool?: string;
-  height: string;
-  weight: number;
-  fortyTime: number;
-  gpa: number;
-  avatarUrl: string;
-  statsHighlights: string;
-  hudlUrl: string;
-  verifiedStats: boolean;
+  athleteId: string;
+  athleteName: string;
+  position: string;
+  starRating: number;
+  transferType: TransferType;
+  eligibilityRemaining: number;
+  originSchool: {
+    id: string;
+    name: string;
+    primaryColor: string;
+  };
+  destinationSchool: {
+    id: string;
+    name: string;
+    primaryColor: string;
+  } | null;
+  entryDate: string;
+  status: PortalStatus;
 }
 
 export interface CoachPipelineProspect {
@@ -276,6 +296,27 @@ export interface CoachPipelineProspect {
   notes: string;
   lastActivity: string;
   avatarUrl: string;
+}
+
+/** Kanban stages for `RecruitingPipeline` (coach workspace). */
+export type RecruitingPipelineStage =
+  | "Evaluating"
+  | "Offered"
+  | "Official Visit"
+  | "Committed";
+
+/** Offer row enriched with athlete facts for the recruiting Kanban board. */
+export interface PipelineOffer {
+  id: string;
+  schoolId: string;
+  athleteId: string;
+  isOfficial: boolean;
+  offerDate: string;
+  commitmentStatus: string;
+  stage: RecruitingPipelineStage;
+  athleteName: string;
+  position: string;
+  starRating: number;
 }
 
 export interface TimelineEvent {
@@ -325,6 +366,31 @@ export interface CapGMRosterModel {
   players: RosterPlayerCapItem[];
 }
 
+/** House v. NCAA revenue-share cap in integer cents ($20.5M = 2_050_000_000). */
+export const CAP_GM_HARD_CAP_CENTS = 2_050_000_000;
+
+export type RetentionRiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+
+export interface CapGmPlayer {
+  id: string;
+  name: string;
+  position: string;
+  starRating: number;
+  marketValueCents: number;
+  allocatedCents: number;
+  baseEpa: number;
+  isRetained: boolean;
+  notes: string;
+}
+
+export interface CapGmState {
+  totalCapCents: number;
+  allocatedCents: number;
+  remainingCents: number;
+  projectedEpa: number;
+  globalRetentionRisk: RetentionRiskLevel;
+}
+
 export interface CognitiveProfile {
   id: string;
   athleteName: string;
@@ -352,6 +418,23 @@ export interface TrueSpeedAnalysis {
   trueSpeedConfidenceScore: number;
 }
 
+/** MediaPipe PoseLandmarker kinematic output mapped to Supabase TrueSpeed rows. */
+export type TrueSpeedVerificationStatus =
+  | "UNVERIFIED"
+  | "PROCESSING"
+  | "AUTHENTICATED"
+  | "REJECTED";
+
+export interface TrueSpeedTelemetry {
+  athleteId: string;
+  verifiedFortyTime: number | null;
+  peakVelocityMph: number | null;
+  averageStrideLengthInches: number | null;
+  confidenceScore: number;
+  verificationStatus: TrueSpeedVerificationStatus;
+  analyzedAt: string | null;
+}
+
 export interface BioScanTelemetry {
   id: string;
   athleteName: string;
@@ -369,16 +452,88 @@ export interface NilEscrowCampaign {
   campaignTitle: string;
   sponsorName: string;
   athleteName: string;
-  escrowTotalAmount: number;
-  disbursedAmount: number;
-  heldInEscrowAmount: number;
-  milestones: {
-    id: string;
-    description: string;
-    payoutAmount: number;
-    status: "Verified & Paid" | "Pending Fulfillment" | "Refunded on Transfer";
-  }[];
+  athleteId: string;
+  /** Integer cents — never float dollars. */
+  escrowTotalAmountCents: number;
+  disbursedAmountCents: number;
+  heldInEscrowAmountCents: number;
+  milestones: NilEscrowMilestone[];
   complianceAuditStatus: "SEC / Compliance Clear" | "Under Review";
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  /** THIRD_PARTY_NIL_GO is RallySafe. INSTITUTIONAL_CAPS is CapGM only. */
+  regulatoryPlane: NilRegulatoryPlane;
+  payoutReleased: boolean;
+  vbpNotes: string | null;
+}
+
+export type ClearinghouseStatus =
+  | "PENDING"
+  | "CLEARED"
+  | "NOT_CLEARED"
+  | "FLAGGED_FOR_REVIEW";
+
+/** Row contract for `public.nil_transactions` (fail-closed CHECK on payout_released). */
+export interface NilTransaction {
+  id: string;
+  athleteId: string;
+  sponsorName: string;
+  dealAmountCents: number;
+  clearinghouseStatus: ClearinghouseStatus;
+  payoutReleased: boolean;
+  vbpNotes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type NilRegulatoryPlane = "THIRD_PARTY_NIL_GO" | "INSTITUTIONAL_CAPS";
+
+export interface NilEscrowMilestone {
+  id: string;
+  description: string;
+  payoutAmountCents: number;
+  status: "Verified & Paid" | "Pending Fulfillment" | "Refunded on Transfer";
+  stripeMilestoneVerified: boolean;
+}
+
+export interface RallySafeReleaseSnapshot {
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  regulatoryPlane: NilRegulatoryPlane;
+  payoutReleased?: boolean;
+}
+
+/** Closed market set for the 2026 NIL estimator (House v. NCAA revenue-share tiers). */
+export type NilMarketDivision =
+  | "FBS_P4"
+  | "FBS_G5"
+  | "FCS"
+  | "D2"
+  | "D3"
+  | "NAIA"
+  | "JUCO"
+  | "PREP";
+
+export type NilPositionGroup = "QB" | "SKILL" | "DEFENSE" | "LINEMAN" | "SPECIAL";
+
+export type NilStarRating = 1 | 2 | 3 | 4 | 5;
+
+/** Integer-cents breakdown from `estimateNilValuationCents`. */
+export interface NilValuationCents {
+  athleticCents: number;
+  socialCents: number;
+  totalCents: number;
+}
+
+export interface NilValuationInput {
+  division: NilMarketDivision;
+  position: NilPositionGroup;
+  stars: NilStarRating;
+  followers: number;
+  /** Engagement percent in tenths (45 = 4.5%). */
+  engagementTenths: number;
 }
 
 // PHASE 3: AI HUDL FILM TAGGING ENGINE INTERFACES
@@ -405,6 +560,37 @@ export interface FilmBreakdownSession {
   tags: FilmTagItem[];
 }
 
+export type PlayTagCategory = "ROUTE_TREE" | "COVERAGE" | "BLOCKING_SCHEME" | "PENALTY";
+
+export type FilmAnalysisStatus = "IDLE" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+/**
+ * Temporal film tag: a kinematic sequence (route breaks, DB hip orientation),
+ * not a single-frame object detection.
+ */
+export interface FilmTag {
+  id: string;
+  videoId: string;
+  timestampSeconds: number;
+  category: PlayTagCategory;
+  label: string;
+  confidenceScore: number;
+  boundingBox?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface FilmAnalysisSession {
+  videoId: string;
+  status: FilmAnalysisStatus;
+  tags: FilmTag[];
+  processedFrames: number;
+  totalFrames: number;
+}
+
 // PHASE 3: MULTI-TENANT RBAC PERMISSIONS INTERFACES
 
 export interface RolePermissionConfig {
@@ -429,44 +615,426 @@ export interface MultiTenantUser {
 }
 
 // PHASE 4: AUTONOMOUS SCOUTING, LASER COMBINE & PARENT PORTAL INTERFACES
+
 export interface SchemeFitScoutAlert {
-  id: string;
-  recruitId: string;
+  alertId: string;
+  athleteId: string;
   athleteName: string;
-  position: Position;
-  targetScheme: string;
-  matchPercentage: number;
-  keyMatchingFactors: string[];
-  trueSpeedMph: number;
-  cognitionScore: number;
+  confidenceScore: number; 
+  matchedScheme: 'Air Raid' | 'Spread Option' | 'West Coast' | '3-4 Blitz' | 'Cover 3 Match';
+  keyMetrics: {
+    trueSpeedMph: number;
+    cognitionScore: number;
+    laserShuttle?: number;
+  };
   timestamp: string;
 }
 
 export interface VerifiedLaserCombineEntry {
-  id: string;
-  athleteName: string;
-  combineEventName: string;
-  laserFortyTime: number;
-  laserShuttleTime: number;
-  laserThreeConeTime: number;
+  eventId: string;
+  athleteId: string;
+  combineLocation: string;
+  date: string;
+  laser40YardDash: number;
+  laser20YardShuttle: number;
+  laser3ConeDrill: number;
   verticalJumpInches: number;
   broadJumpInches: number;
-  verificationStatus: "⚡ Laser Verified";
-  timestamp: string;
+  verifiedBy: string;
 }
+
+export type MinorSafetyStatus = "PENDING_CONSENT" | "CONSENT_GRANTED" | "CONSENT_DENIED";
+
+export type GuardianRelationship = "MOTHER" | "FATHER" | "LEGAL_GUARDIAN";
 
 export interface ParentConsentRecord {
-  id: string;
+  consentId: string;
   athleteId: string;
-  athleteName: string;
-  parentName: string;
-  parentEmail: string;
-  isConsentGranted: boolean;
-  coppaComplianceStatus: "COPPA / FERPA Verified" | "Pending Sign-Off";
-  signedTimestamp: string;
-  consentScope: string[];
+  guardianName: string;
+  guardianEmail: string;
+  relationship: GuardianRelationship;
+  coppaConsent: boolean;
+  messagingConsent: boolean;
+  biometricConsent: boolean;
+  digitalSignature: string;
+  safetyStatus: MinorSafetyStatus;
+  milestoneDisclosuresAgreed: boolean;
+  coppaFerpaWaived: boolean;
+  signatureTimestamp: string;
+  escrowCampaignId?: string;
 }
 
+// ============================================================================
+// AUTOMATED PROGRAM / COACH INGESTION PIPELINE (CFBD + SIDEARM + CSV)
+// Never invent coach emails or staff lists — only persist verified ingress.
+// ============================================================================
 
+export type ProgramDataSource = "cfbd" | "sidearm_scrape" | "csv_bulk" | "manual";
 
+export type CoachStaffRoleCategory =
+  | "Head Coach"
+  | "Offensive Coordinator"
+  | "Defensive Coordinator"
+  | "Position Coach"
+  | "Recruiting Coordinator"
+  | "Other";
 
+/** Canonical program row synced from CFBD `/teams` or JUCO/Prep CSV bulk import. */
+export interface CanonicalProgramRecord {
+  id: string;
+  cfbdId: number | null;
+  institutionName: string;
+  mascot: string | null;
+  abbreviation: string | null;
+  conference: string | null;
+  classification: "fbs" | "fcs" | "ii" | "iii" | "juco" | "prep" | "naia" | "unknown";
+  city: string | null;
+  state: string | null;
+  stadiumCapacity: number | null;
+  primaryColorHex: string | null;
+  secondaryColorHex: string | null;
+  athleticsBaseUrl: string | null;
+  dataSource: ProgramDataSource;
+  lastSyncedAt: string;
+}
+
+/** Staff contact extracted from Sidearm `/staff.aspx` / `/coaches.aspx` or CSV — email/phone may be null. */
+export interface CanonicalCoachStaffRecord {
+  id: string;
+  programId: string;
+  fullName: string;
+  title: string;
+  roleCategory: CoachStaffRoleCategory;
+  email: string | null;
+  phone: string | null;
+  twitterHandle?: string | null;
+  staffPageUrl: string;
+  source: Exclude<ProgramDataSource, "cfbd">;
+  lastVerifiedAt: string;
+  isActive: boolean;
+}
+
+export interface IngestionRunSummary {
+  runId: string;
+  startedAt: string;
+  finishedAt: string;
+  programsUpserted: number;
+  coachesUpserted: number;
+  coachesMissingEmail: number;
+  errors: string[];
+}
+
+/**
+ * Relational coach row for CoachesDirectory / messaging (Postgres `college_coaches`).
+ * `schoolId` maps to `schools.school_id` in schema.production.sql (typically `cfbd-{id}`).
+ * `email` is nullable — never invent unpublished athletics contacts.
+ */
+export interface DatabaseCoach {
+  coachId: string;
+  schoolId: string;
+  fullName: string;
+  title: string;
+  email: string | null;
+  officePhone: string | null;
+  twitterHandle: string | null;
+  sourceUrl: string | null;
+  lastVerifiedAt: string;
+}
+
+/** Production schools row — schema.production.sql */
+export type DivisionTierEnum =
+  | "FBS_POWER_4"
+  | "FBS_GROUP_OF_5"
+  | "FCS"
+  | "D2"
+  | "D3"
+  | "NAIA"
+  | "JUCO"
+  | "PREP";
+
+export interface DatabaseSchool {
+  schoolId: string;
+  institutionName: string;
+  mascot: string | null;
+  abbreviation: string | null;
+  tier: DivisionTierEnum;
+  conference: string | null;
+  city: string | null;
+  state: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  stadiumCapacity: number | null;
+  lastSyncedAt: string;
+}
+
+/** Lean athlete facts for Autonomous Scouting Agent / Leaderboard indexes */
+export interface DatabaseAthleteProfile {
+  athleteId: string;
+  firstName: string;
+  lastName: string;
+  gradYear: number;
+  primaryPosition: string;
+  state: string | null;
+  starRating: number;
+  trueSpeedMph: number | null;
+  cognitionScore: number | null;
+}
+
+/**
+ * Full athlete dossier — joins `athlete_profiles` + `users` + `athlete_media` +
+ * `scholarship_offers`→`schools` (MVP relational model in schema.sql).
+ */
+export interface AthleteFullProfile {
+  id: string;
+  first_name: string;
+  last_name: string;
+  height_inches: number | null;
+  weight_lbs: number | null;
+  forty_yard_dash: number | null;
+  vertical_jump_inches: number | null;
+  position_tier: string | null;
+  star_rating: number | null;
+  media: {
+    twitter_handle: string | null;
+    instagram_handle: string | null;
+    hudl_link: string | null;
+    youtube_link: string | null;
+  } | null;
+  offers: {
+    id: string;
+    is_official: boolean;
+    offer_date: string;
+    commitment_status: string;
+    school: {
+      id: string;
+      name: string;
+      primary_color: string | null;
+      abbreviation: string | null;
+    } | null;
+  }[];
+}
+
+/** Map Sidearm/CSV ingress → relational `DatabaseCoach` contract. */
+export function toDatabaseCoach(staff: CanonicalCoachStaffRecord): DatabaseCoach {
+  return {
+    coachId: staff.id,
+    schoolId: staff.programId,
+    fullName: staff.fullName,
+    title: staff.title,
+    email: staff.email,
+    officePhone: staff.phone,
+    twitterHandle: staff.twitterHandle ?? null,
+    sourceUrl: staff.staffPageUrl,
+    lastVerifiedAt: staff.lastVerifiedAt,
+  };
+}
+
+const POWER4_CONFERENCES = ["SEC", "Big Ten", "Big 12", "ACC"] as const;
+
+/** Power 4 vs Group of 5 from CFBD conference name (FBS only). */
+export function mapFbsConferenceToTier(
+  conference: string | null | undefined
+): Extract<DivisionTierEnum, "FBS_POWER_4" | "FBS_GROUP_OF_5"> {
+  if (conference && (POWER4_CONFERENCES as readonly string[]).includes(conference)) {
+    return "FBS_POWER_4";
+  }
+  return "FBS_GROUP_OF_5";
+}
+
+export function classificationToDivisionTier(
+  classification: CanonicalProgramRecord["classification"],
+  conference?: string | null
+): DivisionTierEnum {
+  switch (classification) {
+    case "fbs":
+      return mapFbsConferenceToTier(conference);
+    case "fcs":
+      return "FCS";
+    case "ii":
+      return "D2";
+    case "iii":
+      return "D3";
+    case "naia":
+      return "NAIA";
+    case "juco":
+      return "JUCO";
+    case "prep":
+      return "PREP";
+    default:
+      return "FCS";
+  }
+}
+
+/** Map CFBD/CSV program ingress → production `schools` row. */
+export function toDatabaseSchool(program: CanonicalProgramRecord): DatabaseSchool {
+  return {
+    schoolId: program.id,
+    institutionName: program.institutionName,
+    mascot: program.mascot,
+    abbreviation: program.abbreviation,
+    tier: classificationToDivisionTier(program.classification, program.conference),
+    conference: program.conference,
+    city: program.city,
+    state: program.state,
+    primaryColor: program.primaryColorHex,
+    secondaryColor: program.secondaryColorHex,
+    stadiumCapacity: program.stadiumCapacity,
+    lastSyncedAt: program.lastSyncedAt,
+  };
+}
+
+export type RecruitingPeriodType = "dead" | "quiet" | "contact" | "evaluation";
+export type NcaaRecruitingPeriod = "CONTACT" | "EVALUATION" | "QUIET" | "DEAD";
+
+export type ComplianceGateDecision = "ALLOWED" | "BLOCKED" | "FLAGGED_FOR_REVIEW";
+export type ClearanceStatus =
+  | "CLEARED"
+  | "BLOCKED_CALENDAR"
+  | "BLOCKED_MINOR_CONSENT"
+  | "BLOCKED_INDUCEMENT"
+  | "BLOCKED_AUDIT_LEDGER"
+  | "NIL_PENDING"
+  | "NIL_FLAGGED"
+  | "NIL_NOT_CLEARED";
+
+export interface ComplianceGateContext {
+  coachId: string;
+  recruitId: string;
+  recruitAge: number;
+  hasParentalConsent: boolean;
+  contactMethod: "direct_message" | "email" | "phone_call" | "in_person";
+  messagePayload?: string;
+  evaluationDate?: string;
+}
+
+export interface ComplianceEvaluation {
+  isCleared: boolean;
+  status: ClearanceStatus;
+  flaggedKeywords: string[];
+  reason: string;
+  /** Present only after a successful `compliance_audit_logs` persist. */
+  auditLogId?: string;
+}
+
+export interface ComplianceAuditLog {
+  id: string;
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  actionType: "DIRECT_MESSAGE" | "OFFER_EXTENSION" | "CAMP_INVITE" | "NIL_CLEARANCE_SYNC";
+  clearanceStatus: ClearanceStatus;
+  notes: string;
+  flaggedKeywords: string[];
+  createdAt: string;
+}
+
+export interface ComplianceGateDispatchRequest {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  athleteAge: number;
+  hasParentalConsent: boolean;
+  messagePayload: string;
+  actionType: ComplianceAuditLog["actionType"];
+  evalDate?: string;
+}
+
+export interface ComplianceAuditPersistInput {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  actionType: ComplianceAuditLog["actionType"];
+  evaluation: ComplianceEvaluation;
+}
+
+export type ComplianceAuditPersistResult =
+  | { ok: true; id: string }
+  | { ok: false; error: string };
+
+export interface NcaaClearanceRequest {
+  schoolId: string;
+  coachId: string;
+  athleteId: string;
+  recruitAge: number;
+  hasParentalConsent: boolean;
+  period: NcaaRecruitingPeriod;
+  actionType: ComplianceAuditLog["actionType"];
+  contactMethod: "electronic" | "written" | "call" | "in_person";
+  messagePayload: string;
+}
+
+export interface OpponentTendency {
+  downAndDistance: string;
+  preferredCoverage: string;
+  blitzFrequencyPercent: number;
+  vulnerableRoute: string;
+  notes: string;
+}
+
+export interface PlaycallWristbandCard {
+  playNumber: number;
+  codeName: string;
+  personnelGroup: string;
+  targetMatchup: string;
+  expectedSuccessRate: number;
+}
+
+export interface OpponentScoutingDossier {
+  opponentId: string;
+  opponentName: string;
+  opponentMascot: string;
+  conference: string;
+  primaryColor: string;
+  defensiveBaseScheme: string;
+  blitzRateOverall: number;
+  filmSessionsAnalyzed: number;
+  tendencies: OpponentTendency[];
+  recommendedWristbandPlays: PlaycallWristbandCard[];
+}
+
+export type TradeEscrowStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'RECLAIMED';
+
+export interface TokenizedAssetAssetPointer {
+  mintAddress: string;
+  assetName: string;
+  assetType: 'PLAYER_CARD_NFT' | 'FUTURE_DRAFT_PICK';
+  draftYear?: number;
+  starRating?: number;
+  position?: string;
+}
+
+export interface ExplodingTradeEscrow {
+  tradeAddress: string;
+  senderPublicKey: string;
+  recipientPublicKey: string;
+  leaguePublicKey: string;
+  senderOfferedAssets: TokenizedAssetAssetPointer[];
+  recipientRequestedAssets: TokenizedAssetAssetPointer[];
+  expiresAtUnix: number;
+  durationSeconds: number;
+  status: TradeEscrowStatus;
+  collateralUsdcCents: number;
+  requiresDynastyCollateral: boolean;
+  createdAtUnix: number;
+}
+
+export interface GcsSignedUrlRequest {
+  athleteId: string;
+  athleteAge: number;
+  parentalConsentSigned: boolean;
+  objectPath: string;
+  httpMethod: 'GET' | 'PUT';
+  contentType: string;
+  expiresInSeconds?: number;
+  bucketName?: string;
+}
+
+export interface GcsSignedUrlResponse {
+  isAllowed: boolean;
+  signedUrl?: string;
+  bucketName: string;
+  objectPath: string;
+  expiresAtIso?: string;
+  denyReason?: string;
+  coppaStatus: 'VERIFIED' | 'MINOR_CONSENT_REQUIRED_FAIL_CLOSED' | 'NOT_APPLICABLE';
+}

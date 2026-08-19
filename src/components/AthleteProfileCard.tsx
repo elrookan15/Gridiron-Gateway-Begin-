@@ -27,6 +27,7 @@ import { VideoPitchRecorder } from "./VideoPitchRecorder";
 import { EndorsementSection } from "./EndorsementSection";
 import { UnifiedRecruitingTimeline } from "./UnifiedRecruitingTimeline";
 import { RecruitComparisonModal } from "./RecruitComparisonModal";
+import { UserProfileEditor } from "./UserProfileEditor";
 
 interface AthleteProfileCardProps {
   profile: AthleteProfile;
@@ -46,6 +47,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
   const [showPitchRecorderStudio, setShowPitchRecorderStudio] = useState(false);
   const [showComparisonModal, setShowComparisonModal] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
 
   const handleExportPdf = () => {
     setIsExportingPdf(true);
@@ -266,8 +268,9 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
             </button>
 
             <button
-              onClick={onEditProfile}
-              className="flex items-center justify-center px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
+              type="button"
+              onClick={() => setIsEditorOpen(true)}
+              className="flex items-center justify-center min-h-[44px] px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
             >
               Edit Profile
             </button>
@@ -969,6 +972,19 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
         <p className="font-mono font-bold">VERIFIED RECRUIT REPORT</p>
       </div>
     </div>
+
+    <UserProfileEditor
+      isOpen={isEditorOpen}
+      profile={profile}
+      onClose={() => setIsEditorOpen(false)}
+      onSave={(updated) => {
+        if (onUpdateProfile) {
+          onUpdateProfile(updated);
+        } else {
+          onEditProfile();
+        }
+      }}
+    />
     </>
   );
 };

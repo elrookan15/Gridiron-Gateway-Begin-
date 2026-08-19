@@ -1,0 +1,23 @@
+# Gridiron Gateway — local Supabase project config
+# Link with: supabase link --project-ref <YOUR_PROJECT_ID>
+
+[api]
+enabled = true
+
+[db]
+port = 54322
+
+[studio]
+enabled = true
+
+[functions.cfbd-schools-seeder]
+# Service-role seeding; optional SEEDER_INVOKE_SECRET gate in function code.
+verify_jwt = true
+
+[functions.csc-nil-go-sync]
+# CSC sends HMAC (x-csc-signature), not a Supabase JWT.
+verify_jwt = false
+
+[functions.gemini-assistant]
+# GEMINI_API_KEY lives only in Edge secrets. Browser must send a user JWT.
+verify_jwt = true

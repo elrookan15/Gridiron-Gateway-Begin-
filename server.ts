@@ -7,8 +7,10 @@ import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import {
   evaluateComplianceGate,
+  executeAndLogComplianceGate,
   MESSAGE_SEND_ATTEMPTS_DB,
   RECRUITING_PERIODS_DB,
+  setComplianceAuditPersister,
 } from "./src/complianceEngine";
 import { runComplianceTestSuite } from "./src/complianceTestSuite";
 import {
@@ -21,6 +23,26 @@ import {
   sanitizeErrorMessage,
   verifyStripeWebhook,
 } from "./src/serverSecurity";
+import { syncCfbdTeams } from "./src/cfbdIngestionPipeline";
+import {
+  scrapeSidearmDirectory,
+  runSidearmDirectoryScraper,
+  type SidearmSeedProgram,
+} from "./src/sidearmDirectoryScraper";
+import { parseSchoolsCsv } from "./src/schoolsCsvImport";
+import type {
+  CanonicalProgramRecord,
+  ClearinghouseStatus,
+  DatabaseCoach,
+  NilEscrowCampaign,
+  NilRegulatoryPlane,
+} from "./src/types";
+import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
+import {
+  isComplianceAuditPostgresConfigured,
+  persistComplianceAuditToPostgres,
+} from "./src/lib/complianceAuditPersist";
+import type { ComplianceGateDispatchRequest } from "./src/types";
 
 dotenv.config();
 
@@ -28,7 +50,17 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const IS_PROD = process.env.NODE_ENV === "production";
 
-app.use(express.json({ limit: "256kb" }));
+setComplianceAuditPersister(async (input) => {
+  if (isComplianceAuditPostgresConfigured()) {
+    return persistComplianceAuditToPostgres(input);
+  }
+  if (IS_PROD) {
+    return { ok: false, error: "compliance_audit_logs writer not configured in production." };
+  }
+  return { ok: true, id: `DEV-${Date.now()}` };
+});
+
+app.use(express.json({ limit: "2mb" }));
 
 // ---------------------------------------------------------------------------
 // Typed domain stores (in-memory until Supabase schema.sql is wired)
@@ -58,11 +90,14 @@ interface EscrowCampaign {
   title?: string;
   sponsor?: string;
   athlete?: string;
-  escrowTotal?: number;
-  disbursed?: number;
-  held?: number;
+  disbursedCents?: number;
+  heldCents?: number;
   complianceStatus?: string;
   id?: string;
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  regulatoryPlane: NilRegulatoryPlane;
 }
 
 interface RolePermissions {
@@ -76,16 +111,36 @@ interface RolePermissions {
 const BIOSCAN_TELEMETRY_DB: Record<string, BioscanTelemetry> = {};
 const ACTIVE_WS_CLIENTS = new Set<WebSocket>();
 
+/** In-memory program/coach directory until Supabase upsert is wired. */
+const PROGRAM_DIRECTORY_DB: CanonicalProgramRecord[] = [];
+const COLLEGE_COACHES_DB: DatabaseCoach[] = [];
+
+function upsertPrograms(programs: CanonicalProgramRecord[]) {
+  for (const program of programs) {
+    const idx = PROGRAM_DIRECTORY_DB.findIndex((p) => p.id === program.id);
+    if (idx >= 0) PROGRAM_DIRECTORY_DB[idx] = program;
+    else PROGRAM_DIRECTORY_DB.push(program);
+  }
+}
+
+function upsertCoaches(coaches: DatabaseCoach[]) {
+  for (const coach of coaches) {
+    const idx = COLLEGE_COACHES_DB.findIndex((c) => c.coachId === coach.coachId);
+    if (idx >= 0) COLLEGE_COACHES_DB[idx] = coach;
+    else COLLEGE_COACHES_DB.push(coach);
+  }
+}
+
 /** Server-authoritative portal flags — never trust client claims. */
 const PORTAL_FLAGGED_ATHLETE_IDS = new Set<string>(["ath_portal_flagged_demo"]);
 
 const ESCROW_CAMPAIGNS_DB: EscrowCampaign[] = [
   {
-    id: "esc-1",
-    campaignId: "esc-1",
+    id: "esc-pending",
+    campaignId: "esc-pending",
     sponsorId: "spn_austin_auto",
     athleteId: "ath_derrick_vance",
-    amountUsdCents: 5000000,
+    amountUsdCents: 5_000_000,
     amountUsdFormatted: "$50,000.00",
     milestoneConditions: [],
     stripeClientSecret: "pi_seed_redacted",
@@ -94,12 +149,108 @@ const ESCROW_CAMPAIGNS_DB: EscrowCampaign[] = [
     title: "Austin Local Business Auto Group Endorsement",
     sponsor: "Austin Auto Group Collective",
     athlete: "Derrick Vance Jr.",
-    escrowTotal: 50000,
-    disbursed: 20000,
-    held: 30000,
+    disbursedCents: 2_000_000,
+    heldCents: 3_000_000,
+    complianceStatus: "Under Review",
+    clearinghouseStatus: "PENDING",
+    stripeMilestoneVerified: false,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
+  },
+  {
+    id: "esc-cleared",
+    campaignId: "esc-cleared",
+    sponsorId: "spn_cleared_brand",
+    athleteId: "ath_malik_sanders",
+    amountUsdCents: 2_500_000,
+    amountUsdFormatted: "$25,000.00",
+    milestoneConditions: [],
+    stripeClientSecret: "pi_seed_redacted",
+    escrowStatus: "FUNDED",
+    created_at: new Date().toISOString(),
+    title: "National Apparel Appearance (CSC Cleared)",
+    sponsor: "Independent Brand Partner",
+    athlete: "Malik Sanders",
+    disbursedCents: 1_000_000,
+    heldCents: 1_500_000,
     complianceStatus: "SEC / Compliance Clear",
+    clearinghouseStatus: "CLEARED",
+    stripeMilestoneVerified: true,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
+  },
+  {
+    id: "esc-not-cleared",
+    campaignId: "esc-not-cleared",
+    sponsorId: "spn_collective_flag",
+    athleteId: "ath_eligibility_risk",
+    amountUsdCents: 8_000_000,
+    amountUsdFormatted: "$80,000.00",
+    milestoneConditions: [],
+    stripeClientSecret: "pi_seed_redacted",
+    escrowStatus: "FUNDED",
+    created_at: new Date().toISOString(),
+    title: "Associated Collective Appearance — CSC Not Cleared",
+    sponsor: "Booster-Funded Collective",
+    athlete: "Jordan Hale",
+    disbursedCents: 0,
+    heldCents: 8_000_000,
+    complianceStatus: "Under Review",
+    clearinghouseStatus: "NOT_CLEARED",
+    stripeMilestoneVerified: true,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
   },
 ];
+
+function toNilEscrowCampaign(c: EscrowCampaign): NilEscrowCampaign {
+  const total = c.amountUsdCents;
+  const disbursed = c.disbursedCents ?? 0;
+  const held = c.heldCents ?? total - disbursed;
+  const pendingId = `${c.campaignId}-pending`;
+  return {
+    id: c.campaignId,
+    campaignTitle: c.title ?? c.campaignId,
+    sponsorName: c.sponsor ?? c.sponsorId,
+    athleteName: c.athlete ?? c.athleteId,
+    athleteId: c.athleteId,
+    escrowTotalAmountCents: total,
+    disbursedAmountCents: disbursed,
+    heldInEscrowAmountCents: held,
+    milestones: [
+      ...(disbursed > 0
+        ? [
+            {
+              id: `${c.campaignId}-paid`,
+              description: "Prior verified milestone disbursement",
+              payoutAmountCents: disbursed,
+              status: "Verified & Paid" as const,
+              stripeMilestoneVerified: true,
+            },
+          ]
+        : []),
+      ...(held > 0
+        ? [
+            {
+              id: pendingId,
+              description: "Next fulfillment milestone",
+              payoutAmountCents: held,
+              status: "Pending Fulfillment" as const,
+              stripeMilestoneVerified: c.stripeMilestoneVerified,
+            },
+          ]
+        : []),
+    ],
+    complianceAuditStatus:
+      c.clearinghouseStatus === "CLEARED" ? "SEC / Compliance Clear" : "Under Review",
+    clearinghouseStatus: c.clearinghouseStatus,
+    stripeMilestoneVerified: c.stripeMilestoneVerified,
+    athleteInTransferPortal: c.athleteInTransferPortal,
+    regulatoryPlane: c.regulatoryPlane,
+    payoutReleased: c.escrowStatus === "RELEASED",
+    vbpNotes: null,
+  };
+}
 
 const PERMISSIONS_MAP: Record<string, RolePermissions> = {
   HEAD_COACH_GM: {
@@ -180,11 +331,154 @@ app.use("/api", (req, res, next) => {
   // Express strips the mount prefix, so path is relative to /api.
   if (
     req.path === "/v1/bioscan/webhooks/catapult" ||
-    req.path === "/v1/rallysafe/webhooks/stripe"
+    req.path === "/v1/rallysafe/webhooks/stripe" ||
+    req.path === "/v1/combines/webhooks/laser"
   ) {
     return next();
   }
   return requireApiAuth(req, res, next);
+});
+
+const adminRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: "admin-ingest" });
+
+// ============================================================================
+// ADMIN DATA INGESTION (CFBD / SIDEARM / JUCO CSV)
+// ============================================================================
+
+/**
+ * Admin: Trigger CFBD sync → upsert into in-memory PROGRAM_DIRECTORY_DB.
+ * Body: none required.
+ */
+app.post("/api/v1/admin/sync-cfbd", adminRateLimit, async (_req, res) => {
+  try {
+    const result = await syncCfbdTeams();
+    upsertPrograms(result.programs);
+    return res.status(200).json({
+      ...result,
+      programsUpserted: result.count,
+      totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
+    });
+  } catch (err: unknown) {
+    console.error("CFBD sync error:", err);
+    return res.status(500).json({
+      error: "CFBD_SYNC_FAILED",
+      message: sanitizeErrorMessage(err, "Failed to sync CFBD teams."),
+    });
+  }
+});
+
+/**
+ * Admin: Sidearm directory scrape.
+ * Prefer single-school `{ schoolId, directoryUrl }`; optionally batch `{ programs: SidearmSeedProgram[] }`.
+ */
+app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
+  try {
+    const schoolId = typeof req.body?.schoolId === "string" ? req.body.schoolId.trim() : "";
+    const directoryUrl =
+      typeof req.body?.directoryUrl === "string" ? req.body.directoryUrl.trim() : "";
+    const programs = Array.isArray(req.body?.programs)
+      ? (req.body.programs as SidearmSeedProgram[])
+      : undefined;
+
+    if (schoolId && directoryUrl) {
+      const coaches = await scrapeSidearmDirectory(schoolId, directoryUrl);
+      upsertCoaches(coaches);
+      return res.status(200).json({
+        status: "success",
+        count: coaches.length,
+        coachesUpserted: coaches.length,
+        coaches,
+        missingEmailCount: coaches.filter((c) => !c.email).length,
+        totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+      });
+    }
+
+    if (programs?.length) {
+      const result = await runSidearmDirectoryScraper({ programs });
+      upsertCoaches(result.databaseCoaches);
+      return res.status(200).json({
+        status: "success",
+        count: result.count,
+        coachesUpserted: result.count,
+        coaches: result.databaseCoaches,
+        scrapedAt: result.scrapedAt,
+        missingEmailCount: result.missingEmailCount,
+        errors: result.errors,
+        totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+        artifactPath: result.artifactPath,
+      });
+    }
+
+    return res.status(400).json({
+      error: "schoolId and directoryUrl are required.",
+      message: "Provide { schoolId, directoryUrl } or a non-empty programs[] batch.",
+    });
+  } catch (err: unknown) {
+    console.error("Sidearm scrape error:", err);
+    return res.status(500).json({
+      error: "SIDEARM_SCRAPE_FAILED",
+      message: sanitizeErrorMessage(err, "Failed to scrape Sidearm directories."),
+    });
+  }
+});
+
+/**
+ * Admin: JUCO/Prep CSV import — real parse via parseSchoolsCsv when csvText provided.
+ * SchoolsCsvImporter depends on this contract (programsUpserted / coachesUpserted).
+ */
+app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
+  try {
+    const csvText = typeof req.body?.csvText === "string" ? req.body.csvText : "";
+    if (!csvText.trim()) {
+      return res.status(400).json({
+        error: "MISSING_CSV",
+        message: "csvText is required in the request body.",
+      });
+    }
+
+    const result = parseSchoolsCsv(csvText);
+    if (!result.programs.length && result.errors.length) {
+      return res.status(400).json({
+        error: "CSV_VALIDATION_FAILED",
+        message: result.errors[0],
+        errors: result.errors,
+      });
+    }
+
+    upsertPrograms(result.programs);
+    upsertCoaches(result.coaches);
+
+    return res.status(200).json({
+      status: "CSV_IMPORT_COMPLETE",
+      message: "CSV import processed.",
+      importedAt: result.importedAt,
+      programsUpserted: result.programsUpserted,
+      coachesUpserted: result.coachesUpserted,
+      duplicatesSkipped: result.duplicatesSkipped,
+      errors: result.errors,
+      totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
+      totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+      artifactPath: result.artifactPath,
+    });
+  } catch (err: unknown) {
+    console.error("CSV import error:", err);
+    return res.status(500).json({
+      error: "CSV_IMPORT_FAILED",
+      message: sanitizeErrorMessage(err, "Failed to import schools CSV."),
+    });
+  }
+});
+
+app.get("/api/v1/admin/directory-snapshot", (_req, res) => {
+  res.json({
+    programs: PROGRAM_DIRECTORY_DB,
+    coaches: COLLEGE_COACHES_DB,
+    totals: {
+      programs: PROGRAM_DIRECTORY_DB.length,
+      coaches: COLLEGE_COACHES_DB.length,
+      coachesMissingEmail: COLLEGE_COACHES_DB.filter((c) => !c.email).length,
+    },
+  });
 });
 
 // ==========================================
@@ -222,7 +516,7 @@ app.get("/api/compliance/status", (req, res) => {
   });
 });
 
-app.post("/api/messages/send", mutateRateLimit, (req, res) => {
+app.post("/api/messages/send", mutateRateLimit, async (req, res) => {
   const { coach_id, recruit_id, contact_method, message_text } = req.body ?? {};
 
   if (typeof coach_id !== "string" || typeof recruit_id !== "string" || !coach_id || !recruit_id) {
@@ -239,7 +533,29 @@ app.post("/api/messages/send", mutateRateLimit, (req, res) => {
 
   const safeText = clampMessageText(message_text);
 
-  // Ignore any client compliance override fields — gate re-evaluates server-side
+  const messagingGate = await executeAndLogComplianceGate({
+    schoolId: typeof req.body?.school_id === "string" ? req.body.school_id : "unspecified",
+    coachId: coach_id,
+    athleteId: recruit_id,
+    athleteAge: typeof req.body?.athlete_age === "number" ? req.body.athlete_age : 0,
+    hasParentalConsent: req.body?.has_parental_consent === true,
+    messagePayload: safeText,
+    actionType: "DIRECT_MESSAGE",
+  });
+
+  if (!messagingGate.isCleared) {
+    return res.status(403).json({
+      error: "MESSAGE_BLOCKED_BY_COMPLIANCE_GATE",
+      decision: "blocked",
+      reason: messagingGate.reason,
+      status: messagingGate.status,
+      flagged_keywords: messagingGate.flaggedKeywords,
+      audit_log_id: messagingGate.auditLogId,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  // Ignore any client compliance override fields — period table re-evaluates server-side
   const result = evaluateComplianceGate({
     coach_id,
     recruit_id,
@@ -270,6 +586,55 @@ app.post("/api/messages/send", mutateRateLimit, (req, res) => {
   });
 });
 
+function isComplianceActionType(
+  value: unknown,
+): value is ComplianceGateDispatchRequest["actionType"] {
+  return value === "DIRECT_MESSAGE" || value === "OFFER_EXTENSION" || value === "CAMP_INVITE";
+}
+
+app.post("/api/v1/compliance/messaging-clearance", mutateRateLimit, async (req, res) => {
+  const body = req.body ?? {};
+  const schoolId = typeof body.schoolId === "string" ? body.schoolId.trim() : "";
+  const coachId = typeof body.coachId === "string" ? body.coachId.trim() : "";
+  const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : "";
+  const athleteAge = typeof body.athleteAge === "number" ? body.athleteAge : Number.NaN;
+  const messagePayload = typeof body.messagePayload === "string" ? body.messagePayload : "";
+  const actionType = body.actionType;
+
+  if (!schoolId || !coachId || !athleteId || !Number.isFinite(athleteAge)) {
+    return res.status(400).json({
+      error: "INVALID_CLEARANCE_REQUEST",
+      message: "schoolId, coachId, athleteId, and athleteAge are required.",
+    });
+  }
+
+  if (!isComplianceActionType(actionType)) {
+    return res.status(400).json({
+      error: "INVALID_ACTION_TYPE",
+      message: "actionType must be DIRECT_MESSAGE, OFFER_EXTENSION, or CAMP_INVITE.",
+    });
+  }
+
+  const evaluation = await executeAndLogComplianceGate({
+    schoolId,
+    coachId,
+    athleteId,
+    athleteAge,
+    hasParentalConsent: body.hasParentalConsent === true,
+    messagePayload: clampMessageText(messagePayload),
+    actionType,
+    evalDate: typeof body.evalDate === "string" ? body.evalDate : undefined,
+  });
+
+  return res.status(evaluation.isCleared ? 200 : 403).json({
+    isCleared: evaluation.isCleared,
+    status: evaluation.status,
+    flaggedKeywords: evaluation.flaggedKeywords,
+    reason: evaluation.reason,
+    auditLogId: evaluation.auditLogId ?? null,
+  });
+});
+
 app.get("/api/compliance/audit-logs", (_req, res) => {
   res.json({
     total_logs: MESSAGE_SEND_ATTEMPTS_DB.length,
@@ -288,40 +653,197 @@ app.get("/api/compliance/recruiting-periods", (_req, res) => {
 // PHASE 4: COMBINE LASER API & PARENT CONSENT REST ENDPOINTS
 // ============================================================================
 
-app.post("/api/v1/combines/webhooks/laser", (req, res) => {
-  const { athleteName, combineEventName, laserFortyTime, laserShuttleTime, laserThreeConeTime, verticalJumpInches, broadJumpInches } = req.body;
-  if (!athleteName || !laserFortyTime) {
-    return res.status(400).json({ error: "MISSING_LASER_TELEMETRY", message: "athleteName and laserFortyTime required." });
+interface LaserCombineRecord {
+  id: string;
+  athleteName: string;
+  combineEventName: string;
+  laserFortyTime: number;
+  laserShuttleTime: number;
+  laserThreeConeTime: number;
+  verticalJumpInches: number;
+  broadJumpInches: number;
+  badge: "⚡ Laser Verified";
+  timestamp: string;
+}
+
+interface ParentConsentDbRecord {
+  id: string;
+  athleteId: string;
+  athleteName: string;
+  parentName: string;
+  parentEmail: string;
+  consentScope: string[];
+  nilEscrowDisclosureAcknowledged: boolean;
+  minorSafetyStatus: "COPPA_FERPA_VERIFIED";
+  coppaComplianceStatus: "COPPA / FERPA Verified";
+  timestamp: string;
+}
+
+const LASER_COMBINE_DB: LaserCombineRecord[] = [];
+const PARENT_CONSENT_DB: ParentConsentDbRecord[] = [];
+
+app.post(
+  "/api/v1/combines/webhooks/laser",
+  requireWebhookSecret("x-laser-secret", "LASER_WEBHOOK_SECRET"),
+  (req, res) => {
+    try {
+      const {
+        athleteName,
+        combineEventName,
+        laserFortyTime,
+        laserShuttleTime,
+        laserThreeConeTime,
+        verticalJumpInches,
+        broadJumpInches,
+      } = req.body ?? {};
+
+      if (typeof athleteName !== "string" || !athleteName.trim()) {
+        return res.status(400).json({
+          error: "MISSING_LASER_TELEMETRY",
+          message: "athleteName is required.",
+        });
+      }
+
+      const forty = Number(laserFortyTime);
+      if (!Number.isFinite(forty) || forty <= 0) {
+        return res.status(400).json({
+          error: "MISSING_LASER_TELEMETRY",
+          message: "laserFortyTime must be a positive number.",
+        });
+      }
+
+      const record: LaserCombineRecord = {
+        id: `las_${Date.now()}`,
+        athleteName: athleteName.trim(),
+        combineEventName:
+          typeof combineEventName === "string" && combineEventName.trim()
+            ? combineEventName.trim()
+            : "Regional Combine Showcase",
+        laserFortyTime: forty,
+        laserShuttleTime: Number(laserShuttleTime) || 0,
+        laserThreeConeTime: Number(laserThreeConeTime) || 0,
+        verticalJumpInches: Number(verticalJumpInches) || 0,
+        broadJumpInches: Number(broadJumpInches) || 0,
+        badge: "⚡ Laser Verified",
+        timestamp: new Date().toISOString(),
+      };
+
+      LASER_COMBINE_DB.unshift(record);
+
+      return res.status(201).json({
+        status: "LASER_TIMING_INGESTED",
+        id: record.id,
+        badge: record.badge,
+        athleteName: record.athleteName,
+        combineEventName: record.combineEventName,
+        laserFortyTime: record.laserFortyTime,
+        laserShuttleTime: record.laserShuttleTime,
+        laserThreeConeTime: record.laserThreeConeTime,
+        verticalJumpInches: record.verticalJumpInches,
+        broadJumpInches: record.broadJumpInches,
+        timestamp: record.timestamp,
+      });
+    } catch (err: unknown) {
+      console.error("Laser webhook error:", err);
+      return res.status(500).json({
+        error: sanitizeErrorMessage(err, "Failed to ingest laser combine telemetry."),
+      });
+    }
   }
-  return res.status(201).json({
-    status: "LASER_TIMING_INGESTED",
-    badge: "⚡ Laser Verified",
-    athleteName,
-    combineEventName: combineEventName || "Regional Combine Showcase",
-    laserFortyTime,
-    laserShuttleTime,
-    laserThreeConeTime,
-    verticalJumpInches,
-    broadJumpInches,
-    timestamp: new Date().toISOString(),
-  });
+);
+
+app.get("/api/v1/combines/laser-entries", (_req, res) => {
+  res.json({ total: LASER_COMBINE_DB.length, entries: LASER_COMBINE_DB });
 });
 
-app.post("/api/v1/compliance/parent-consent", (req, res) => {
-  const { athleteId, athleteName, parentName, parentEmail, consentScope } = req.body;
-  if (!athleteId || !parentEmail) {
-    return res.status(400).json({ error: "MISSING_CONSENT_DATA", message: "athleteId and parentEmail required." });
+app.post("/api/v1/compliance/parent-consent", mutateRateLimit, (req, res) => {
+  try {
+    const body = req.body ?? {};
+    const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : "";
+    const athleteName =
+      typeof body.athleteName === "string" && body.athleteName.trim()
+        ? body.athleteName.trim()
+        : athleteId || "Student-Athlete";
+    const parentName =
+      (typeof body.parentName === "string" && body.parentName.trim()) ||
+      (typeof body.guardianName === "string" && body.guardianName.trim()) ||
+      "";
+    const parentEmail =
+      (typeof body.parentEmail === "string" && body.parentEmail.trim()) ||
+      (typeof body.guardianEmail === "string" && body.guardianEmail.trim()) ||
+      "";
+    const consentScope = body.consentScope;
+    const nilEscrowDisclosureAcknowledged =
+      body.nilEscrowDisclosureAcknowledged === true || body.milestoneDisclosuresAgreed === true;
+
+    if (!athleteId) {
+      return res.status(400).json({
+        error: "MISSING_CONSENT_DATA",
+        message: "athleteId is required.",
+      });
+    }
+    if (!parentEmail.includes("@")) {
+      return res.status(400).json({
+        error: "MISSING_CONSENT_DATA",
+        message: "Valid parentEmail / guardianEmail is required.",
+      });
+    }
+    if (!parentName) {
+      return res.status(400).json({
+        error: "MISSING_CONSENT_DATA",
+        message: "parentName / guardianName is required.",
+      });
+    }
+    if (!nilEscrowDisclosureAcknowledged) {
+      return res.status(400).json({
+        error: "NIL_DISCLOSURE_REQUIRED",
+        message: "RallySafe NIL escrow disclosure must be acknowledged.",
+      });
+    }
+
+    const record: ParentConsentDbRecord = {
+      id: `consent_${Date.now()}`,
+      athleteId,
+      athleteName,
+      parentName,
+      parentEmail: parentEmail.toLowerCase(),
+      consentScope: Array.isArray(consentScope)
+        ? consentScope.filter((s: unknown) => typeof s === "string")
+        : ["Messaging Consent", "NIL Escrow Authorization"],
+      nilEscrowDisclosureAcknowledged: true,
+      minorSafetyStatus: "COPPA_FERPA_VERIFIED",
+      coppaComplianceStatus: "COPPA / FERPA Verified",
+      timestamp: new Date().toISOString(),
+    };
+
+    PARENT_CONSENT_DB.unshift(record);
+
+    return res.status(200).json({
+      status: "CONSENT_RECORDED",
+      id: record.id,
+      consentId: record.id,
+      coppaComplianceStatus: record.coppaComplianceStatus,
+      minorSafetyStatus: record.minorSafetyStatus,
+      safetyStatus: "CONSENT_GRANTED",
+      athleteId: record.athleteId,
+      athleteName: record.athleteName,
+      parentName: record.parentName,
+      parentEmail: record.parentEmail,
+      guardianName: record.parentName,
+      guardianEmail: record.parentEmail,
+      consentScope: record.consentScope,
+      timestamp: record.timestamp,
+    });
+  } catch (err: unknown) {
+    console.error("Parent consent error:", err);
+    return res.status(500).json({
+      error: sanitizeErrorMessage(err, "Failed to record parent consent."),
+    });
   }
-  return res.status(200).json({
-    status: "CONSENT_RECORDED",
-    coppaComplianceStatus: "COPPA / FERPA Verified",
-    athleteId,
-    athleteName,
-    parentName,
-    parentEmail,
-    consentScope: consentScope || ["Messaging Consent", "NIL Escrow Authorization"],
-    timestamp: new Date().toISOString(),
-  });
+});
+
+app.get("/api/v1/compliance/parent-consent", (_req, res) => {
+  res.json({ total: PARENT_CONSENT_DB.length, consents: PARENT_CONSENT_DB });
 });
 
 app.post("/api/compliance/run-tests", mutateRateLimit, (_req, res) => {
@@ -583,18 +1105,38 @@ app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, (req, res) => {
     stripeClientSecret,
     escrowStatus: "AWAITING_FUNDING",
     created_at: new Date().toISOString(),
+    disbursedCents: 0,
+    heldCents: amountUsd,
+    complianceStatus: "Under Review",
+    clearinghouseStatus: "PENDING",
+    stripeMilestoneVerified: false,
+    athleteInTransferPortal: false,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
   };
 
   ESCROW_CAMPAIGNS_DB.push(newCampaign);
 
   console.log(
-    `[RallySafe FinTech] Campaign ${campaignId} created for sponsor ${sponsorId} ($${(amountUsd / 100).toFixed(2)})`
+    `[RallySafe FinTech] Campaign ${campaignId} created PENDING (CSC NIL Go). Sponsor ${sponsorId} ($${(amountUsd / 100).toFixed(2)})`
   );
 
   return res.status(201).json({
     campaignId,
     stripeClientSecret,
     escrowStatus: "AWAITING_FUNDING",
+    clearinghouseStatus: "PENDING",
+    message:
+      "Deal defaulted to PENDING. Third-party NIL ≥ $600 aggregate must be reported to NIL Go within 5 business days. RallySafe will not release until CLEARED.",
+  });
+});
+
+app.get("/api/v1/rallysafe/campaigns", (_req, res) => {
+  return res.json({
+    plane: "THIRD_PARTY_NIL_GO",
+    excludedPlane: "INSTITUTIONAL_CAPS",
+    campaigns: ESCROW_CAMPAIGNS_DB.filter((c) => c.regulatoryPlane === "THIRD_PARTY_NIL_GO").map(
+      toNilEscrowCampaign,
+    ),
   });
 });
 
@@ -631,24 +1173,42 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (re
     return res.status(404).json({ error: "CAMPAIGN_NOT_FOUND", campaignId });
   }
 
-  // Server-side portal check only — ignore client isPortalFlagged
-  const athleteId = campaign.athleteId;
-  const isAthleteInPortal =
-    PORTAL_FLAGGED_ATHLETE_IDS.has(athleteId) || campaignId.includes("flagged");
+  const portalLocked =
+    PORTAL_FLAGGED_ATHLETE_IDS.has(campaign.athleteId) || campaignId.includes("flagged");
+  if (portalLocked) {
+    campaign.athleteInTransferPortal = true;
+  }
 
-  if (isAthleteInPortal) {
+  const gate = canReleaseNilEscrow({
+    clearinghouseStatus: campaign.clearinghouseStatus,
+    stripeMilestoneVerified: campaign.stripeMilestoneVerified,
+    athleteInTransferPortal: campaign.athleteInTransferPortal,
+    regulatoryPlane: campaign.regulatoryPlane,
+  });
+
+  if (gate.ok === false) {
+    const eligibilityCrisis = gate.code === "CSC_NOT_CLEARED";
     console.warn(
-      `[RallySafe FinTech] Payout rejected for campaign ${campaignId}: Athlete in Transfer Portal`
+      `[RallySafe] FAIL_CLOSED release blocked campaign=${campaignId} code=${gate.code}`,
     );
     return res.status(403).json({
-      error: "TRANSFER_REJECTED",
-      reason: "Transfer rejected: Athlete currently flagged in TransferPortalModule.",
+      error: "ESCROW_RELEASE_BLOCKED",
+      code: gate.code,
+      eligibilityCrisis,
+      message: eligibilityCrisis
+        ? "CSC NIL Go returned NOT_CLEARED. This is an eligibility event — RallySafe will not move capital. Remediate within the CSC window; AI cannot override."
+        : `Escrow release blocked (${gate.code}). Requires CLEARED + Stripe HMAC-verified milestone, NIL Go plane, and no portal lock.`,
       campaignId,
       milestoneId,
+      clearinghouseStatus: campaign.clearinghouseStatus,
     });
   }
 
   const stripeTransferId = `tr_mock_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+  const held = campaign.heldCents ?? campaign.amountUsdCents;
+  campaign.disbursedCents = (campaign.disbursedCents ?? 0) + held;
+  campaign.heldCents = 0;
+  campaign.escrowStatus = "RELEASED";
 
   const auditEntry = {
     event: "ESCROW_MILESTONE_RELEASE",
@@ -656,19 +1216,20 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (re
     milestoneId,
     verificationProofUrl,
     complianceOfficerId:
-      typeof complianceOfficerId === "string" ? complianceOfficerId : "SYSTEM_AI_VERIFIER",
+      typeof complianceOfficerId === "string" ? complianceOfficerId : "UNASSIGNED",
     stripeTransferId,
     timestamp: new Date().toISOString(),
     status: "RELEASED",
+    clearinghouseStatus: campaign.clearinghouseStatus,
   };
 
   console.log(
-    `[RallySafe FinTech] Escrow funds released for campaign ${campaignId} via ${stripeTransferId}`
+    `[RallySafe FinTech] Escrow funds released for campaign ${campaignId} via ${stripeTransferId} (CSC CLEARED + HMAC)`,
   );
 
   return res.status(200).json({
     status: "RELEASED",
-    message: "Funds released via Stripe Transfer. Transaction logged in ComplianceDashboard.",
+    message: "Funds released via Stripe Transfer after CSC CLEARED + HMAC milestone verification.",
     campaignId,
     milestoneId,
     stripeTransferId,
@@ -691,14 +1252,34 @@ app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, (req, res) =>
     `[Stripe Connect Webhook] Processing event ${id} (${type}) verified=${verified}`
   );
 
+  const campaignId =
+    typeof data?.object?.metadata?.campaignId === "string"
+      ? data.object.metadata.campaignId
+      : undefined;
+  const campaign = campaignId
+    ? ESCROW_CAMPAIGNS_DB.find((c) => c.campaignId === campaignId || c.id === campaignId)
+    : undefined;
+
   let eventOutcome = "PROCESSED";
 
   switch (type) {
     case "payment_intent.succeeded":
       eventOutcome = "ESCROW_FUNDED_SUCCESS";
+      if (verified && campaign) {
+        campaign.stripeMilestoneVerified = true;
+        campaign.escrowStatus = "FUNDED";
+      }
       console.log(
-        `[Stripe Webhook] Escrow funded successfully for PaymentIntent ${data?.object?.id || id}`
+        `[Stripe Webhook] Escrow funded for PaymentIntent ${data?.object?.id || id} hmac=${verified}`
       );
+      break;
+
+    case "checkout.session.completed":
+    case "transfer.created":
+      eventOutcome = verified ? "MILESTONE_HMAC_VERIFIED" : "MILESTONE_HMAC_MISSING";
+      if (verified && campaign) {
+        campaign.stripeMilestoneVerified = true;
+      }
       break;
 
     case "payout.failed":
