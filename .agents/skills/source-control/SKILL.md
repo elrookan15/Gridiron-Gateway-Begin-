@@ -6,6 +6,7 @@ description: Automated source control management, branch publishing, merging, We
 # 🐙 Source Control Agent Skill (Gridiron Gateway & RoundBlock)
 
 ## Overview
+
 This skill equips Antigravity AI agents with automated source control management, branch publishing, branch merging, git pushing, Web3 cryptographic determinism, NCAA fail-closed compliance, strict type safety, and GitHub Actions CI/CD orchestration.
 
 ## Core Directives
@@ -31,6 +32,7 @@ This skill equips Antigravity AI agents with automated source control management
    - Maintain zero `any` type leakage across all API and database models.
 
 6. **Conventional Commit Standard:**
+
    ```text
    <type>(<scope>): <short description>
 
@@ -38,38 +40,45 @@ This skill equips Antigravity AI agents with automated source control management
 
    [compliance or cryptographic audit footnote if applicable]
    ```
+
    - **Types:** `feat`, `fix`, `refactor`, `style`, `docs`, `test`, `chore`, `ci`
    - **Scopes:** `compliance`, `web3`, `capgm`, `nil`, `leaderboard`, `film`, `bioscan`, `truespeed`, `cognition`, `types`, `rbac`
 
 ## Standard Execution Workflow
 
 ### Step 1: Pre-Flight Status & Scoped Diff Audit
+
 ```bash
 git status
 git diff
 ```
 
 ### Step 2: Type Compilation & Compliance Test Suite
+
 ```bash
 cmd /c npx tsx scripts/runAllPreCommitChecks.ts
 ```
 
 ### Step 3: Staging Scoped Files
+
 ```bash
 git add <target_files>
 ```
 
 ### Step 4: Automated Commit Execution
+
 ```bash
 git commit -m "<type>(<scope>): <summary>" -m "<rationale>"
 ```
 
 ### Step 5: Automated Branch Publishing & Pushing
+
 ```bash
 git push -u origin <branch_name>
 ```
 
 ### Step 6: Automated Branch Merging (When Applicable)
+
 ```bash
 git checkout <target_branch>
 git merge <feature_branch>
