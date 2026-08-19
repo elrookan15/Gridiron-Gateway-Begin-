@@ -5,11 +5,13 @@ export type Position =
   | "CB" | "S" | "ATH" 
   | "K" | "P" | "LS";
 
-export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029;
+export type PitchTone = "NFL_DEVELOPMENT" | "IMMEDIATE_IMPACT" | "ACADEMIC_EXCELLENCE" | "HOMETOWN_HERO";
 
 export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION_COACH" | "COMPLIANCE_OFFICER" | "ATHLETE_RECRUIT";
 
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
+
+export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029 | 2030 | number;
 
 export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5' | 'FBS_IND';
 
@@ -364,6 +366,31 @@ export interface CapGMRosterModel {
   players: RosterPlayerCapItem[];
 }
 
+/** House v. NCAA revenue-share cap in integer cents ($20.5M = 2_050_000_000). */
+export const CAP_GM_HARD_CAP_CENTS = 2_050_000_000;
+
+export type RetentionRiskLevel = "LOW" | "MODERATE" | "HIGH" | "CRITICAL";
+
+export interface CapGmPlayer {
+  id: string;
+  name: string;
+  position: string;
+  starRating: number;
+  marketValueCents: number;
+  allocatedCents: number;
+  baseEpa: number;
+  isRetained: boolean;
+  notes: string;
+}
+
+export interface CapGmState {
+  totalCapCents: number;
+  allocatedCents: number;
+  remainingCents: number;
+  projectedEpa: number;
+  globalRetentionRisk: RetentionRiskLevel;
+}
+
 export interface CognitiveProfile {
   id: string;
   athleteName: string;
@@ -432,13 +459,13 @@ export interface NilEscrowCampaign {
   heldInEscrowAmountCents: number;
   milestones: NilEscrowMilestone[];
   complianceAuditStatus: "SEC / Compliance Clear" | "Under Review";
-    clearinghouseStatus: ClearinghouseStatus;
-    stripeMilestoneVerified: boolean;
-    athleteInTransferPortal: boolean;
-    /** THIRD_PARTY_NIL_GO is RallySafe. INSTITUTIONAL_CAPS is CapGM only. */
-    regulatoryPlane: NilRegulatoryPlane;
-    payoutReleased: boolean;
-    vbpNotes: string | null;
+  clearinghouseStatus: ClearinghouseStatus;
+  stripeMilestoneVerified: boolean;
+  athleteInTransferPortal: boolean;
+  /** THIRD_PARTY_NIL_GO is RallySafe. INSTITUTIONAL_CAPS is CapGM only. */
+  regulatoryPlane: NilRegulatoryPlane;
+  payoutReleased: boolean;
+  vbpNotes: string | null;
 }
 
 export type ClearinghouseStatus =
@@ -531,6 +558,37 @@ export interface FilmBreakdownSession {
   coveragesDetected: string[];
   routesDetected: string[];
   tags: FilmTagItem[];
+}
+
+export type PlayTagCategory = "ROUTE_TREE" | "COVERAGE" | "BLOCKING_SCHEME" | "PENALTY";
+
+export type FilmAnalysisStatus = "IDLE" | "PROCESSING" | "COMPLETED" | "FAILED";
+
+/**
+ * Temporal film tag: a kinematic sequence (route breaks, DB hip orientation),
+ * not a single-frame object detection.
+ */
+export interface FilmTag {
+  id: string;
+  videoId: string;
+  timestampSeconds: number;
+  category: PlayTagCategory;
+  label: string;
+  confidenceScore: number;
+  boundingBox?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
+export interface FilmAnalysisSession {
+  videoId: string;
+  status: FilmAnalysisStatus;
+  tags: FilmTag[];
+  processedFrames: number;
+  totalFrames: number;
 }
 
 // PHASE 3: MULTI-TENANT RBAC PERMISSIONS INTERFACES
@@ -905,4 +963,57 @@ export interface NcaaClearanceRequest {
   messagePayload: string;
 }
 
+export interface OpponentTendency {
+  downAndDistance: string;
+  preferredCoverage: string;
+  blitzFrequencyPercent: number;
+  vulnerableRoute: string;
+  notes: string;
+}
 
+export interface PlaycallWristbandCard {
+  playNumber: number;
+  codeName: string;
+  personnelGroup: string;
+  targetMatchup: string;
+  expectedSuccessRate: number;
+}
+
+export interface OpponentScoutingDossier {
+  opponentId: string;
+  opponentName: string;
+  opponentMascot: string;
+  conference: string;
+  primaryColor: string;
+  defensiveBaseScheme: string;
+  blitzRateOverall: number;
+  filmSessionsAnalyzed: number;
+  tendencies: OpponentTendency[];
+  recommendedWristbandPlays: PlaycallWristbandCard[];
+}
+
+export type TradeEscrowStatus = 'PENDING' | 'ACCEPTED' | 'EXPIRED' | 'RECLAIMED';
+
+export interface TokenizedAssetAssetPointer {
+  mintAddress: string;
+  assetName: string;
+  assetType: 'PLAYER_CARD_NFT' | 'FUTURE_DRAFT_PICK';
+  draftYear?: number;
+  starRating?: number;
+  position?: string;
+}
+
+export interface ExplodingTradeEscrow {
+  tradeAddress: string;
+  senderPublicKey: string;
+  recipientPublicKey: string;
+  leaguePublicKey: string;
+  senderOfferedAssets: TokenizedAssetAssetPointer[];
+  recipientRequestedAssets: TokenizedAssetAssetPointer[];
+  expiresAtUnix: number;
+  durationSeconds: number;
+  status: TradeEscrowStatus;
+  collateralUsdcCents: number;
+  requiresDynastyCollateral: boolean;
+  createdAtUnix: number;
+}

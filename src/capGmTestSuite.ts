@@ -1,4 +1,5 @@
-import { CapGMRosterModel, RosterPlayerCapItem } from "./types";
+import { computeCapGmState, dollarsToAllocatedCents } from "./lib/capGmMath";
+import { CAP_GM_HARD_CAP_CENTS, RosterPlayerCapItem, type CapGmPlayer } from "./types";
 
 /**
  * CapGM Mathematical Validation & Edge Case Unit Test Suite
@@ -99,6 +100,48 @@ function runCapGmTestSuite() {
   const qbAllocated = 4800000;
   const qbPercentage = Number(((qbAllocated / BASE_CAP) * 100).toFixed(1));
   assert(qbPercentage === 23.4, "QB position budget percentage calculation", `Expected 23.4%, got ${qbPercentage}%`);
+
+  const centsRoster: CapGmPlayer[] = [
+    {
+      id: "c1",
+      name: "QB",
+      position: "QB",
+      starRating: 5,
+      marketValueCents: 250_000_000,
+      allocatedCents: 250_000_000,
+      baseEpa: 7.2,
+      isRetained: true,
+      notes: "",
+    },
+    {
+      id: "c2",
+      name: "LT",
+      position: "LT",
+      starRating: 3,
+      marketValueCents: 80_000_000,
+      allocatedCents: 40_000_000,
+      baseEpa: 2.1,
+      isRetained: true,
+      notes: "",
+    },
+    {
+      id: "c3",
+      name: "Cut",
+      position: "WR",
+      starRating: 4,
+      marketValueCents: 120_000_000,
+      allocatedCents: 120_000_000,
+      baseEpa: 4.0,
+      isRetained: false,
+      notes: "",
+    },
+  ];
+  const centsState = computeCapGmState(centsRoster, CAP_GM_HARD_CAP_CENTS);
+  assert(centsState.allocatedCents === 290_000_000, "Integer-cents allocated excludes cut players");
+  assert(centsState.remainingCents === CAP_GM_HARD_CAP_CENTS - 290_000_000, "Integer remaining = hard cap minus allocated");
+  assert(centsState.globalRetentionRisk === "HIGH", "One critically underfunded retainee → HIGH");
+  assert(dollarsToAllocatedCents(25_000) === 2_500_000, "Slider dollars * 100 maps to integer cents");
+  assert(Number.isInteger(dollarsToAllocatedCents(12_345.678)), "floor(dollars * 100) yields integer cents only");
 
   console.log("==================================================");
   console.log(`📊 TEST RESULTS SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);

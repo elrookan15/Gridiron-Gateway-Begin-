@@ -77,10 +77,12 @@ export const ParentConsentPortal: React.FC<ParentConsentPortalProps> = ({
 
     try {
       const { data: sessionData } = await supabase.auth.getUser();
+      const resolvedAthleteId = sessionData.user?.id ?? athleteId.trim();
+
       bindConsentAthleteIdToSession(athleteId, sessionData.user?.id);
 
       await submitParentalConsent({
-        athleteId,
+        athleteId: resolvedAthleteId,
         parentName: form.parentName,
         parentEmail: form.parentEmail,
         relationship: form.relationship,

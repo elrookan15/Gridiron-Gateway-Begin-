@@ -21,6 +21,7 @@ import { CoachWorkspace } from "./components/CoachWorkspace";
 import { ComplianceDashboard } from "./components/ComplianceDashboard";
 import { AthleteDossier } from "./components/AthleteDossier";
 import { GridironGatewayDashboard } from "./components/GridironGatewayDashboard";
+import { SourceControlPanel } from "./components/SourceControlPanel";
 
 export function App() {
   const [profile, setProfile] = useState<AthleteProfile>(INITIAL_ATHLETE_PROFILE);
@@ -60,6 +61,7 @@ export function App() {
     | "coach_views"
     | "compliance"
     | "tech_docs"
+    | "source_control"
   >("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("Athlete");
@@ -193,6 +195,8 @@ export function App() {
         {activeTab === "compliance" && <ComplianceDashboard />}
 
         {activeTab === "tech_docs" && <TechDocsView />}
+
+        {activeTab === "source_control" && <SourceControlPanel />}
       </main>
 
       {/* 25-30 QUESTION ONBOARDING WIZARD MODAL OVERLAY */}

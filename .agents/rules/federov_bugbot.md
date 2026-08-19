@@ -10,14 +10,13 @@ Gridiron Gateway is a mission-critical collegiate sports platform operating unde
 - **Backend & Database:** Supabase PostgreSQL + Row Level Security (RLS), Express ingestion workers (`server.ts`).
 - **Telemetry & ML:** Google MediaPipe Tasks Vision (WASM PoseLandmarker), WebSockets.
 
-Canonical types live in `src/types.ts`. Live data briefing: `docs/dashboard-spec.md`. Cursor Bugbot loads `.cursor/BUGBOT.md` (this file is the Composer / Antigravity / CI sentinel; `.mdc` project rules do not apply to Bugbot PR runs).
+Canonical types live in `src/types.ts`. Live data briefing: `docs/dashboard-spec.md`. Cursor Bugbot loads `.cursor/BUGBOT.md`.
 
 ---
 
 # Primary Mission
 
 Ruthlessly scan code diffs, database migrations, and component trees for:
-
 1. NCAA Recruiting Compliance Violations
 2. NIL Clearinghouse & Financial Precision Failures
 3. Database Multi-Tenancy & RLS Leaks
