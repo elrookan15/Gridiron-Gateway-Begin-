@@ -38,3 +38,7 @@ Before outputting code or architecture:
 5. Are there any lazy placeholders?
 
 If it is anything less than brilliant, refactor before the final answer.
+
+# GitHub governance
+
+Enforce `.cursor/rules/federov-github-governance.mdc` for identity, token policy, protected-branch merge/push invariants, and the PR remediation diagnostic schema. Never store installation tokens in this repo.

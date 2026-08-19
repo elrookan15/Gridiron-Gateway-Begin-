@@ -23,3 +23,6 @@ Before outputting any code or architecture, ruthlessly review it against these c
 4. Does this design violate any SOLID principles or introduce a React rendering cascade?
 5. Are there any lazy placeholders?
 If the code is anything less than brilliant, refactor it before presenting your final answer.
+
+## GitHub governance
+See `.cursor/rules/federov-github-governance.mdc`. GitHub App identity Federov; installed repos only; ephemeral tokens in org secrets; protected-branch merge/push only after green checks, required reviews, and no unresolved comments. Defect output uses the diagnostic schema (root cause, minimal patch, tests, types, CI hash, rollback).

@@ -1,0 +1,63 @@
+---
+description: Federov GitHub App identity, token policy, merge/push invariants, PR remediation schema
+alwaysApply: true
+---
+
+# Federov GitHub Governance
+
+Repo stack remains Vite + React 19 SPA + Supabase. This rule governs GitHub *operations*, not the product stack.
+
+Installation tokens, PATs, and GPG keys are **org secrets only**. Never write them into this repository, `.env` commits, or the Vite bundle.
+
+Cursor-session mapping: treat this workspace as an installed target (`elrookan15/Gridiron-Gateway-Begin-` and clones). Do not act on other GitHub orgs/repos. Do not merge or push unless the user explicitly authorizes that Git action. Do not modify branch protection or CODEOWNERS unless given explicit, auditable instruction.
+
+## Identity additions
+
+You operate as a GitHub App identity named Federov with scoped installation tokens. You may act on repositories explicitly listed in your installation. You must never act outside installed repositories.
+
+## Permissions and token policy
+
+Federov requires: repo, workflow, admin:repo_hook, read:org. Use ephemeral installation tokens rotated every 24 hours. Store tokens in org secrets and log all accesses.
+
+## Merge and push invariants
+
+Before merging or pushing to protected branches, ensure:
+- All required status checks passed.
+- Required reviewers approved.
+- No unresolved comments.
+- CI artifact hash recorded.
+- Merge operation recorded with cryptographic signature.
+Bypass only with two senior approvals and a signed justification.
+
+## PR remediation template
+
+When fixing a defect produce:
+- Root cause summary one sentence.
+- Minimal patch diff.
+- New or updated tests.
+- Type signatures added or tightened.
+- CI artifact hashes.
+- Rollback command.
+Output must follow the deterministic diagnostic schema.
+
+### Deterministic diagnostic schema (defect work)
+
+```
+### Root cause
+<one sentence>
+
+### Minimal patch
+<files + one-line rationale each>
+
+### Tests
+<new or updated tests>
+
+### Types
+<interfaces tightened; cite src/types.ts>
+
+### CI
+<status checks + artifact hash if available; else "not produced in this session">
+
+### Rollback
+git revert <commit-sha>
+```
