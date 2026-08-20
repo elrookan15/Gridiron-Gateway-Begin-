@@ -2,7 +2,11 @@ import React, { useState, useMemo } from "react";
 import { SCHOOLS_DATABASE, SchoolEntry } from "../data/schoolsData";
 import { CollegeDivision } from "../types";
 import { generateSchoolWithGemini } from "../services/geminiAssistantApi";
-import { validateSchoolEntry } from "../lib/geminiSchoolGeneratorEngine";
+import {
+  UNVERIFIED_CONTACT_LABEL,
+  hasVerifiedRecruitingEmail,
+  hasVerifiedRecruitingPhone,
+} from "../lib/geminiSchoolGeneratorEngine";
 import {
   Building2,
   Search,
@@ -180,25 +184,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
     setAiGeneratorError(null);
 
     try {
-      let generatedSchool: SchoolEntry;
-      try {
-        generatedSchool = await generateSchoolWithGemini(aiSchoolQuery);
-      } catch (_edgeErr) {
-        // Fallback generator when edge function or network key is unreachable
-        const fallbackRes = validateSchoolEntry({
-          name: aiSchoolQuery.trim(),
-          mascot: "Wildcats",
-          division: "FBS",
-          conference: "Independent",
-          cityState: "Austin, TX",
-          primaryColor: "#0f172a",
-          programHighlights: "Generated via Gemini AI Recruiting Intelligence.",
-        });
-        if (!fallbackRes.isValid || !fallbackRes.school) {
-          throw new Error(fallbackRes.error || "Failed to validate school payload.");
-        }
-        generatedSchool = fallbackRes.school;
-      }
+      const generatedSchool = await generateSchoolWithGemini(aiSchoolQuery);
 
       setSchools((prev) => [generatedSchool, ...prev]);
       setSavedSchoolIds((prev) => [...prev, generatedSchool.id]);
@@ -569,46 +555,69 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                   {/* Contact Info (Email & Phone) */}
                   <div className="bg-slate-950/90 rounded-2xl p-3 border border-slate-800/80 space-y-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
-                      <a
-                        href={`mailto:${school.recruitingEmail}`}
-                        className="text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
-                        title={school.recruitingEmail}
-                      >
-                        <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span className="truncate">{school.recruitingEmail}</span>
-                      </a>
-                      <button
-                        onClick={() => copyToClipboard(school.recruitingEmail, "Email")}
-                        className="text-slate-500 hover:text-slate-300 p-1 rounded"
-                        title="Copy email"
-                      >
-                        {copiedText === "Email" ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
+                      {hasVerifiedRecruitingEmail(school.recruitingEmail) ? (
+                        <a
+                          href={`mailto:${school.recruitingEmail}`}
+                          className="min-h-[44px] text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
+                          title={school.recruitingEmail}
+                        >
+                          <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span className="truncate">{school.recruitingEmail}</span>
+                        </a>
+                      ) : (
+                        <span
+                          className="min-h-[44px] text-slate-500 font-medium truncate flex items-center gap-1.5 text-[11px]"
+                          title={UNVERIFIED_CONTACT_LABEL}
+                        >
+                          <Mail className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span className="truncate">{UNVERIFIED_CONTACT_LABEL}</span>
+                        </span>
+                      )}
+                      {hasVerifiedRecruitingEmail(school.recruitingEmail) ? (
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(school.recruitingEmail, "Email")}
+                          className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-slate-300 p-1 rounded inline-flex items-center justify-center"
+                          title="Copy email"
+                        >
+                          {copiedText === "Email" ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      ) : null}
                     </div>
 
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-                      <a
-                        href={`tel:${school.recruitingPhone}`}
-                        className="text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
-                      >
-                        <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span>{school.recruitingPhone}</span>
-                      </a>
-                      <button
-                        onClick={() => copyToClipboard(school.recruitingPhone, "Phone")}
-                        className="text-slate-500 hover:text-slate-300 p-1 rounded"
-                        title="Copy phone"
-                      >
-                        {copiedText === "Phone" ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
-                        ) : (
-                          <Copy className="w-3 h-3" />
-                        )}
-                      </button>
+                      {hasVerifiedRecruitingPhone(school.recruitingPhone) ? (
+                        <a
+                          href={`tel:${school.recruitingPhone}`}
+                          className="min-h-[44px] text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>{school.recruitingPhone}</span>
+                        </a>
+                      ) : (
+                        <span className="min-h-[44px] text-slate-500 font-medium flex items-center gap-1.5 text-[11px]">
+                          <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <span>{UNVERIFIED_CONTACT_LABEL}</span>
+                        </span>
+                      )}
+                      {hasVerifiedRecruitingPhone(school.recruitingPhone) ? (
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(school.recruitingPhone, "Phone")}
+                          className="min-h-[44px] min-w-[44px] shrink-0 text-slate-500 hover:text-slate-300 p-1 rounded inline-flex items-center justify-center"
+                          title="Copy phone"
+                        >
+                          {copiedText === "Phone" ? (
+                            <Check className="w-3 h-3 text-emerald-400" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </button>
+                      ) : null}
                     </div>
                   </div>
 
@@ -812,12 +821,18 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <td className="py-3 px-4 text-slate-400 font-bold">Recruiting Email</td>
                       {comparedSchools.map((school) => (
                         <td key={school.id} className="py-3 px-4 text-center">
-                          <a
-                            href={`mailto:${school.recruitingEmail}`}
-                            className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
-                          >
-                            {school.recruitingEmail}
-                          </a>
+                          {hasVerifiedRecruitingEmail(school.recruitingEmail) ? (
+                            <a
+                              href={`mailto:${school.recruitingEmail}`}
+                              className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
+                            >
+                              {school.recruitingEmail}
+                            </a>
+                          ) : (
+                            <span className="text-slate-500 font-medium text-[11px]">
+                              {UNVERIFIED_CONTACT_LABEL}
+                            </span>
+                          )}
                         </td>
                       ))}
                     </tr>

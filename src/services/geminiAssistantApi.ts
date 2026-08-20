@@ -1,5 +1,5 @@
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
-import { validateSchoolEntry } from "../lib/geminiSchoolGeneratorEngine";
+import { validateSchoolEntry, type SchoolEntryDraft } from "../lib/geminiSchoolGeneratorEngine";
 import type { SchoolEntry } from "../data/schoolsData";
 import type { PitchTone } from "../types";
 
@@ -18,7 +18,7 @@ export interface GeminiOutreachResponse {
 }
 
 export interface GeminiSchoolResponse {
-  school: Partial<SchoolEntry>;
+  school: SchoolEntryDraft;
 }
 
 /**

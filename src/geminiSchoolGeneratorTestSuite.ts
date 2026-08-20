@@ -1,4 +1,9 @@
-import { validateSchoolEntry } from "./lib/geminiSchoolGeneratorEngine";
+import {
+  UNVERIFIED_CONTACT_LABEL,
+  hasVerifiedRecruitingEmail,
+  normalizeCollegeDivision,
+  validateSchoolEntry,
+} from "./lib/geminiSchoolGeneratorEngine";
 import type { SchoolEntry } from "./data/schoolsData";
 
 export function runGeminiSchoolGeneratorTestSuite() {
@@ -46,7 +51,7 @@ export function runGeminiSchoolGeneratorTestSuite() {
   assert(res3.isValid === false && res3.error === "Mascot is required.", "Missing mascot rejected");
 
   // Test 4: Invalid Division Rejection
-  const res4 = validateSchoolEntry({ ...validD2, division: "INVALID" as any });
+  const res4 = validateSchoolEntry({ ...validD2, division: "INVALID" });
   assert(res4.isValid === false, "Invalid division label rejected");
 
   // Test 5: Fallback Colors and Default Attributes
@@ -60,7 +65,38 @@ export function runGeminiSchoolGeneratorTestSuite() {
   const res5 = validateSchoolEntry(minimalSchool);
   assert(res5.isValid === true, "Minimal school entry validated with fallbacks");
   assert(res5.school?.primaryColor === "#0f172a", "Default fallback primary color (#0f172a) assigned");
-  assert(res5.school?.recruitingEmail.includes("@ferris-state-bulldogs.edu"), "Fallback recruiting email generated");
+  assert(
+    res5.school?.recruitingEmail === UNVERIFIED_CONTACT_LABEL,
+    "Missing contacts stay unverified — no invented @.edu address",
+  );
+  assert(
+    res5.school?.recruitingPhone === UNVERIFIED_CONTACT_LABEL,
+    "Missing phones stay unverified — no 555 placeholder",
+  );
+
+  // Test 6: Gemini schema drift D2/D3 must map onto CollegeDivision DII/DIII
+  assert(normalizeCollegeDivision("D2") === "DII", "Gemini D2 alias maps to DII");
+  assert(normalizeCollegeDivision("D3") === "DIII", "Gemini D3 alias maps to DIII");
+  const geminiD2Payload = {
+    name: "Valdosta State Blazers",
+    mascot: "Blazers",
+    division: "D2",
+    conference: "Gulf South Conference",
+    cityState: "Valdosta, GA",
+    recruitingEmail: "recruiting@valdosta-state.edu",
+    recruitingPhone: "(555) 019-2026",
+  };
+  const res6 = validateSchoolEntry(geminiD2Payload);
+  assert(res6.isValid === true && res6.school?.division === "DII", "Gemini D2 payload accepted as DII");
+  assert(
+    res6.school?.recruitingEmail === UNVERIFIED_CONTACT_LABEL &&
+      !hasVerifiedRecruitingEmail(res6.school?.recruitingEmail ?? ""),
+    "LLM-supplied recruiting email discarded (Sidearm/CSV only)",
+  );
+  assert(
+    !String(res6.school?.recruitingEmail).includes("@"),
+    "AI-generated school must not expose a clickable invented mailbox",
+  );
 
   console.log("==================================================");
   console.log(`📊 TEST RESULTS SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);

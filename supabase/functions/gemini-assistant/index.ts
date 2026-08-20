@@ -70,23 +70,22 @@ serve(async (req) => {
         properties: {
           name: { type: Type.STRING },
           mascot: { type: Type.STRING },
-          division: { type: Type.STRING, description: "Must be one of: FBS, FCS, D2, D3, NAIA, JUCO" },
+          division: { type: Type.STRING, description: "Must be one of: FBS, FCS, DII, DIII, NAIA, JUCO, PREP" },
           conference: { type: Type.STRING },
           cityState: { type: Type.STRING },
           primaryColor: { type: Type.STRING, description: "Hex color code e.g. #BF5700" },
           secondaryColor: { type: Type.STRING, description: "Hex color code e.g. #1E293B" },
           topMajors: { type: Type.ARRAY, items: { type: Type.STRING } },
           programHighlights: { type: Type.STRING },
-          recruitingEmail: { type: Type.STRING },
-          recruitingPhone: { type: Type.STRING },
         },
         required: ["name", "mascot", "division", "conference", "cityState", "primaryColor", "programHighlights"],
       };
 
       const prompt = `You are an elite college football recruiting database curator.
 Generate structured, accurate data for the college football program matching "${schoolQuery}".
-Return exact division as one of: FBS, FCS, D2, D3, NAIA, JUCO.
-Return valid hex codes for primaryColor and secondaryColor.`;
+Return exact division as one of: FBS, FCS, DII, DIII, NAIA, JUCO, PREP.
+Return valid hex codes for primaryColor and secondaryColor.
+Do not invent recruiting emails, phone numbers, or staff directories.`;
 
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
