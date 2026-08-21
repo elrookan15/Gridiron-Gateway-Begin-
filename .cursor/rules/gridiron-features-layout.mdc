@@ -6,23 +6,28 @@ alwaysApply: true
 # Feature Architecture & File Layout
 
 ## Strategic Purpose
-Enterprise recruiting / analytics / NCAA compliance platform for 2026: $20.5M revenue-share cap, 105-man rosters, NIL collectives. Unifies verified telemetry, AI film, sports IQ, and FinTech escrow in a multi-tenant command center.
+Enterprise recruiting / analytics / NCAA compliance platform for 2026: $20.5M revenue-share cap, 105-man rosters, NIL collectives. Unifies verified telemetry, AI film, sports IQ, and FinTech escrow in a multi-tenant command center for HS/JUCO athletes, college coaches, and compliance officers.
 
-## Phases 1–4 Modules
+## Core Modules (canonical filenames)
 | Domain | Modules |
 |---|---|
-| Front Office | `CapGMRosterSimulator`, Transfer Portal, Leaderboard/Directory |
+| Command Center | `GridironGatewayDashboard` — directory, dossier, NIL estimator |
+| Recruit profile | `OnboardingWizard`, `AthleteProfileCard` |
+| Rankings / portal | `LeaderboardTop250`, `TransferPortalModule` |
+| Coach ops | `CoachPipelineBoard`, `CoachWorkspace`, `RecruitingPipeline` |
+| Academics / AI | `NcaaEligibilityTracker`, `AIRecruitingAssistant` |
+| Front office | `CapGMRosterSimulator`, RallySafe, MultiTenant RBAC |
 | Scouting | `BioScanTelemetryModule`, `TrueSpeedModule`, Cognition, Combine Laser (P4), Autonomous Scouting (P4) |
-| Coaching Ops | `AiFilmTaggingStudio`, Coach Pipeline Board |
-| Compliance/FinTech | `RallySafeEscrowModule`, `MultiTenantRoleSelector`, Parent Consent (P4) |
+| Film / consent | `AiFilmTaggingStudio` / `AIFilmStudio`, `ParentConsentPortal` (P4) |
 
 ## Canonical Paths
-- Types: `src/types.ts` (`CapGMRoster`, `BioScanTelemetry`, `MultiTenantUser`, etc.)
+- Types: `src/types.ts` (`AthleteProfile`, `PipelineOffer`, `CapGmPlayer`, `BioScanTelemetry`, `MultiTenantUser`, etc.)
 - SPA root / RBAC state: `src/App.tsx`
+- Live clients: `src/services/*`, `src/lib/supabaseClient.ts`
 - Cap math tests: `src/capGmTestSuite.ts`
-- Mock data: `src/data/mockData.ts`
+- Mock fixtures (not product DB): `src/data/mockData.ts`
 - Master shell: `src/components/GridironGatewayDashboard.tsx`
 - Backend: `server.ts` (REST RallySafe/Laser + WS BioScan)
 
 ## Product Guide Source of Truth
-`README.md` is the canonical feature map, API table, design tokens, and setup guide. When adding or refactoring modules, match the named components and endpoints documented there. Prefer verified/instrumented metrics, fail-closed compliance, integer-cents FinTech, and RBAC persona isolation.
+`README.md` + `docs/dashboard-spec.md` + `.cursor/rules/federov.mdc`. Prefer extending named modules over inventing parallel files. Prefer verified/instrumented metrics, fail-closed compliance, integer-cents FinTech, RBAC persona isolation, and the lime/red/gold/sky/maroon/orange sports-tech palette.

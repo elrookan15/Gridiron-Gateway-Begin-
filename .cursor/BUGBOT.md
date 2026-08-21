@@ -167,7 +167,7 @@ If a changed async component (fetch/suspense/loader) has no reserved skeleton or
 
 For files matching `src/components/**/*.{tsx,jsx}`:
 
-If cards omit `border border-slate-800` on `bg-slate-900`, or invent a palette outside emerald `#10b981` / cyan `#06b6d4` / amber `#f59e0b` / purple `#a855f7` / rose `#f43f5e` on `bg-slate-950` backdrops:
+If cards omit `border border-slate-800` on `bg-slate-900`, or invent a palette outside lime / red / gold-yellow / sky / maroon / orange (`text-lime-400`/`bg-lime-500`, `text-red-500`/`bg-red-600`, `text-yellow-400`/`bg-yellow-500`, `text-sky-300`/`bg-sky-400`, `text-rose-800`/`bg-rose-900`, `text-orange-300`/`bg-orange-400`) on `bg-slate-950` backdrops:
 
 - Add a non-blocking Bug titled "Design-token drift"
 

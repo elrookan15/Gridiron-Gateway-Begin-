@@ -248,15 +248,20 @@ Gridiron-Gateway/
 
 ## 🎨 Design System & Aesthetics
 
-Gridiron Gateway strictly adheres to a **Dark Sports-Tech** design aesthetic:
+Gridiron Gateway strictly adheres to a **high-energy sports-tech** aesthetic on a dark backdrop:
 
 * **Backdrop:** `#09090b` (`bg-slate-950`)
 * **Surfaces:** Dark Slate (`bg-slate-900`, `border-slate-800`)
-* **Neon Emerald (`#10b981`):** Primary action buttons, verified badges, positive CapGM metrics.
-* **Cyan Blue (`#06b6d4`):** Physical combine measurements, BioScan telemetry, TrueSpeed data.
-* **Amber Gold (`#f59e0b`):** Star ratings, Top 250 national ranks, showcase camps.
-* **Purple (`#a855f7`):** Academics, S2 Cognition diagnostics, play-by-play film tags.
-* **Rose Red (`#f43f5e`):** Compliance locks, transfer portal blocks, legal consent warnings.
+* **Lime (`text-lime-400` / `bg-lime-500`):** Primary actions, verified scout badges, active states, positive NIL metrics.
+* **Red (`text-red-500` / `bg-red-600`):** Transfer portal alerts, missing compliance, urgent pipeline deadlines.
+* **Gold/Yellow (`text-yellow-400` / `bg-yellow-500`):** Star ratings, high-value accolades, Top 250 rankings.
+* **Sky (`text-sky-300` / `bg-sky-400`):** Laser/combine metrics, BioScan, TrueSpeed, biometric data.
+* **Maroon (`text-rose-800` / `bg-rose-900`):** Academic tracking, NCAA eligibility, Core GPA.
+* **Orange (`text-orange-300` / `bg-orange-400`):** AI Recruiting Assistant, generative DMs, Kanban stage highlights.
+* **Typography:** Crisp sans (`font-inter` / `font-jakarta`); uppercase tracked section labels; `font-mono` for numeric telemetry.
+* **Touch targets:** `min-h-[44px] min-w-[44px]`.
+
+Agent identity & full engineering disciplines: `.cursor/rules/federov.mdc`.
 
 ---
 
