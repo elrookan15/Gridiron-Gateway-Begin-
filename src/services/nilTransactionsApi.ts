@@ -1,4 +1,8 @@
 import type { ClearinghouseStatus, NilTransaction } from "../types";
+import {
+  isActiveTransferPortalStatus,
+  liveNilLedgerPayoutDecision,
+} from "../lib/rallySafeReleaseGate";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
 
 interface NilTransactionRow {
@@ -59,11 +63,63 @@ export async function fetchNilTransactionsForAthlete(athleteId: string): Promise
  * Optimistic UI is forbidden — only persist after a returned row.
  */
 export async function releaseNilEscrowPayout(transactionId: string): Promise<NilTransaction> {
+  if (!transactionId.trim()) {
+    throw new Error("transactionId is required.");
+  }
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured.");
   }
 
   const supabase = getSupabaseClient();
+  const { data: existing, error: lookupError } = await supabase
+    .from("nil_transactions")
+    .select(
+      "id, athlete_id, sponsor_name, deal_amount_cents, clearinghouse_status, payout_released, vbp_notes, created_at, updated_at",
+    )
+    .eq("id", transactionId)
+    .maybeSingle();
+
+  if (lookupError) {
+    throw new Error(`Escrow release blocked: ${lookupError.message}`);
+  }
+  if (!existing) {
+    throw new Error(
+      "FAIL_CLOSED: no row updated (not CLEARED, already released, or RLS denied).",
+    );
+  }
+
+  const current = existing as NilTransactionRow;
+  const athleteId = String(current.athlete_id);
+  const { data: portalRows, error: portalError } = await supabase
+    .from("transfer_portal_entries")
+    .select("id, status")
+    .eq("athlete_id", athleteId)
+    .eq("status", "ACTIVE")
+    .limit(1);
+
+  if (portalError) {
+    throw new Error(
+      "FAIL_CLOSED: could not verify NCAA transfer-portal status before payout.",
+    );
+  }
+
+  const athleteInActiveTransferPortal = (portalRows ?? []).some((row) =>
+    isActiveTransferPortalStatus(String((row as { status: string }).status)),
+  );
+
+  const gate = liveNilLedgerPayoutDecision({
+    clearinghouseStatus: current.clearinghouse_status,
+    payoutReleased: current.payout_released,
+    athleteInActiveTransferPortal,
+  });
+  if (gate.ok === false) {
+    throw new Error(
+      gate.code === "TRANSFER_PORTAL_LOCK"
+        ? "FAIL_CLOSED: NCAA transfer portal lock — RallySafe will not release escrow."
+        : `FAIL_CLOSED: escrow release blocked (${gate.code}).`,
+    );
+  }
+
   const { data, error } = await supabase
     .from("nil_transactions")
     .update({ payout_released: true })
@@ -78,7 +134,9 @@ export async function releaseNilEscrowPayout(transactionId: string): Promise<Nil
     throw new Error(
       error.message.includes("enforce_cleared_payout")
         ? "FAIL_CLOSED: Postgres rejected payout_released on a non-CLEARED deal."
-        : `Escrow release blocked: ${error.message}`,
+        : error.message.includes("TRANSFER_PORTAL_LOCK")
+          ? "FAIL_CLOSED: NCAA transfer portal lock — RallySafe will not release escrow."
+          : `Escrow release blocked: ${error.message}`,
     );
   }
 
