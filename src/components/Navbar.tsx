@@ -1,12 +1,13 @@
 import React from "react";
 import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Building2, FileCheck, Sun, Moon, GitBranch } from "lucide-react";
 import { GridironLogo } from "./GridironLogo";
+import type { AppTab, ChromeUserRole } from "../types";
 
 interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: any) => void;
-  userRole: any;
-  setUserRole: (role: any) => void;
+  activeTab: AppTab;
+  setActiveTab: (tab: AppTab) => void;
+  userRole: ChromeUserRole;
+  setUserRole: (role: ChromeUserRole) => void;
   athleteName?: string;
   gradClass?: number;
   position?: string;
@@ -45,9 +46,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-slate-400 text-[11px]">Mode:</span>
             <div className="flex bg-slate-900 rounded-lg p-0.5 border border-slate-800">
               <button
-                onClick={() => setUserRole("athlete")}
-                className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "athlete"
+                type="button"
+                onClick={() => setUserRole("Athlete")}
+                className={`px-2.5 min-h-[44px] rounded-md text-[11px] font-medium transition-all ${
+                  userRole === "Athlete"
                     ? "bg-emerald-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -55,9 +57,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Athlete / Parent
               </button>
               <button
-                onClick={() => setUserRole("coach")}
-                className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "coach"
+                type="button"
+                onClick={() => setUserRole("Coach")}
+                className={`px-2.5 min-h-[44px] rounded-md text-[11px] font-medium transition-all ${
+                  userRole === "Coach"
                     ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -65,9 +68,10 @@ export const Navbar: React.FC<NavbarProps> = ({
                 College Coach
               </button>
               <button
-                onClick={() => setUserRole("fan")}
-                className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "fan"
+                type="button"
+                onClick={() => setUserRole("Fan")}
+                className={`px-2.5 min-h-[44px] rounded-md text-[11px] font-medium transition-all ${
+                  userRole === "Fan"
                     ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -105,7 +109,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Nav Tabs */}
           <nav className="hidden lg:flex items-center gap-1">
             <button
-              onClick={() => setActiveTab("gateway_center" as any)}
+              type="button"
+              onClick={() => setActiveTab("gateway_center")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "gateway_center"
                   ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
@@ -177,12 +182,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "onboarding"
-                  ? "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-inner"
-                  : "text-slate-300 hover:text-white hover:bg-slate-900"
-              }`}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-900"
             >
               <UserCheck className="w-4 h-4 text-cyan-400" />
               Profile Builder
@@ -418,10 +420,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             Camps
           </button>
           <button
+            type="button"
             onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
-            className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "onboarding" ? "bg-cyan-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
-            }`}
+            className="px-3 py-1.5 min-h-[44px] rounded-md whitespace-nowrap font-medium bg-slate-900 text-slate-300"
           >
             Profile Builder
           </button>

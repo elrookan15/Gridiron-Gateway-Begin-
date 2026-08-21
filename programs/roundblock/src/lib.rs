@@ -17,6 +17,8 @@ pub mod roundblock {
         requires_collateral: bool,
         collateral_amount_cents: u64,
     ) -> Result<()> {
+        require!(duration_seconds > 0, EscrowError::InvalidDuration);
+
         let clock = Clock::get()?;
         let escrow = &mut ctx.accounts.trade_escrow;
 
@@ -24,7 +26,10 @@ pub mod roundblock {
         escrow.recipient = ctx.accounts.recipient.key();
         escrow.league = ctx.accounts.league.key();
         escrow.created_at = clock.unix_timestamp;
-        escrow.expires_at = clock.unix_timestamp + duration_seconds;
+        escrow.expires_at = clock
+            .unix_timestamp
+            .checked_add(duration_seconds)
+            .ok_or(EscrowError::ArithmeticOverflow)?;
         escrow.status = TradeStatus::Pending;
         escrow.requires_collateral = requires_collateral;
         escrow.collateral_amount = collateral_amount_cents;
@@ -206,4 +211,8 @@ pub enum EscrowError {
     InvalidStatus,
     #[msg("Unauthorized account for trade resolution.")]
     Unauthorized,
+    #[msg("Duration must be a positive number of seconds.")]
+    InvalidDuration,
+    #[msg("Checked arithmetic overflow on escrow timestamp.")]
+    ArithmeticOverflow,
 }

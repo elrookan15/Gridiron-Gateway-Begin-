@@ -20,18 +20,9 @@ export interface DatabaseSchool {
   program_highlights: string[] | null;
 }
 
-const getEnvVar = (key: string): string | undefined => {
-  if (typeof process !== "undefined" && process.env?.[key]) {
-    return process.env[key];
-  }
-  if (typeof import.meta !== "undefined" && import.meta && (import.meta as any).env?.[key]) {
-    return (import.meta as any).env[key];
-  }
-  return undefined;
-};
-
-const supabaseUrl = getEnvVar("VITE_SUPABASE_URL")?.trim();
-const supabaseAnonKey = getEnvVar("VITE_SUPABASE_ANON_KEY")?.trim();
+const viteEnv = import.meta.env as ImportMetaEnv | undefined;
+const supabaseUrl = (viteEnv?.VITE_SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)?.trim();
+const supabaseAnonKey = (viteEnv?.VITE_SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY)?.trim();
 
 export function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl && supabaseAnonKey);

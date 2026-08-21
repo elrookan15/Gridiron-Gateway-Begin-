@@ -656,9 +656,3 @@ export async function updatePipelineOfferStage(
     throw new Error(`Failed to update pipeline stage: ${error.message}`);
   }
 }
-
-export {
-  fetchNilTransactionsForAthlete,
-  releaseNilEscrowPayout,
-} from "./nilTransactionsApi";
-export { getTransferPortalAthletes } from "./transferPortalApi";

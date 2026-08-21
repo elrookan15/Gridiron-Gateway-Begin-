@@ -9,6 +9,29 @@ export type PitchTone = "NFL_DEVELOPMENT" | "IMMEDIATE_IMPACT" | "ACADEMIC_EXCEL
 
 export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION_COACH" | "COMPLIANCE_OFFICER" | "ATHLETE_RECRUIT";
 
+/** Chrome persona switcher — subset of `UserRole` used by `Navbar` / `App`. */
+export type ChromeUserRole = Extract<UserRole, "Athlete" | "Coach" | "Fan">;
+
+/** Primary SPA tabs owned by `App.tsx`. */
+export type AppTab =
+  | "gateway_center"
+  | "profile"
+  | "dossier"
+  | "top250"
+  | "highlights"
+  | "coaches"
+  | "schools"
+  | "transfer_portal"
+  | "coach_pipeline"
+  | "coach_workspace"
+  | "camps"
+  | "ai_assistant"
+  | "ncaa"
+  | "coach_views"
+  | "compliance"
+  | "tech_docs"
+  | "source_control";
+
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
 
 export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029 | 2030 | number;
@@ -23,8 +46,8 @@ export interface SchoolEntry {
   state: string;
   division: DivisionTier;
   conference: string;
-  primaryRecruitingEmail?: string;
-  coachingPhone?: string;
+  primaryRecruitingEmail?: string | null;
+  coachingPhone?: string | null;
   topMajors?: string[];
   programHighlights?: string[];
 }
@@ -250,8 +273,9 @@ export interface CollegeCoachProfile {
   bio: string;
   recruitingTerritory: string[];
   targetPositions: Position[];
-  email: string;
-  phone: string;
+  /** Verified Sidearm/CSV only — never LLM-invented. */
+  email: string | null;
+  phone: string | null;
   twitterHandle: string;
   verifiedBadge: boolean;
   officeAddress: string;

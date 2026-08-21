@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ArrowRightLeft, Clock, GraduationCap, Search } from "lucide-react";
 
 import { isSupabaseConfigured } from "../lib/supabaseClient";
-import { getTransferPortalAthletes } from "../services/schoolsApi";
+import { getTransferPortalAthletes } from "../services/transferPortalApi";
 import type { PortalStatus, TransferPortalAthlete } from "../types";
 
 function getStatusBadge(status: PortalStatus) {

@@ -139,7 +139,11 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
     setTimeout(() => setActionNotice(null), 2500);
   };
 
-  const copyToClipboard = (text: string, label: string) => {
+  const copyToClipboard = (text: string | null | undefined, label: string) => {
+    if (!text) {
+      triggerNotice("Contact not verified");
+      return;
+    }
     navigator.clipboard.writeText(text);
     setCopiedText(label);
     triggerNotice(`Copied ${label} to clipboard!`);
@@ -569,17 +573,26 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                   {/* Contact Info (Email & Phone) */}
                   <div className="bg-slate-950/90 rounded-2xl p-3 border border-slate-800/80 space-y-2 text-xs">
                     <div className="flex items-center justify-between gap-2">
-                      <a
-                        href={`mailto:${school.recruitingEmail}`}
-                        className="text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
-                        title={school.recruitingEmail}
-                      >
-                        <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                        <span className="truncate">{school.recruitingEmail}</span>
-                      </a>
+                      {school.recruitingEmail ? (
+                        <a
+                          href={`mailto:${school.recruitingEmail}`}
+                          className="text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
+                          title={school.recruitingEmail}
+                        >
+                          <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <span className="truncate">{school.recruitingEmail}</span>
+                        </a>
+                      ) : (
+                        <span className="text-amber-400 font-medium truncate flex items-center gap-1.5 text-[11px]">
+                          <Mail className="w-3.5 h-3.5 shrink-0" />
+                          Contact not verified
+                        </span>
+                      )}
                       <button
+                        type="button"
                         onClick={() => copyToClipboard(school.recruitingEmail, "Email")}
-                        className="text-slate-500 hover:text-slate-300 p-1 rounded"
+                        disabled={!school.recruitingEmail}
+                        className="text-slate-500 hover:text-slate-300 p-1 rounded min-h-[44px] min-w-[44px] inline-flex items-center justify-center disabled:opacity-40"
                         title="Copy email"
                       >
                         {copiedText === "Email" ? (
@@ -591,16 +604,25 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                     </div>
 
                     <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-                      <a
-                        href={`tel:${school.recruitingPhone}`}
-                        className="text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
-                      >
-                        <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                        <span>{school.recruitingPhone}</span>
-                      </a>
+                      {school.recruitingPhone ? (
+                        <a
+                          href={`tel:${school.recruitingPhone}`}
+                          className="text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
+                        >
+                          <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                          <span>{school.recruitingPhone}</span>
+                        </a>
+                      ) : (
+                        <span className="text-amber-400 font-medium flex items-center gap-1.5 text-[11px]">
+                          <Phone className="w-3.5 h-3.5 shrink-0" />
+                          Contact not verified
+                        </span>
+                      )}
                       <button
+                        type="button"
                         onClick={() => copyToClipboard(school.recruitingPhone, "Phone")}
-                        className="text-slate-500 hover:text-slate-300 p-1 rounded"
+                        disabled={!school.recruitingPhone}
+                        className="text-slate-500 hover:text-slate-300 p-1 rounded min-h-[44px] min-w-[44px] inline-flex items-center justify-center disabled:opacity-40"
                         title="Copy phone"
                       >
                         {copiedText === "Phone" ? (
@@ -812,12 +834,16 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <td className="py-3 px-4 text-slate-400 font-bold">Recruiting Email</td>
                       {comparedSchools.map((school) => (
                         <td key={school.id} className="py-3 px-4 text-center">
-                          <a
-                            href={`mailto:${school.recruitingEmail}`}
-                            className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
-                          >
-                            {school.recruitingEmail}
-                          </a>
+                          {school.recruitingEmail ? (
+                            <a
+                              href={`mailto:${school.recruitingEmail}`}
+                              className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
+                            >
+                              {school.recruitingEmail}
+                            </a>
+                          ) : (
+                            <span className="text-amber-400 text-[11px] font-bold">Contact not verified</span>
+                          )}
                         </td>
                       ))}
                     </tr>
@@ -827,7 +853,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <td className="py-3 px-4 text-slate-400 font-bold">Recruiting Phone</td>
                       {comparedSchools.map((school) => (
                         <td key={school.id} className="py-3 px-4 text-center text-slate-200">
-                          {school.recruitingPhone}
+                          {school.recruitingPhone ?? "Contact not verified"}
                         </td>
                       ))}
                     </tr>

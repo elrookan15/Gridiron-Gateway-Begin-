@@ -1,5 +1,7 @@
 import type { ClearinghouseStatus, NilTransaction } from "../types";
+import { canReleaseNilEscrow } from "../lib/rallySafeReleaseGate";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
+import { isAthleteActiveInTransferPortal } from "./transferPortalApi";
 
 interface NilTransactionRow {
   id: string;
@@ -59,11 +61,43 @@ export async function fetchNilTransactionsForAthlete(athleteId: string): Promise
  * Optimistic UI is forbidden — only persist after a returned row.
  */
 export async function releaseNilEscrowPayout(transactionId: string): Promise<NilTransaction> {
+  if (!transactionId.trim()) {
+    throw new Error("transactionId is required.");
+  }
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured.");
   }
 
   const supabase = getSupabaseClient();
+  const { data: existing, error: loadError } = await supabase
+    .from("nil_transactions")
+    .select(
+      "id, athlete_id, sponsor_name, deal_amount_cents, clearinghouse_status, payout_released, vbp_notes, created_at, updated_at",
+    )
+    .eq("id", transactionId)
+    .maybeSingle();
+
+  if (loadError) {
+    throw new Error(`Escrow release blocked: ${loadError.message}`);
+  }
+  if (!existing) {
+    throw new Error("FAIL_CLOSED: NIL transaction not found or RLS denied.");
+  }
+
+  const current = mapNilTransaction(existing as NilTransactionRow);
+  const athleteInTransferPortal = await isAthleteActiveInTransferPortal(current.athleteId);
+  const gate = canReleaseNilEscrow({
+    clearinghouseStatus: current.clearinghouseStatus,
+    stripeMilestoneVerified: current.clearinghouseStatus === "CLEARED",
+    athleteInTransferPortal,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
+    payoutReleased: current.payoutReleased,
+  });
+
+  if (gate.ok === false) {
+    throw new Error(`FAIL_CLOSED: escrow release blocked (${gate.code}).`);
+  }
+
   const { data, error } = await supabase
     .from("nil_transactions")
     .update({ payout_released: true })
