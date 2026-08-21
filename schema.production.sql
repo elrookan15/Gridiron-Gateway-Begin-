@@ -72,3 +72,4 @@ COMMENT ON COLUMN college_coaches.email IS 'Extracted from published athletics p
 -- Do not store CapGM / CAPS institutional revenue-share rows here.
 -- COPPA minor contact lock: supabase/migrations/20260816120000_parental_consents.sql
 -- Transfer portal ticker: supabase/migrations/20260816140000_transfer_portal_entries.sql
+-- Portal payout lock: supabase/migrations/20260821120000_nil_portal_payout_lock.sql

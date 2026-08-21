@@ -1,4 +1,8 @@
-import { canReleaseNilEscrow } from "./lib/rallySafeReleaseGate";
+import {
+  canReleaseNilEscrow,
+  isActiveTransferPortalStatus,
+  liveNilLedgerPayoutDecision,
+} from "./lib/rallySafeReleaseGate";
 import type { RallySafeReleaseSnapshot } from "./types";
 
 function runRallySafeClearinghouseTestSuite() {
@@ -52,6 +56,37 @@ function runRallySafeClearinghouseTestSuite() {
   assert(
     canReleaseNilEscrow({ ...cleared, regulatoryPlane: "INSTITUTIONAL_CAPS" }).ok === false,
     "CapGM / CAPS plane cannot release via RallySafe NIL Go",
+  );
+
+  const liveCleared = {
+    clearinghouseStatus: "CLEARED" as const,
+    payoutReleased: false,
+    athleteInActiveTransferPortal: false,
+  };
+  assert(
+    liveNilLedgerPayoutDecision(liveCleared).ok === true,
+    "Live nil_transactions ledger allows payout when CLEARED and not in portal",
+  );
+
+  const livePortal = liveNilLedgerPayoutDecision({
+    ...liveCleared,
+    athleteInActiveTransferPortal: true,
+  });
+  assert(
+    livePortal.ok === false && livePortal.code === "TRANSFER_PORTAL_LOCK",
+    "Live SPA payout path blocks ACTIVE transfer-portal athletes even when CLEARED",
+  );
+
+  assert(
+    liveNilLedgerPayoutDecision({ ...liveCleared, payoutReleased: true }).ok === false,
+    "Live ledger rejects already-released payouts",
+  );
+
+  assert(
+    isActiveTransferPortalStatus("ACTIVE") === true &&
+      isActiveTransferPortalStatus("WITHDRAWN") === false &&
+      isActiveTransferPortalStatus("MATRICULATED") === false,
+    "Only ACTIVE portal rows block RallySafe payout",
   );
 
   console.log("==================================================");
