@@ -21,11 +21,15 @@ export interface DatabaseSchool {
 }
 
 const getEnvVar = (key: string): string | undefined => {
+  const viteValue =
+    typeof import.meta !== "undefined" && import.meta.env
+      ? (import.meta.env as ImportMetaEnv)[key as keyof ImportMetaEnv]
+      : undefined;
+  if (typeof viteValue === "string" && viteValue.length > 0) {
+    return viteValue;
+  }
   if (typeof process !== "undefined" && process.env?.[key]) {
     return process.env[key];
-  }
-  if (typeof import.meta !== "undefined" && import.meta && (import.meta as any).env?.[key]) {
-    return (import.meta as any).env[key];
   }
   return undefined;
 };
@@ -55,7 +59,8 @@ function createBrowserClient(): SupabaseClient {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storage: typeof window !== "undefined" ? window.localStorage : undefined,
+        storage:
+          typeof window !== "undefined" ? window.localStorage : undefined,
       },
     },
   );
@@ -77,7 +82,9 @@ export function getSupabaseClient(): SupabaseClient {
  * Translates a snake_case Postgres `schools` row into a clean, camelCase `SchoolEntry` model.
  * Handles null/undefined array properties defensively to eliminate rendering crashes.
  */
-export function mapDatabaseSchoolToSchoolEntry(dbSchool: DatabaseSchool): SchoolEntry {
+export function mapDatabaseSchoolToSchoolEntry(
+  dbSchool: DatabaseSchool,
+): SchoolEntry {
   const divisionTier = (dbSchool.division || "FBS_P4") as DivisionTier;
 
   return {
@@ -90,7 +97,9 @@ export function mapDatabaseSchoolToSchoolEntry(dbSchool: DatabaseSchool): School
     conference: dbSchool.conference,
     primaryRecruitingEmail: dbSchool.primary_recruiting_email ?? undefined,
     coachingPhone: dbSchool.coaching_phone ?? undefined,
-    topMajors: Array.isArray(dbSchool.top_majors) ? [...dbSchool.top_majors] : undefined,
+    topMajors: Array.isArray(dbSchool.top_majors)
+      ? [...dbSchool.top_majors]
+      : undefined,
     programHighlights: Array.isArray(dbSchool.program_highlights)
       ? [...dbSchool.program_highlights]
       : undefined,
@@ -101,7 +110,9 @@ export function mapDatabaseSchoolToSchoolEntry(dbSchool: DatabaseSchool): School
  * Translates a frontend camelCase `SchoolEntry` model into a snake_case Postgres `schools` row
  * suitable for database writeback operations.
  */
-export function mapSchoolEntryToDatabaseSchool(entry: SchoolEntry): DatabaseSchool {
+export function mapSchoolEntryToDatabaseSchool(
+  entry: SchoolEntry,
+): DatabaseSchool {
   return {
     id: entry.id,
     name: entry.name,
@@ -113,6 +124,8 @@ export function mapSchoolEntryToDatabaseSchool(entry: SchoolEntry): DatabaseScho
     primary_recruiting_email: entry.primaryRecruitingEmail ?? null,
     coaching_phone: entry.coachingPhone ?? null,
     top_majors: entry.topMajors ? [...entry.topMajors] : null,
-    program_highlights: entry.programHighlights ? [...entry.programHighlights] : null,
+    program_highlights: entry.programHighlights
+      ? [...entry.programHighlights]
+      : null,
   };
 }
