@@ -35,14 +35,17 @@ function snapshotForTransaction(
 ): RallySafeReleaseSnapshot {
   return {
     clearinghouseStatus: tx.clearinghouseStatus,
-    stripeMilestoneVerified: tx.clearinghouseStatus === "CLEARED",
+    // NilTransaction has no Stripe milestone column — fail-closed until HMAC is independently verified.
+    stripeMilestoneVerified: false,
     athleteInTransferPortal,
     regulatoryPlane: "THIRD_PARTY_NIL_GO",
     payoutReleased: tx.payoutReleased,
   };
 }
 
-export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }) => {
+export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({
+  athleteId,
+}) => {
   const [transactions, setTransactions] = useState<NilTransaction[]>([]);
   const [portalLocked, setPortalLocked] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -69,7 +72,9 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
       setTransactions(rows);
       setPortalLocked(inPortal);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch ledger data.");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch ledger data.",
+      );
       setTransactions([]);
       setPortalLocked(false);
     } finally {
@@ -85,7 +90,9 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
     const target = transactions.find((tx) => tx.id === transactionId);
     if (!target) return;
 
-    const gate = canReleaseNilEscrow(snapshotForTransaction(target, portalLocked));
+    const gate = canReleaseNilEscrow(
+      snapshotForTransaction(target, portalLocked),
+    );
     if (gate.ok === false) {
       return;
     }
@@ -94,7 +101,9 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
     setActionError(null);
     try {
       const updated = await releaseNilEscrowPayout(transactionId);
-      setTransactions((prev) => prev.map((tx) => (tx.id === updated.id ? updated : tx)));
+      setTransactions((prev) =>
+        prev.map((tx) => (tx.id === updated.id ? updated : tx)),
+      );
     } catch (err) {
       setActionError(
         err instanceof Error
@@ -152,7 +161,9 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
         ) : (
           transactions.map((tx) => {
             const isNotCleared = tx.clearinghouseStatus === "NOT_CLEARED";
-            const gate = canReleaseNilEscrow(snapshotForTransaction(tx, portalLocked));
+            const gate = canReleaseNilEscrow(
+              snapshotForTransaction(tx, portalLocked),
+            );
             const canRelease = gate.ok === true;
 
             return (
@@ -177,8 +188,8 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
                       </span>
                     ) : isNotCleared ? (
                       <span className="text-rose-400 flex items-center gap-1">
-                        <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> NOT CLEARED — eligibility
-                        crisis
+                        <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> NOT
+                        CLEARED — eligibility crisis
                       </span>
                     ) : (
                       <span className="text-amber-500 flex items-center gap-1">

@@ -29,12 +29,16 @@ function mapNilTransaction(row: NilTransactionRow): NilTransaction {
   };
 }
 
-export async function fetchNilTransactionsForAthlete(athleteId: string): Promise<NilTransaction[]> {
+export async function fetchNilTransactionsForAthlete(
+  athleteId: string,
+): Promise<NilTransaction[]> {
   if (!athleteId.trim()) {
     throw new Error("athleteId is required.");
   }
   if (!isSupabaseConfigured()) {
-    throw new Error("Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).");
+    throw new Error(
+      "Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).",
+    );
   }
 
   const supabase = getSupabaseClient();
@@ -60,7 +64,9 @@ export async function fetchNilTransactionsForAthlete(athleteId: string): Promise
  * Trigger `fn_lock_nil_clearinghouse_status` rejects SPA clearance flips.
  * Optimistic UI is forbidden — only persist after a returned row.
  */
-export async function releaseNilEscrowPayout(transactionId: string): Promise<NilTransaction> {
+export async function releaseNilEscrowPayout(
+  transactionId: string,
+): Promise<NilTransaction> {
   if (!transactionId.trim()) {
     throw new Error("transactionId is required.");
   }
@@ -85,10 +91,13 @@ export async function releaseNilEscrowPayout(transactionId: string): Promise<Nil
   }
 
   const current = mapNilTransaction(existing as NilTransactionRow);
-  const athleteInTransferPortal = await isAthleteActiveInTransferPortal(current.athleteId);
+  const athleteInTransferPortal = await isAthleteActiveInTransferPortal(
+    current.athleteId,
+  );
   const gate = canReleaseNilEscrow({
     clearinghouseStatus: current.clearinghouseStatus,
-    stripeMilestoneVerified: current.clearinghouseStatus === "CLEARED",
+    // Independent of CLEARED — NilTransaction has no Stripe HMAC signal; fail closed.
+    stripeMilestoneVerified: false,
     athleteInTransferPortal,
     regulatoryPlane: "THIRD_PARTY_NIL_GO",
     payoutReleased: current.payoutReleased,

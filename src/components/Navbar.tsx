@@ -1,5 +1,25 @@
 import React from "react";
-import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Building2, FileCheck, Sun, Moon, GitBranch } from "lucide-react";
+import {
+  Shield,
+  Award,
+  Calendar,
+  UserCheck,
+  Sparkles,
+  GraduationCap,
+  MessageSquare,
+  Flame,
+  Video,
+  Users,
+  RefreshCw,
+  ListFilter,
+  Code,
+  ShieldCheck,
+  Building2,
+  FileCheck,
+  Sun,
+  Moon,
+  GitBranch,
+} from "lucide-react";
 import { GridironLogo } from "./GridironLogo";
 import type { AppTab, ChromeUserRole } from "../types";
 
@@ -35,10 +55,18 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden text-slate-300">
             <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-emerald-500/30">
-              <Flame className="w-3 h-3 text-amber-400 animate-pulse" /> Live Recruiting Feed
+              <Flame className="w-3 h-3 text-amber-400 animate-pulse" /> Live
+              Recruiting Feed
             </span>
             <span className="truncate text-slate-300">
-              <strong className="text-white">5★ QB Julian Lewis</strong> committed to <span className="text-amber-300 font-medium">Colorado Bulldogs</span> • <strong className="text-white">4★ WR Dakorien Moore</strong> pledged to <span className="text-emerald-300 font-medium">Oregon Ducks</span>
+              <strong className="text-white">5★ QB Julian Lewis</strong>{" "}
+              committed to{" "}
+              <span className="text-amber-300 font-medium">
+                Colorado Bulldogs
+              </span>{" "}
+              • <strong className="text-white">4★ WR Dakorien Moore</strong>{" "}
+              pledged to{" "}
+              <span className="text-emerald-300 font-medium">Oregon Ducks</span>
             </span>
           </div>
 
@@ -97,7 +125,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
                   GRIDIRON
                 </span>
-                <span className="text-emerald-400 font-extrabold text-xl">GATEWAY</span>
+                <span className="text-emerald-400 font-extrabold text-xl">
+                  GATEWAY
+                </span>
               </div>
               <p className="text-[10px] text-amber-400 font-semibold tracking-wider uppercase flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -111,7 +141,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab("gateway_center")}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
+              className={`flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold transition-all ${
                 activeTab === "gateway_center"
                   ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
@@ -183,8 +213,10 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               type="button"
-              onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-900"
+              onClick={() =>
+                onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile")
+              }
+              className="flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white hover:bg-slate-900"
             >
               <UserCheck className="w-4 h-4 text-cyan-400" />
               Profile Builder
@@ -316,18 +348,26 @@ export const Navbar: React.FC<NavbarProps> = ({
             {onToggleTheme && (
               <button
                 onClick={onToggleTheme}
-                title={theme === "light" ? "Switch to Dark Sports-Tech View" : "Switch to Light Mode View"}
+                title={
+                  theme === "light"
+                    ? "Switch to Dark Sports-Tech View"
+                    : "Switch to Light Mode View"
+                }
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold transition-all border border-slate-700 text-amber-300 shadow-sm shrink-0"
               >
                 {theme === "light" ? (
                   <>
                     <Moon className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-                    <span className="hidden sm:inline text-amber-300">Dark View</span>
+                    <span className="hidden sm:inline text-amber-300">
+                      Dark View
+                    </span>
                   </>
                 ) : (
                   <>
                     <Sun className="w-4 h-4 text-amber-400 fill-amber-400/20" />
-                    <span className="hidden sm:inline text-amber-300">Light View</span>
+                    <span className="hidden sm:inline text-amber-300">
+                      Light View
+                    </span>
                   </>
                 )}
               </button>
@@ -359,14 +399,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={onToggleTheme}
               className="px-2.5 py-1.5 rounded-md whitespace-nowrap font-bold bg-slate-900 border border-slate-700 text-amber-300 flex items-center gap-1 shrink-0"
             >
-              {theme === "light" ? <Moon className="w-3.5 h-3.5 text-amber-400" /> : <Sun className="w-3.5 h-3.5 text-amber-400" />}
+              {theme === "light" ? (
+                <Moon className="w-3.5 h-3.5 text-amber-400" />
+              ) : (
+                <Sun className="w-3.5 h-3.5 text-amber-400" />
+              )}
               <span>{theme === "light" ? "Dark" : "Light"}</span>
             </button>
           )}
           <button
             onClick={() => setActiveTab("top250")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "top250" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "top250"
+                ? "bg-emerald-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Top 250
@@ -374,7 +420,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("highlights")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "highlights" ? "bg-rose-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "highlights"
+                ? "bg-rose-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Top 10 Plays
@@ -382,7 +430,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("coaches")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "coaches" ? "bg-blue-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "coaches"
+                ? "bg-blue-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Coaches
@@ -390,7 +440,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("schools")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "schools" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "schools"
+                ? "bg-emerald-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Schools (D1-AA, D2, D3, NAIA, JUCO)
@@ -398,7 +450,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("transfer_portal")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "transfer_portal" ? "bg-blue-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "transfer_portal"
+                ? "bg-blue-600 text-white font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Transfer Portal
@@ -406,7 +460,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("coach_pipeline")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "coach_pipeline" ? "bg-purple-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "coach_pipeline"
+                ? "bg-purple-600 text-white font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Coach Board
@@ -414,14 +470,18 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("camps")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "camps" ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "camps"
+                ? "bg-amber-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Camps
           </button>
           <button
             type="button"
-            onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
+            onClick={() =>
+              onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile")
+            }
             className="px-3 py-1.5 min-h-[44px] rounded-md whitespace-nowrap font-medium bg-slate-900 text-slate-300"
           >
             Profile Builder
@@ -429,7 +489,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("ai_assistant")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "ai_assistant" ? "bg-purple-600 text-white font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "ai_assistant"
+                ? "bg-purple-600 text-white font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             AI Pitcher
@@ -437,7 +499,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("ncaa")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "ncaa" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "ncaa"
+                ? "bg-emerald-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Core GPA
@@ -445,7 +509,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("coach_views")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "coach_views" ? "bg-emerald-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "coach_views"
+                ? "bg-emerald-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Messaging
@@ -453,7 +519,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("compliance")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "compliance" ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "compliance"
+                ? "bg-amber-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             NIL & Gate
@@ -461,7 +529,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => setActiveTab("tech_docs")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "tech_docs" ? "bg-sky-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "tech_docs"
+                ? "bg-sky-500 text-slate-950 font-bold"
+                : "bg-slate-900 text-slate-300"
             }`}
           >
             Arch Specs
