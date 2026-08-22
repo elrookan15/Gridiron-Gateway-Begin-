@@ -41,8 +41,12 @@ try {
   execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("🔟 Executing Pipeline Stage Signed NLI Immutability Gate (13/13 Fail-Closed)...");
+  execSync("npx tsx src/pipelineStageTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS, PIPELINE & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {
