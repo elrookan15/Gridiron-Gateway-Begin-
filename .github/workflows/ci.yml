@@ -51,5 +51,8 @@ jobs:
       - name: GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)
         run: npm run test:gcs-signed-url
 
+      - name: Pipeline Stage Signed NLI Immutability Gate (13/13 Fail-Closed Audit)
+        run: npm run test:pipeline-stage
+
       - name: Production Bundle Verification
         run: npm run build

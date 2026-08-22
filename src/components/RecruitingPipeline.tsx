@@ -10,6 +10,7 @@ import {
 } from "../types";
 import {
   getPipelineOffers,
+  isSignedNliStatus,
   updatePipelineOfferStage,
 } from "../services/schoolsApi";
 import { isSupabaseConfigured } from "../lib/supabaseClient";
@@ -132,6 +133,12 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
     if (nextIdx < 0 || nextIdx >= PIPELINE_STAGES.length) return;
 
     const nextStage = PIPELINE_STAGES[nextIdx];
+    if (direction === -1 && isSignedNliStatus(current.commitmentStatus)) {
+      setActionError(
+        "FAIL_CLOSED: Signed NLI offers cannot be moved out of Committed from the pipeline board.",
+      );
+      return;
+    }
     const previous = offers;
 
     // Optimistic UI — preserve column heights / avoid CLS
@@ -275,7 +282,7 @@ const PipelineColumn: React.FC<PipelineColumnProps> = ({
             <PipelineCard
               key={offer.id}
               offer={offer}
-              canMoveLeft={idx > 0}
+              canMoveLeft={idx > 0 && !isSignedNliStatus(offer.commitmentStatus)}
               canMoveRight={idx < PIPELINE_STAGES.length - 1}
               isMoving={movingId === offer.id}
               onMoveLeft={() => onMoveLeft(offer.id)}

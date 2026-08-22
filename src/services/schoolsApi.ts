@@ -511,11 +511,16 @@ interface PipelineOfferRow {
   athlete_profiles: PipelineAthleteEmbed | PipelineAthleteEmbed[] | null;
 }
 
-const OFFICIAL_VISIT_TAG = "[pipeline:Official Visit]";
+export const OFFICIAL_VISIT_TAG = "[pipeline:Official Visit]";
+
+export function isSignedNliStatus(status: string | null | undefined): boolean {
+  return status?.trim().toLowerCase() === "signed";
+}
 
 /**
  * Derive Kanban stage from offer flags until a dedicated `pipeline_stage` column ships.
  * Official Visit is tagged in `notes` so it survives reload.
+ * `Signed` (NLI) maps to the Committed column — it must not be writable as Uncommitted.
  */
 export function derivePipelineStage(
   commitmentStatus: string,
@@ -533,6 +538,45 @@ export function derivePipelineStage(
     return "Offered";
   }
   return "Evaluating";
+}
+
+export interface PipelineStageWritePatch {
+  is_official: boolean;
+  commitment_status: string;
+  notes: string | null;
+}
+
+/**
+ * Kanban → scholarship_offers write mapping.
+ * Fail-closed: a Signed NLI cannot be overwritten to Uncommitted by a stage regress.
+ */
+export function buildPipelineStagePatch(
+  stage: RecruitingPipelineStage,
+  priorNotes: string | null | undefined,
+  priorCommitmentStatus: string | null | undefined,
+): PipelineStageWritePatch {
+  if (isSignedNliStatus(priorCommitmentStatus) && stage !== "Committed") {
+    throw new Error(
+      "FAIL_CLOSED: cannot regress a Signed NLI offer via Kanban. Signed status is immutable from the pipeline board.",
+    );
+  }
+
+  const priorNotesClean = (priorNotes ?? "").replace(OFFICIAL_VISIT_TAG, "").trim();
+  const notes =
+    stage === "Official Visit"
+      ? `${OFFICIAL_VISIT_TAG}${priorNotesClean ? ` ${priorNotesClean}` : ""}`.trim()
+      : priorNotesClean || null;
+
+  let commitmentStatus = "Uncommitted";
+  if (stage === "Committed") {
+    commitmentStatus = isSignedNliStatus(priorCommitmentStatus) ? "Signed" : "Committed";
+  }
+
+  return {
+    is_official: stage !== "Evaluating",
+    commitment_status: commitmentStatus,
+    notes,
+  };
 }
 
 /**
@@ -622,30 +666,21 @@ export async function updatePipelineOfferStage(
 
   const supabase = getSupabaseClient();
 
-  // Preserve non-pipeline notes while toggling the OV tag
   const { data: existing, error: readError } = await supabase
     .from("scholarship_offers")
-    .select("notes")
+    .select("notes, commitment_status")
     .eq("id", offerId)
     .maybeSingle();
 
   if (readError) {
     throw new Error(`Failed to read offer notes: ${readError.message}`);
   }
+  if (!existing) {
+    throw new Error("FAIL_CLOSED: offer not found or RLS denied.");
+  }
 
-  const priorNotes = ((existing as { notes?: string | null } | null)?.notes ?? "")
-    .replace(OFFICIAL_VISIT_TAG, "")
-    .trim();
-  const notes =
-    stage === "Official Visit"
-      ? `${OFFICIAL_VISIT_TAG}${priorNotes ? ` ${priorNotes}` : ""}`.trim()
-      : priorNotes || null;
-
-  const patch = {
-    is_official: stage !== "Evaluating",
-    commitment_status: stage === "Committed" ? "Committed" : "Uncommitted",
-    notes,
-  };
+  const row = existing as { notes?: string | null; commitment_status?: string | null };
+  const patch = buildPipelineStagePatch(stage, row.notes, row.commitment_status);
 
   const { error } = await supabase
     .from("scholarship_offers")
