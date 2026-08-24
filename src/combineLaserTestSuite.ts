@@ -64,6 +64,32 @@ export function runCombineLaserTestSuite() {
   const result7 = validateAndIngestLaserPacket({ ...validPayload, athleteId: "" });
   assert(result7.success === false && result7.errorCode === "MISSING_ATHLETE_ID", "Missing athlete ID rejected");
 
+  // Test 8: Legacy webhook shape — 3.50s 40 with no athleteId must not earn Verified
+  const result8 = validateAndIngestLaserPacket({
+    athleteName: "Tariq Lawson",
+    laserFortyTime: 3.5,
+  });
+  assert(
+    result8.success === false && result8.ingestedEntry === undefined,
+    "Impossible 40 without athleteId is rejected (no Verified badge)",
+  );
+
+  // Test 9: Incomplete packet missing shuttle/3cone/jumps (old webhook stored 0 + Verified)
+  const result9 = validateAndIngestLaserPacket({
+    athleteName: "Tariq Lawson",
+    athleteId: "rec_tariq_lawson",
+    combineEventName: "Regional Combine Showcase",
+    laserFortyTime: 4.48,
+  });
+  assert(
+    result9.success === false && result9.errorCode === "INVALID_SHUTTLE_TIME",
+    "Incomplete laser packet missing shuttle is rejected",
+  );
+
+  // Test 10: Null / non-object webhook body
+  const result10 = validateAndIngestLaserPacket(null);
+  assert(result10.success === false && result10.errorCode === "MISSING_ATHLETE_ID", "Null webhook body is rejected");
+
   console.log("==================================================");
   console.log(`📊 TEST RESULTS SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);
   console.log("==================================================");

@@ -38,6 +38,7 @@ import type {
   NilRegulatoryPlane,
 } from "./src/types";
 import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
+import { validateAndIngestLaserPacket } from "./src/lib/combineLaserEngine";
 import {
   isComplianceAuditPostgresConfigured,
   persistComplianceAuditToPostgres,
@@ -655,6 +656,7 @@ app.get("/api/compliance/recruiting-periods", (_req, res) => {
 
 interface LaserCombineRecord {
   id: string;
+  athleteId: string;
   athleteName: string;
   combineEventName: string;
   laserFortyTime: number;
@@ -687,45 +689,27 @@ app.post(
   requireWebhookSecret("x-laser-secret", "LASER_WEBHOOK_SECRET"),
   (req, res) => {
     try {
-      const {
-        athleteName,
-        combineEventName,
-        laserFortyTime,
-        laserShuttleTime,
-        laserThreeConeTime,
-        verticalJumpInches,
-        broadJumpInches,
-      } = req.body ?? {};
-
-      if (typeof athleteName !== "string" || !athleteName.trim()) {
+      const result = validateAndIngestLaserPacket(req.body ?? {});
+      if (!result.success || !result.ingestedEntry) {
         return res.status(400).json({
-          error: "MISSING_LASER_TELEMETRY",
-          message: "athleteName is required.",
+          error: result.errorCode ?? "INVALID_LASER_PACKET",
+          message: result.message ?? "Laser packet failed hardware verification.",
         });
       }
 
-      const forty = Number(laserFortyTime);
-      if (!Number.isFinite(forty) || forty <= 0) {
-        return res.status(400).json({
-          error: "MISSING_LASER_TELEMETRY",
-          message: "laserFortyTime must be a positive number.",
-        });
-      }
-
+      const entry = result.ingestedEntry;
       const record: LaserCombineRecord = {
-        id: `las_${Date.now()}`,
-        athleteName: athleteName.trim(),
-        combineEventName:
-          typeof combineEventName === "string" && combineEventName.trim()
-            ? combineEventName.trim()
-            : "Regional Combine Showcase",
-        laserFortyTime: forty,
-        laserShuttleTime: Number(laserShuttleTime) || 0,
-        laserThreeConeTime: Number(laserThreeConeTime) || 0,
-        verticalJumpInches: Number(verticalJumpInches) || 0,
-        broadJumpInches: Number(broadJumpInches) || 0,
+        id: entry.id,
+        athleteId: entry.athleteId,
+        athleteName: entry.athleteName,
+        combineEventName: entry.combineEventName,
+        laserFortyTime: entry.laserFortyTime,
+        laserShuttleTime: entry.laserShuttleTime,
+        laserThreeConeTime: entry.laserThreeConeTime,
+        verticalJumpInches: entry.verticalJumpInches,
+        broadJumpInches: entry.broadJumpInches,
         badge: "⚡ Laser Verified",
-        timestamp: new Date().toISOString(),
+        timestamp: entry.timestamp,
       };
 
       LASER_COMBINE_DB.unshift(record);
@@ -733,6 +717,7 @@ app.post(
       return res.status(201).json({
         status: "LASER_TIMING_INGESTED",
         id: record.id,
+        athleteId: record.athleteId,
         badge: record.badge,
         athleteName: record.athleteName,
         combineEventName: record.combineEventName,

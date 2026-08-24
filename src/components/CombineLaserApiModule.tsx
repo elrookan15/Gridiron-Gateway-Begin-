@@ -63,6 +63,7 @@ export const CombineLaserApiModule: React.FC = () => {
         error?: string;
         message?: string;
         id?: string;
+        athleteId?: string;
         athleteName?: string;
         combineEventName?: string;
         laserFortyTime?: number;
@@ -76,16 +77,28 @@ export const CombineLaserApiModule: React.FC = () => {
         throw new Error(data.message || data.error || "Laser webhook ingestion failed.");
       }
 
+      const forty = Number(data.laserFortyTime);
+      const shuttle = Number(data.laserShuttleTime);
+      const threeCone = Number(data.laserThreeConeTime);
+      const vert = Number(data.verticalJumpInches);
+      const broad = Number(data.broadJumpInches);
+      if (
+        !data.athleteId?.trim() ||
+        ![forty, shuttle, threeCone, vert, broad].every((n) => Number.isFinite(n) && n > 0)
+      ) {
+        throw new Error("Laser webhook returned incomplete verified timings.");
+      }
+
       const ingested: VerifiedLaserCombineEntry = {
         eventId: data.id || `las-${Date.now()}`,
-        athleteId: "rec_tariq_lawson",
+        athleteId: data.athleteId,
         combineLocation: data.combineEventName || "Rivals Combine Series (Atlanta, GA)",
         date: data.timestamp || new Date().toISOString(),
-        laser40YardDash: Number(data.laserFortyTime ?? 4.48),
-        laser20YardShuttle: Number(data.laserShuttleTime ?? 4.09),
-        laser3ConeDrill: Number(data.laserThreeConeTime ?? 6.79),
-        verticalJumpInches: Number(data.verticalJumpInches ?? 37),
-        broadJumpInches: Number(data.broadJumpInches ?? 126),
+        laser40YardDash: forty,
+        laser20YardShuttle: shuttle,
+        laser3ConeDrill: threeCone,
+        verticalJumpInches: vert,
+        broadJumpInches: broad,
         verifiedBy: "⚡ Laser Verified Hardware Ingress",
       };
       setEntries((prev) => [ingested, ...prev]);
