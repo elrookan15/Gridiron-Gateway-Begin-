@@ -7,7 +7,10 @@
  * Secrets (Dashboard → Edge Functions → Secrets, or `supabase secrets set`):
  *   CFBD_API_KEY              — Bearer token from collegefootballdata.com
  *   COLLEGE_FOOTBALL_API_KEY  — optional alias for CFBD_API_KEY
- *   SEEDER_INVOKE_SECRET      — optional; if set, require header `x-seeder-secret`
+ *   SEEDER_INVOKE_SECRET      — required shared secret (header `x-seeder-secret`).
+ *                                Fail-closed when unset: the SPA anon JWT is a valid
+ *                                gateway token, so an optional header would let any
+ *                                client overwrite `public.schools` via service_role.
  *
  * Auto-injected by Supabase runtime:
  *   SUPABASE_URL
@@ -260,14 +263,27 @@ async function upsertSchools(
   return { upserted, errors };
 }
 
+function secretsMatch(required: string, provided: string): boolean {
+  if (required.length !== provided.length) return false;
+  let mismatch = 0;
+  for (let i = 0; i < required.length; i += 1) {
+    mismatch |= required.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  return mismatch === 0;
+}
+
 function authorizeInvoker(req: Request): Response | null {
   const requiredSecret = Deno.env.get("SEEDER_INVOKE_SECRET")?.trim();
   if (!requiredSecret) {
-    return null;
+    console.error("CRITICAL: SEEDER_INVOKE_SECRET unset — refusing service_role schools upsert.");
+    return jsonResponse(
+      { error: "SEEDER_INVOKE_SECRET is not configured. Seeder is fail-closed." },
+      503,
+    );
   }
 
-  const provided = req.headers.get("x-seeder-secret")?.trim();
-  if (provided !== requiredSecret) {
+  const provided = req.headers.get("x-seeder-secret")?.trim() ?? "";
+  if (!provided || !secretsMatch(requiredSecret, provided)) {
     console.warn("⚠️ [cfbd-schools-seeder] Rejected invoke — invalid or missing x-seeder-secret");
     return jsonResponse({ error: "Unauthorized seeder invoke." }, 401);
   }
