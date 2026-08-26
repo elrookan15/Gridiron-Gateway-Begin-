@@ -41,8 +41,12 @@ try {
   execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("🔟 Executing BioScan Live Telemetry Integrity Gate (8/8 Metric Audit)...");
+  execSync("npx tsx src/bioscanTelemetryTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS, BIOSCAN & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

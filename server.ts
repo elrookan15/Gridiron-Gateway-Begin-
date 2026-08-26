@@ -43,6 +43,7 @@ import {
   persistComplianceAuditToPostgres,
 } from "./src/lib/complianceAuditPersist";
 import type { ComplianceGateDispatchRequest } from "./src/types";
+import { parseBioscanMetric } from "./src/lib/bioscanTelemetry";
 
 dotenv.config();
 
@@ -1018,10 +1019,10 @@ app.post(
     }
 
     const m = metrics as Record<string, unknown>;
-    const maxVelocity = Number(m.max_velocity_mph) || 0;
-    const accel = Number(m.acceleration_rate) || 0;
-    const load = Number(m.player_load_total) || 0;
-    const hr = Number(m.heart_rate_bpm) || 0;
+    const maxVelocity = parseBioscanMetric(m.max_velocity_mph);
+    const accel = parseBioscanMetric(m.acceleration_rate);
+    const load = parseBioscanMetric(m.player_load_total);
+    const hr = parseBioscanMetric(m.heart_rate_bpm);
 
     const normalizedTelemetry: BioscanTelemetry = {
       session_id,
@@ -1036,7 +1037,7 @@ app.post(
 
     BIOSCAN_TELEMETRY_DB[athlete_external_id] = normalizedTelemetry;
 
-    broadcastTelemetryUpdate(athlete_external_id, maxVelocity || 22.8, load || 512.0);
+    broadcastTelemetryUpdate(athlete_external_id, maxVelocity, load);
 
     console.log(
       `[BioScan Ingress] Telemetry accepted & WS broadcast for athlete ${athlete_external_id} (${maxVelocity} MPH)`
@@ -1057,14 +1058,14 @@ app.get("/api/v1/bioscan/telemetry/:athleteId", (req, res) => {
     return res.status(400).json({ error: "INVALID_ATHLETE_ID" });
   }
 
-  const telemetry = BIOSCAN_TELEMETRY_DB[athleteId] || {
-    athlete_external_id: athleteId,
-    max_velocity_mph: 22.4,
-    acceleration_rate: 5.6,
-    player_load_total: 492.5,
-    heart_rate_bpm: 168,
-    timestamp: new Date().toISOString(),
-  };
+  const telemetry = BIOSCAN_TELEMETRY_DB[athleteId];
+  if (!telemetry) {
+    return res.status(404).json({
+      error: "TELEMETRY_NOT_FOUND",
+      message: "No Catapult/WHOOP packet has been ingested for this athlete.",
+      athleteId,
+    });
+  }
 
   return res.json(telemetry);
 });

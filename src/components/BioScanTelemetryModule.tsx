@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BioScanTelemetry } from "../types";
+import { applyBioscanWsUpdate } from "../lib/bioscanTelemetry";
 import { Activity, Zap, ShieldCheck, Heart, RefreshCw, Smartphone, Radio } from "lucide-react";
 
 const MOCK_TELEMETRY: BioScanTelemetry[] = [
@@ -44,23 +45,33 @@ export const BioScanTelemetryModule: React.FC = () => {
       ws.onclose = () => setWsConnected(false);
       ws.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data);
-          if (payload.event === "TELEMETRY_UPDATE" && payload.data) {
-            setTelemetryList((prev) =>
-              prev.map((item) =>
-                item.id === payload.data.athleteId || item.id === "bio-1"
-                  ? {
-                      ...item,
-                      inGameMaxSprintMph: payload.data.currentSpeedMph || item.inGameMaxSprintMph,
-                      playerLoadScore: payload.data.cumulativeLoad || item.playerLoadScore,
-                      lastSyncTimestamp: "Just now (Live WS Stream)",
-                    }
-                  : item
-              )
-            );
+          const payload = JSON.parse(event.data) as {
+            event?: string;
+            data?: { athleteId?: string; currentSpeedMph?: number; cumulativeLoad?: number };
+          };
+          const frame = payload.data;
+          if (
+            payload.event !== "TELEMETRY_UPDATE" ||
+            !frame ||
+            typeof frame.athleteId !== "string" ||
+            typeof frame.currentSpeedMph !== "number" ||
+            typeof frame.cumulativeLoad !== "number"
+          ) {
+            return;
           }
-        } catch (e) {
-          // JSON parse fallback
+          setTelemetryList((prev) =>
+            applyBioscanWsUpdate(
+              prev,
+              {
+                athleteId: frame.athleteId,
+                currentSpeedMph: frame.currentSpeedMph,
+                cumulativeLoad: frame.cumulativeLoad,
+              },
+              "Just now (Live WS Stream)",
+            ),
+          );
+        } catch {
+          // Malformed WS frame — keep last verified board state
         }
       };
     } catch (err) {
