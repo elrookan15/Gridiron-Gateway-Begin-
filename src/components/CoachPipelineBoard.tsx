@@ -88,10 +88,32 @@ export const CoachPipelineBoard: React.FC = () => {
     );
   };
 
+  // Performance Optimization: Convert selectedIds array into an O(1) lookup Set.
+  // Reduces selection checks across N prospects from O(N * K) to O(N).
+  const selectedIdSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  // Performance Optimization: Group filtered prospects by stage in a single O(N) pass.
+  // Avoids running filteredProspects.filter(...) 4 times per render loop.
+  const prospectsByStage = useMemo(() => {
+    const map: Record<CoachPipelineProspect["stage"], CoachPipelineProspect[]> = {
+      Identified: [],
+      Contacted: [],
+      Offered: [],
+      Committed: [],
+    };
+    for (let i = 0; i < filteredProspects.length; i++) {
+      const p = filteredProspects[i];
+      if (map[p.stage]) {
+        map[p.stage].push(p);
+      }
+    }
+    return map;
+  }, [filteredProspects]);
+
   const isAllVisibleSelected = useMemo(() => {
     if (filteredProspects.length === 0) return false;
-    return filteredProspects.every((p) => selectedIds.includes(p.id));
-  }, [filteredProspects, selectedIds]);
+    return filteredProspects.every((p) => selectedIdSet.has(p.id));
+  }, [filteredProspects, selectedIdSet]);
 
   const toggleSelectAllVisible = () => {
     if (isAllVisibleSelected) {
@@ -104,10 +126,10 @@ export const CoachPipelineBoard: React.FC = () => {
   };
 
   const toggleSelectStage = (stage: CoachPipelineProspect["stage"]) => {
-    const stageProspects = filteredProspects.filter((p) => p.stage === stage);
+    const stageProspects = prospectsByStage[stage] || [];
     if (stageProspects.length === 0) return;
 
-    const allStageSelected = stageProspects.every((p) => selectedIds.includes(p.id));
+    const allStageSelected = stageProspects.every((p) => selectedIdSet.has(p.id));
     const stageIds = stageProspects.map((p) => p.id);
 
     if (allStageSelected) {
@@ -277,8 +299,8 @@ export const CoachPipelineBoard: React.FC = () => {
   const hasActiveFilters = searchQuery !== "" || selectedPosition !== "ALL" || selectedStage !== "ALL";
 
   const selectedProspectObjects = useMemo(() => {
-    return prospects.filter((p) => selectedIds.includes(p.id));
-  }, [prospects, selectedIds]);
+    return prospects.filter((p) => selectedIdSet.has(p.id));
+  }, [prospects, selectedIdSet]);
 
   return (
     <div className="space-y-6">
@@ -485,7 +507,7 @@ export const CoachPipelineBoard: React.FC = () => {
       {/* Kanban Columns */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto">
         {stages.map((stage) => {
-          const stageProspects = filteredProspects.filter((p) => p.stage === stage);
+          const stageProspects = prospectsByStage[stage] || [];
           const stageColors = {
             Identified: "border-slate-800 bg-slate-950/40 text-slate-400",
             Contacted: "border-blue-500/30 bg-blue-950/20 text-blue-400",
@@ -494,7 +516,7 @@ export const CoachPipelineBoard: React.FC = () => {
           };
 
           const isStageAllSelected =
-            stageProspects.length > 0 && stageProspects.every((p) => selectedIds.includes(p.id));
+            stageProspects.length > 0 && stageProspects.every((p) => selectedIdSet.has(p.id));
 
           return (
             <div
@@ -527,7 +549,7 @@ export const CoachPipelineBoard: React.FC = () => {
               {/* Prospect Cards */}
               <div className="space-y-3 flex-1">
                 {stageProspects.map((prospect) => {
-                  const isSelected = selectedIds.includes(prospect.id);
+                  const isSelected = selectedIdSet.has(prospect.id);
 
                   return (
                     <div
