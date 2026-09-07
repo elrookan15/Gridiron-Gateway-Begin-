@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { NcaaCourse } from "../types";
 import { INITIAL_NCAA_COURSES } from "../data/mockData";
 import { GraduationCap, CheckCircle2, AlertTriangle, BookOpen, Plus, Trash2, Award, Info } from "lucide-react";
@@ -12,41 +12,68 @@ export const NcaaEligibilityTracker: React.FC = () => {
   const [newCategory, setNewCategory] = useState<NcaaCourse["category"]>("English");
   const [newGrade, setNewGrade] = useState<NcaaCourse["grade"]>("A");
 
-  // Calculate Core GPA
-  const calculateCoreGpa = () => {
+  // Single-pass memoized calculation for core GPA, completion count, and category breakdown.
+  // Optimizes performance from O(7N) array filter iterations per input keystroke/render
+  // to a single O(N) pass computed only when `courses` state changes.
+  const { coreGpa, completedCount, categoryRequirements } = useMemo(() => {
     let totalPoints = 0;
     let totalCredits = 0;
+    let completed = 0;
 
-    courses.forEach((c) => {
-      if (c.grade === "In Progress") return;
-      let pts = 0;
-      if (c.grade === "A") pts = 4.0;
-      if (c.grade === "B") pts = 3.0;
-      if (c.grade === "C") pts = 2.0;
-      if (c.grade === "D") pts = 1.0;
-      if (c.grade === "F") pts = 0.0;
+    const categoryCounts: Record<string, number> = {
+      English: 0,
+      Math: 0,
+      "Natural Science": 0,
+      "Social Science": 0,
+      "Extra English/Math/Sci": 0,
+      "Additional Core": 0,
+    };
 
-      totalPoints += pts * c.credits;
-      totalCredits += c.credits;
-    });
+    for (let i = 0; i < courses.length; i++) {
+      const c = courses[i];
 
-    return totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : "0.00";
-  };
+      if (c.grade !== "In Progress" && c.grade !== "F") {
+        completed++;
+      }
 
-  const coreGpa = Number(calculateCoreGpa());
+      if (c.grade !== "F") {
+        if (categoryCounts[c.category] !== undefined) {
+          categoryCounts[c.category]++;
+        }
+      }
 
-  const completedCount = courses.filter((c) => c.grade !== "In Progress" && c.grade !== "F").length;
+      if (c.grade !== "In Progress") {
+        let pts = 0;
+        if (c.grade === "A") pts = 4.0;
+        else if (c.grade === "B") pts = 3.0;
+        else if (c.grade === "C") pts = 2.0;
+        else if (c.grade === "D") pts = 1.0;
+        else if (c.grade === "F") pts = 0.0;
+
+        totalPoints += pts * c.credits;
+        totalCredits += c.credits;
+      }
+    }
+
+    const gpaVal = totalCredits > 0 ? Number((totalPoints / totalCredits).toFixed(2)) : 0;
+
+    const requirements = [
+      { name: "English", required: 4, count: categoryCounts["English"] || 0 },
+      { name: "Math", required: 3, count: categoryCounts["Math"] || 0 },
+      { name: "Natural Science", required: 2, count: categoryCounts["Natural Science"] || 0 },
+      { name: "Social Science", required: 2, count: categoryCounts["Social Science"] || 0 },
+      { name: "Extra English/Math/Sci", required: 1, count: categoryCounts["Extra English/Math/Sci"] || 0 },
+      { name: "Additional Core", required: 4, count: categoryCounts["Additional Core"] || 0 },
+    ];
+
+    return {
+      coreGpa: gpaVal,
+      completedCount: completed,
+      categoryRequirements: requirements,
+    };
+  }, [courses]);
+
   const progressPercent = Math.min(100, Math.round((completedCount / 16) * 100));
-
-  // Category counts
-  const categoryRequirements = [
-    { name: "English", required: 4, count: courses.filter((c) => c.category === "English" && c.grade !== "F").length },
-    { name: "Math", required: 3, count: courses.filter((c) => c.category === "Math" && c.grade !== "F").length },
-    { name: "Natural Science", required: 2, count: courses.filter((c) => c.category === "Natural Science" && c.grade !== "F").length },
-    { name: "Social Science", required: 2, count: courses.filter((c) => c.category === "Social Science" && c.grade !== "F").length },
-    { name: "Extra English/Math/Sci", required: 1, count: courses.filter((c) => c.category === "Extra English/Math/Sci" && c.grade !== "F").length },
-    { name: "Additional Core", required: 4, count: courses.filter((c) => c.category === "Additional Core" && c.grade !== "F").length },
-  ];
 
   const handleAddCourse = (e: React.FormEvent) => {
     e.preventDefault();
