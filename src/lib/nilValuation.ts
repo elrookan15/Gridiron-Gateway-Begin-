@@ -96,7 +96,7 @@ export function estimateNilValuationCents(input: NilValuationInput): NilValuatio
 }
 
 export function formatUsdFromCents(cents: number): string {
-  const dollars = cents / 100;
+  const dollars = Math.trunc(cents / 100);
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",

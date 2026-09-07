@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useMemo } from "react";
 import {
   School,
@@ -306,8 +304,8 @@ export interface SchoolRecord {
   state: string;
   divisionTier: DivisionTier;
   conference: string;
-  primaryRecruitingEmail: string;
-  coachingPhone: string;
+  primaryRecruitingEmail: string | null;
+  coachingPhone: string | null;
   topMajors: string[];
   programHighlights: string[];
   logoUrl: string;
@@ -373,8 +371,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "TX",
     divisionTier: "FBS_P4",
     conference: "SEC",
-    primaryRecruitingEmail: "recruiting@texaslonghorns.com",
-    coachingPhone: "(512) 471-3050",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Business Administration", "Kinesiology", "Petroleum Engineering"],
     programHighlights: ["2023 CFP Semifinalist", "DKR Texas Memorial Stadium (100k+)", "Premier Texas Recruiting Hub"],
     logoUrl: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=120&auto=format&fit=crop&q=80",
@@ -388,8 +386,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "GA",
     divisionTier: "FBS_P4",
     conference: "SEC",
-    primaryRecruitingEmail: "recruiting@uga.edu",
-    coachingPhone: "(706) 542-1307",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Sport Management", "Finance", "Agricultural Sciences"],
     programHighlights: ["2x Back-to-Back CFP National Champions", "Top NFL Draft First Round Producer", "Sanford Stadium Atmosphere"],
     logoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
@@ -403,8 +401,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "OH",
     divisionTier: "FBS_P4",
     conference: "Big Ten",
-    primaryRecruitingEmail: "recruiting@buckeyes.osu.edu",
-    coachingPhone: "(614) 292-2531",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Business", "Kinesiology", "Mechanical Engineering"],
     programHighlights: ["8-Time National Champions", "Woody Hayes Athletic Center", "WR U Recruiting Tradition"],
     logoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
@@ -418,8 +416,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "OR",
     divisionTier: "FBS_P4",
     conference: "Big Ten",
-    primaryRecruitingEmail: "oregonrecruiting@uoregon.edu",
-    coachingPhone: "(541) 346-3825",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Journalism & Media", "Business", "Human Physiology"],
     programHighlights: ["World-class Nike Athletic Innovation Center", "Autzen Stadium Loudness", "High-Tempo Offense"],
     logoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80",
@@ -433,8 +431,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "NC",
     divisionTier: "FBS_G5",
     conference: "Sun Belt",
-    primaryRecruitingEmail: "appstaterecruiting@appstate.edu",
-    coachingPhone: "(828) 262-2501",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Building Science", "Recreation Management", "Criminal Justice"],
     programHighlights: ["Famous Giant-Killer Heritage", "Multiple Sun Belt Titles", "Kidd Brewer Stadium Altitude Advantage"],
     logoUrl: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=120&auto=format&fit=crop&q=80",
@@ -448,8 +446,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "ND",
     divisionTier: "FCS",
     conference: "Missouri Valley",
-    primaryRecruitingEmail: "ndsu.fbrecruiting@ndsu.edu",
-    coachingPhone: "(701) 231-7811",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Agricultural Sciences", "Construction Management", "Industrial Engineering"],
     programHighlights: ["9-Time FCS National Champions", "Fargodome Home Dominance", "NFL Quarterback Pipeline"],
     logoUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80",
@@ -463,8 +461,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "MI",
     divisionTier: "D2",
     conference: "GLIAC",
-    primaryRecruitingEmail: "gvsu.recruiting@gvsu.edu",
-    coachingPhone: "(616) 331-8800",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Nursing", "Biomedical Science", "Supply Chain Management"],
     programHighlights: ["4-Time NCAA Division II Champions", "Lubbers Stadium 17k+ Capacity", "Elite Midwest Facility"],
     logoUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80",
@@ -478,8 +476,8 @@ const MOCK_SCHOOLS: SchoolRecord[] = [
     state: "FL",
     divisionTier: "JUCO",
     conference: "Sun Conference",
-    primaryRecruitingEmail: "keiser.recruiting@keiseruniversity.edu",
-    coachingPhone: "(561) 478-5000",
+    primaryRecruitingEmail: null,
+    coachingPhone: null,
     topMajors: ["Sports Management", "Business Administration", "Exercise Science"],
     programHighlights: ["2023 NAIA National Champions", "Florida Recruiting Pipeline", "Year-round Sunshine Training"],
     logoUrl: "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=120&auto=format&fit=crop&q=80",
@@ -1123,17 +1121,24 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
 
                     {/* Recruiting Contact Buttons */}
                     <div className="pt-3 border-t border-slate-800 space-y-2">
-                      <div className="flex items-center justify-between text-xs text-slate-400">
-                        <a
-                          href={`mailto:${school.primaryRecruitingEmail}`}
-                          className="flex items-center gap-1.5 text-emerald-400 hover:underline font-bold"
-                        >
-                          <Mail className="w-3.5 h-3.5" />
-                          <span className="truncate max-w-[180px]">{school.primaryRecruitingEmail}</span>
-                        </a>
-                        <span className="flex items-center gap-1 font-bold text-slate-300">
+                      <div className="flex items-center justify-between text-xs text-slate-400 gap-2 min-w-0">
+                        {school.primaryRecruitingEmail ? (
+                          <a
+                            href={`mailto:${school.primaryRecruitingEmail}`}
+                            className="flex items-center gap-1.5 text-emerald-400 hover:underline font-bold min-w-0"
+                          >
+                            <Mail className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate max-w-[180px]">{school.primaryRecruitingEmail}</span>
+                          </a>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-amber-400 font-bold min-w-0">
+                            <Mail className="w-3.5 h-3.5 shrink-0" />
+                            Contact not verified
+                          </span>
+                        )}
+                        <span className="flex items-center gap-1 font-bold text-slate-300 shrink-0">
                           <Phone className="w-3.5 h-3.5 text-slate-500" />
-                          {school.coachingPhone}
+                          {school.coachingPhone ?? "Contact not verified"}
                         </span>
                       </div>
                     </div>

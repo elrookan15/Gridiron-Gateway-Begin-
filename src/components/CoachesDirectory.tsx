@@ -284,24 +284,28 @@ export const CoachesDirectory: React.FC = () => {
 
               {/* Contact Info Detail Box */}
               <div className="space-y-2 text-xs bg-slate-950 p-3.5 rounded-2xl border border-slate-800">
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-slate-400 flex items-center gap-1.5 shrink-0">
                     <Mail className="w-3.5 h-3.5 text-blue-400" /> Official Email:
                   </span>
-                  <a
-                    href={`mailto:${coach.email}`}
-                    className="font-bold text-white hover:text-blue-400 transition-colors"
-                  >
-                    {coach.email}
-                  </a>
+                  {coach.email ? (
+                    <a
+                      href={`mailto:${coach.email}`}
+                      className="font-bold text-white hover:text-blue-400 transition-colors truncate"
+                    >
+                      {coach.email}
+                    </a>
+                  ) : (
+                    <span className="font-bold text-amber-400 truncate">Contact not verified</span>
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 flex items-center gap-1.5">
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <span className="text-slate-400 flex items-center gap-1.5 shrink-0">
                     <Phone className="w-3.5 h-3.5 text-emerald-400" /> Football Office:
                   </span>
-                  <span className="font-mono text-slate-200 font-bold">
-                    {coach.phone}
+                  <span className="font-mono text-slate-200 font-bold truncate">
+                    {coach.phone ?? "Contact not verified"}
                   </span>
                 </div>
 
@@ -380,7 +384,9 @@ export const CoachesDirectory: React.FC = () => {
                 <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
                 <h4 className="font-extrabold text-white text-sm">Direct Message Dispatched!</h4>
                 <p className="text-xs text-slate-300">
-                  Delivered to {messageCoachModal.email} and queued in verified coach recruiting portal.
+                  {messageCoachModal.email
+                    ? `Queued for verified staff contact at ${messageCoachModal.school}.`
+                    : "Queued locally. Contact not verified — message will not be delivered to an unpublished athletics address."}
                 </p>
               </div>
             ) : (

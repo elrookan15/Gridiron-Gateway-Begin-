@@ -68,3 +68,25 @@ export async function getTransferPortalAthletes(): Promise<TransferPortalAthlete
 
   return ((data ?? []) as TransferPortalRow[]).map(mapTransferPortalRow);
 }
+
+/** Server-authoritative portal lock for RallySafe — never trust a client flag. */
+export async function isAthleteActiveInTransferPortal(athleteId: string): Promise<boolean> {
+  const id = athleteId.trim();
+  if (!id || !isSupabaseConfigured()) {
+    return false;
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("transfer_portal_entries")
+    .select("id")
+    .eq("athlete_id", id)
+    .eq("status", "ACTIVE")
+    .limit(1);
+
+  if (error) {
+    throw new Error(`Failed to resolve transfer portal lock: ${error.message}`);
+  }
+
+  return (data ?? []).length > 0;
+}

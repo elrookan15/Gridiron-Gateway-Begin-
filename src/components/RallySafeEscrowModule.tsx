@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
-import type { NilTransaction } from "../types";
+import type { NilTransaction, RallySafeReleaseSnapshot } from "../types";
 import {
   ShieldAlert,
   ShieldCheck,
@@ -9,10 +9,12 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { isSupabaseConfigured } from "../lib/supabaseClient";
+import { canReleaseNilEscrow } from "../lib/rallySafeReleaseGate";
 import {
   fetchNilTransactionsForAthlete,
   releaseNilEscrowPayout,
-} from "../services/schoolsApi";
+} from "../services/nilTransactionsApi";
+import { isAthleteActiveInTransferPortal } from "../services/transferPortalApi";
 
 interface EscrowModuleProps {
   athleteId: string;
@@ -27,8 +29,25 @@ function formatDealCents(cents: number): string {
   return negative ? `-${body}` : body;
 }
 
-export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }) => {
+function snapshotForTransaction(
+  tx: NilTransaction,
+  athleteInTransferPortal: boolean,
+): RallySafeReleaseSnapshot {
+  return {
+    clearinghouseStatus: tx.clearinghouseStatus,
+    // NilTransaction has no Stripe milestone column — fail-closed until HMAC is independently verified.
+    stripeMilestoneVerified: false,
+    athleteInTransferPortal,
+    regulatoryPlane: "THIRD_PARTY_NIL_GO",
+    payoutReleased: tx.payoutReleased,
+  };
+}
+
+export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({
+  athleteId,
+}) => {
   const [transactions, setTransactions] = useState<NilTransaction[]>([]);
+  const [portalLocked, setPortalLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -38,6 +57,7 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
     if (!isSupabaseConfigured()) {
       setError("Supabase connection required to view escrow ledger.");
       setTransactions([]);
+      setPortalLocked(false);
       setLoading(false);
       return;
     }
@@ -45,11 +65,18 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
     setLoading(true);
     setError(null);
     try {
-      const rows = await fetchNilTransactionsForAthlete(athleteId);
+      const [rows, inPortal] = await Promise.all([
+        fetchNilTransactionsForAthlete(athleteId),
+        isAthleteActiveInTransferPortal(athleteId),
+      ]);
       setTransactions(rows);
+      setPortalLocked(inPortal);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch ledger data.");
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch ledger data.",
+      );
       setTransactions([]);
+      setPortalLocked(false);
     } finally {
       setLoading(false);
     }
@@ -61,7 +88,12 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
 
   const handleReleaseFunds = async (transactionId: string) => {
     const target = transactions.find((tx) => tx.id === transactionId);
-    if (!target || target.clearinghouseStatus !== "CLEARED" || target.payoutReleased) {
+    if (!target) return;
+
+    const gate = canReleaseNilEscrow(
+      snapshotForTransaction(target, portalLocked),
+    );
+    if (gate.ok === false) {
       return;
     }
 
@@ -69,7 +101,9 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
     setActionError(null);
     try {
       const updated = await releaseNilEscrowPayout(transactionId);
-      setTransactions((prev) => prev.map((tx) => (tx.id === updated.id ? updated : tx)));
+      setTransactions((prev) =>
+        prev.map((tx) => (tx.id === updated.id ? updated : tx)),
+      );
     } catch (err) {
       setActionError(
         err instanceof Error
@@ -107,6 +141,12 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
         </h3>
       </div>
 
+      {portalLocked && (
+        <div className="bg-rose-950/40 border border-rose-500/40 rounded-xl px-4 py-3 text-xs font-mono text-rose-200 min-h-[44px] flex items-center">
+          Transfer portal lock active — RallySafe will not release capital.
+        </div>
+      )}
+
       {actionError && (
         <div className="bg-rose-950/40 border border-rose-500/40 rounded-xl px-4 py-3 text-xs font-mono text-rose-200">
           {actionError}
@@ -120,9 +160,11 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
           </p>
         ) : (
           transactions.map((tx) => {
-            const isCleared = tx.clearinghouseStatus === "CLEARED";
             const isNotCleared = tx.clearinghouseStatus === "NOT_CLEARED";
-            const canRelease = isCleared && !tx.payoutReleased;
+            const gate = canReleaseNilEscrow(
+              snapshotForTransaction(tx, portalLocked),
+            );
+            const canRelease = gate.ok === true;
 
             return (
               <article
@@ -140,14 +182,14 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({ athleteId }
                   </div>
 
                   <div className="flex items-center gap-1.5 text-xs font-mono">
-                    {isCleared ? (
+                    {tx.clearinghouseStatus === "CLEARED" ? (
                       <span className="text-emerald-500 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5 shrink-0" /> CLEARED
                       </span>
                     ) : isNotCleared ? (
                       <span className="text-rose-400 flex items-center gap-1">
-                        <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> NOT CLEARED — eligibility
-                        crisis
+                        <ShieldAlert className="w-3.5 h-3.5 shrink-0" /> NOT
+                        CLEARED — eligibility crisis
                       </span>
                     ) : (
                       <span className="text-amber-500 flex items-center gap-1">

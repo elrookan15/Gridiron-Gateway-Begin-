@@ -60,7 +60,19 @@ export function runGeminiSchoolGeneratorTestSuite() {
   const res5 = validateSchoolEntry(minimalSchool);
   assert(res5.isValid === true, "Minimal school entry validated with fallbacks");
   assert(res5.school?.primaryColor === "#0f172a", "Default fallback primary color (#0f172a) assigned");
-  assert(res5.school?.recruitingEmail.includes("@ferris-state-bulldogs.edu"), "Fallback recruiting email generated");
+  assert(res5.school?.recruitingEmail === null, "AI generator must not invent recruiting emails");
+  assert(res5.school?.recruitingPhone === null, "AI generator must not invent recruiting phones");
+
+  const withHallucinatedContact = validateSchoolEntry({
+    ...validD2,
+    recruitingEmail: "invented@university.edu",
+    recruitingPhone: "(555) 010-0000",
+  });
+  assert(
+    withHallucinatedContact.school?.recruitingEmail === null &&
+      withHallucinatedContact.school?.recruitingPhone === null,
+    "LLM-supplied staff contacts are stripped (Contact not verified)",
+  );
 
   console.log("==================================================");
   console.log(`📊 TEST RESULTS SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);
