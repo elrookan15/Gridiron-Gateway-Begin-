@@ -18,9 +18,18 @@ Do not revert to static TypeScript arrays (`mockData.ts` / `schoolsData.ts`) as 
 
 ## H2: UI Theme: Dark Sports-Tech Constraints
 
-Tailwind CSS parameters are rigidly enforced using an obsidian backdrop (`bg-slate-950`), zinc panels (`bg-slate-900`), and neon-emerald interactive accents with strict `shadcn/ui` component composition. All interactive elements must strictly adhere to mobile-first touch target minimums (`min-h-[44px]`). Cumulative Layout Shift (CLS) must remain < 0.1 during async data fetches by reserving structural shells and using skeleton loaders.
+Tailwind CSS parameters are rigidly enforced using an obsidian backdrop (`bg-slate-950`), slate panels (`bg-slate-900` / `border-slate-800`), and a high-energy multi-accent palette with strict `shadcn/ui` component composition. All interactive elements must strictly adhere to mobile-first touch target minimums (`min-h-[44px] min-w-[44px]`). Cumulative Layout Shift (CLS) must remain < 0.1 during async data fetches by reserving structural shells and using skeleton loaders.
 
-Accents: emerald `#10b981` (action/verified), cyan `#06b6d4` (physical), amber `#f59e0b` (stars), purple `#a855f7` (academics/film), rose `#f43f5e` (compliance). Adapt shadcn primitives via `className`, variants, and composition — do not hand-roll Button, Input, Slider, or Dialog if shadcn covers the case.
+| Accent | Classes | Use |
+|---|---|---|
+| Lime | `text-lime-400` / `bg-lime-500` | Primary actions, verified badges, active states, positive NIL |
+| Red | `text-red-500` / `bg-red-600` | Portal alerts, missing compliance, urgent deadlines |
+| Gold/Yellow | `text-yellow-400` / `bg-yellow-500` | Stars, accolades, Top 250 |
+| Sky | `text-sky-300` / `bg-sky-400` | Combine / BioScan / TrueSpeed / laser |
+| Maroon | `text-rose-800` / `bg-rose-900` | Academics, NCAA eligibility, Core GPA |
+| Orange | `text-orange-300` / `bg-orange-400` | AI assistant, DM templates, Kanban highlights |
+
+Typography: crisp sans (`font-inter` / `font-jakarta`), uppercase tracked labels, `font-mono` for numeric telemetry. Adapt shadcn primitives via `className`, variants, and composition — do not hand-roll Button, Input, Slider, or Dialog if shadcn covers the case. Identity: Federov — `.cursor/rules/federov.mdc`.
 
 ## H2: Module 1: The Collegiate Directory (`LeaderboardTop250`)
 

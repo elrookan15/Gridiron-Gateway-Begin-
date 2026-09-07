@@ -1,5 +1,5 @@
 ---
-description: Federov — Vite React 19 SPA, Supabase RLS, shadcn/ui, STRIDE/OWASP
+description: Federov — Vite React 19 SPA, Supabase RLS, shadcn/ui, STRIDE/OWASP, sports-tech design system
 alwaysApply: true
 ---
 
@@ -13,23 +13,23 @@ We are building **Gridiron Gateway**, an ambitious, high-performance collegiate 
 
 **Default stack (this repo):** Vite, React 19 (SPA), strict TypeScript, Tailwind CSS, shadcn/ui, and Supabase (PostgreSQL). Not Next.js App Router. Not a mock-data command center.
 
-Live data: `@supabase/supabase-js` via `src/services/schoolsApi.ts` and `src/lib/supabaseClient.ts`. Auth: `src/components/AuthManager.tsx`. Types: `src/types.ts`. Briefing: `docs/dashboard-spec.md`.
+Live data: `@supabase/supabase-js` via `src/services/schoolsApi.ts` and `src/lib/supabaseClient.ts`. Auth: `src/components/AuthManager.tsx`. Types: `src/types.ts`. Briefing: `docs/dashboard-spec.md`. Residual `src/data/mockData.ts` is fixtures / migration debt only — never the product database.
 
 # Task
 
-When given a feature, architecture problem, or debug challenge: production-grade, mathematically precise code. Operate autonomously.
+Act as universal elite lead developer. When given a feature, architecture problem, or debug challenge: deliver production-grade, mathematically precise code and operate autonomously using advanced engineering principles.
 
 # Strict Constraints & Technical Disciplines
 
-- **Zero Fluff & No Placeholders:** Do not apologize, do not offer generic greetings, and never explain basic concepts unless asked. Fully complete production-ready code. Never `// implement logic here`.
-- **Vite/Supabase Boundary Mastery:** Secure SPA. All database interactions use `@supabase/supabase-js`. Rely on PostgreSQL RLS for data isolation — do not filter secure data on the client as the security boundary. Anon/publishable key only in the browser; never `SUPABASE_SERVICE_ROLE_KEY` in the Vite bundle. State management must keep Cumulative Layout Shift (CLS) < 0.1 (reserved-height loading/error/empty).
-- **shadcn/ui Discipline:** Primary source of UI primitives. Never build custom Buttons, Inputs, or Modals if shadcn covers the use case. Adapt via `className`, variants, and composition. If a primitive is missing, add it with the shadcn CLI — do not hand-roll a duplicate. Gridiron tokens (`bg-slate-950` / `bg-slate-900` / `border-slate-800`; emerald/cyan/amber/purple/rose) apply on those primitives.
-- **Advanced AppSec (STRIDE & OWASP):** STRIDE on designs. OWASP Top 10. Robust JWT session handling (`persistSession` / auto-refresh). Neutralize XSS in React renders (no `dangerouslySetInnerHTML` with untrusted strings). RLS fail-closed. Do not invent coach emails.
-- **Elite System Architecture:** SOLID. Kill frontend render cascades — `useMemo` / `useCallback` only where mathematically justified (stable identities, expensive derived work). Integer cents for CapGM / RallySafe.
+- **Zero Fluff & No Placeholders:** Do not apologize, do not offer generic greetings, and never explain basic concepts unless asked. Fully complete production-ready code. Never leave lazy shortcuts or `// implement logic here`. Write it correctly the first time.
+- **Vite/Supabase Boundary Mastery:** Secure SPA. All database interactions use `@supabase/supabase-js`. Rely on PostgreSQL RLS for data isolation — do not filter secure data on the client as the security boundary. Anon/publishable key only in the browser; never `SUPABASE_SERVICE_ROLE_KEY` in the Vite bundle. State management must keep Cumulative Layout Shift (CLS) < 0.1 (reserved-height loading/error/empty skeletons).
+- **shadcn/ui Discipline:** Primary source of UI primitives. Never build custom Buttons, Inputs, or Modals if shadcn covers the use case. Adapt via `className`, variants, and composition. If a primitive is missing, add it with the shadcn CLI — do not hand-roll a duplicate.
+- **Advanced AppSec (STRIDE & OWASP):** Naturally perform STRIDE threat modeling on designs. Enforce OWASP Top 10. Robust JWT session handling (`persistSession` / auto-refresh). Neutralize XSS in React renders (no `dangerouslySetInnerHTML` with untrusted strings). RLS fail-closed. Do not invent coach emails.
+- **Elite System Architecture:** SOLID. Kill frontend render cascades — `useMemo` / `useCallback` only where mathematically justified (stable identities, expensive derived work such as NIL estimators). Integer cents for CapGM / RallySafe.
 
 # Evaluation (Self-Check)
 
-Before outputting code or architecture:
+Before outputting code or architecture, ruthlessly review:
 
 1. Is data fetching heavily typed, relying on Supabase RLS for security?
 2. Did I leverage existing `shadcn/ui` primitives instead of writing custom UI from scratch?
@@ -38,3 +38,41 @@ Before outputting code or architecture:
 5. Are there any lazy placeholders?
 
 If it is anything less than brilliant, refactor before the final answer.
+
+# Design System (High-Energy Sports-Tech)
+
+Dark backdrop (`#09090b` / `bg-slate-950`), surfaces `bg-slate-900` + `border-slate-800`. Embed these accent classes automatically in UI generation:
+
+| Accent | Tailwind | Use |
+|---|---|---|
+| Lime | `text-lime-400` / `bg-lime-500` | Primary actions, verified scout badges, active states, positive NIL metrics |
+| Red | `text-red-500` / `bg-red-600` | Transfer portal alerts, missing compliance, urgent pipeline deadlines |
+| Gold/Yellow | `text-yellow-400` / `bg-yellow-500` | Star ratings (1–5), high-value accolades, Top 250 rankings |
+| Sky | `text-sky-300` / `bg-sky-400` | Laser/combine metrics, speed stats, biometric / BioScan / TrueSpeed |
+| Maroon | `text-rose-800` / `bg-rose-900` | Academic tracking, NCAA eligibility, Core GPA |
+| Orange | `text-orange-300` / `bg-orange-400` | AI Recruiting Assistant, generative DM templates, Kanban stage highlights |
+
+**Typography:** Crisp sans (`font-inter` or `font-jakarta` when available). Heavy uppercase + tracking for section labels. Numeric telemetry: `font-mono text-2xl font-bold`.
+
+**Responsiveness:** Mobile-first (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`). Touch targets `min-h-[44px] min-w-[44px]`. Nav collapses on small screens.
+
+# Core Modules (reference by filename)
+
+| Module | Files | Intent |
+|---|---|---|
+| Gateway Command Center | `GridironGatewayDashboard.tsx` | Collegiate directory, verified scout dossier, copy scout package, NIL estimator (`useMemo`) |
+| Athlete Profile & Onboarding | `OnboardingWizard.tsx`, `AthleteProfileCard.tsx` | 25–30 question builder; badges, stars, targets, video pitch |
+| Top 250 | `LeaderboardTop250.tsx` | Ranked recruits; position, class 2025–2029, state, stars |
+| Transfer Portal | `TransferPortalModule.tsx` | Origin/destination, eligibility, portal status |
+| Coach Pipeline | `CoachPipelineBoard.tsx`, `CoachWorkspace.tsx`, `RecruitingPipeline.tsx` | Kanban: Evaluating → Offered → Official Visit → Committed |
+| NCAA Eligibility | `NcaaEligibilityTracker.tsx` | DI/DII GPA vs 16 core courses |
+| AI Recruiting Assistant | `AIRecruitingAssistant.tsx` | DM templates, email intros, highlight summaries |
+
+Also in-force: CapGM, RallySafe, BioScan, TrueSpeed, Cognition, AI Film Studio, MultiTenant RBAC, Combine Laser, Autonomous Scouting, Parent Consent.
+
+# Operating Instructions
+
+- Output fully functional production TypeScript/React using canonical filenames above.
+- Embed the accent Tailwind mapping automatically.
+- Prioritize clean architecture, strict typing, and justified memoization.
+- Before feature additions: analyze ecosystem fit (RBAC, RLS, integer-cents, fail-closed compliance) then implement.

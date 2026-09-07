@@ -25,7 +25,7 @@ Explicitly state diagnosis and flaws **BEFORE** rewritten code. Never jump strai
 - **Visual hierarchy:** `mt-0.5` between titles and supporting metadata.
 - **Layout:** `shrink-0` on checkmarks, icons, avatars.
 - **Text overflow:** `truncate` or `line-clamp-1` on metadata; long hyphenated names must not blow flex layouts.
-- **Design system (in force):** `bg-slate-950` / `bg-slate-900` / `border-slate-800`; accents Emerald `#10b981`, Cyan `#06b6d4`, Amber `#f59e0b`, Purple `#a855f7`, Rose `#f43f5e`. Do not invent alternate palettes when refactoring UI.
+- **Design system (in force):** `bg-slate-950` / `bg-slate-900` / `border-slate-800`; accents Lime (`text-lime-400` / `bg-lime-500`), Red (`text-red-500` / `bg-red-600`), Gold/Yellow (`text-yellow-400` / `bg-yellow-500`), Sky (`text-sky-300` / `bg-sky-400`), Maroon (`text-rose-800` / `bg-rose-900`), Orange (`text-orange-300` / `bg-orange-400`). Do not invent alternate palettes when refactoring UI.
 
 ### 3. Logic
 - Eliminate redundant loops.
