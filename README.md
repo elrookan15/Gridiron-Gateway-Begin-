@@ -11,6 +11,9 @@ Gridiron Gateway is an enterprise-grade college football recruiting, sports anal
 
 Synthesizing verified game film, composite prospect intelligence, sports IQ diagnostics, GPS wearable telemetry, automated NCAA compliance gating, and Stripe Connect NIL escrow, Gridiron Gateway provides a unified ecosystem for **High School & JUCO Recruits**, **Coaching Staffs across all collegiate divisions (FBS P4/G5, FCS, DII, DIII, NAIA, JUCO, Prep)**, and **NCAA Compliance Officers**.
 
+> **Full product manual, feature-by-feature instructions, and codebase map:** [`docs/GRIDIRON_GATEWAY_OVERVIEW.md`](docs/GRIDIRON_GATEWAY_OVERVIEW.md)  
+> **Live SPA / RLS spec:** [`docs/dashboard-spec.md`](docs/dashboard-spec.md)
+
 ---
 
 ## 📋 Table of Contents
@@ -170,6 +173,10 @@ Collegiate football recruitment has shifted into a data-driven enterprise. Gridi
 
 * **Filename:** [`src/components/AIRecruitingAssistant.tsx`](src/components/AIRecruitingAssistant.tsx)
 * **Description:** AI assistant drafting personalized coach introduction letters and answering NCAA visit rules.
+
+---
+
+For navigation instructions, persona workflows, live-vs-mock status, Express/Edge endpoints, and a file-level codebase map, see **[docs/GRIDIRON_GATEWAY_OVERVIEW.md](docs/GRIDIRON_GATEWAY_OVERVIEW.md)**.
 
 ---
 
