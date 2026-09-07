@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { AthleteProfile, UserRole } from "./types";
+import { ActiveTab, AthleteProfile, UserRole } from "./types";
 import { INITIAL_ATHLETE_PROFILE } from "./data/mockData";
 import { Navbar } from "./components/Navbar";
 import { OnboardingWizard } from "./components/OnboardingWizard";
@@ -41,24 +41,7 @@ export function App() {
     setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   };
 
-  const [activeTab, setActiveTab] = useState<
-    | "gateway_center"
-    | "profile"
-    | "dossier"
-    | "top250"
-    | "highlights"
-    | "coaches"
-    | "schools"
-    | "transfer_portal"
-    | "coach_pipeline"
-    | "coach_workspace"
-    | "camps"
-    | "ai_assistant"
-    | "ncaa"
-    | "coach_views"
-    | "compliance"
-    | "tech_docs"
-  >("profile");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("profile");
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>("Athlete");
 
@@ -77,9 +60,9 @@ export function App() {
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={(tab) => setActiveTab(tab as any)}
+        setActiveTab={setActiveTab}
         userRole={userRole}
-        setUserRole={(role) => setUserRole(role as any)}
+        setUserRole={setUserRole}
         onOpenOnboarding={() => setShowOnboarding(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -228,4 +211,3 @@ export function App() {
 }
 
 export default App;
-

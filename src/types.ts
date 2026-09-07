@@ -9,6 +9,24 @@ export type GradYear = 2025 | 2026 | 2027 | 2028 | 2029;
 
 export type UserRole = "Athlete" | "Coach" | "Fan" | "HEAD_COACH_GM" | "POSITION_COACH" | "COMPLIANCE_OFFICER" | "ATHLETE_RECRUIT";
 
+export type ActiveTab =
+  | "gateway_center"
+  | "profile"
+  | "dossier"
+  | "top250"
+  | "highlights"
+  | "coaches"
+  | "schools"
+  | "transfer_portal"
+  | "coach_pipeline"
+  | "coach_workspace"
+  | "camps"
+  | "ai_assistant"
+  | "ncaa"
+  | "coach_views"
+  | "compliance"
+  | "tech_docs";
+
 export type CollegeDivision = "FBS" | "FCS" | "DII" | "DIII" | "NAIA" | "JUCO" | "PREP";
 
 export type DivisionTier = 'FBS_POWER_4' | 'FBS_GROUP_OF_5' | 'FCS' | 'D2' | 'D3' | 'JUCO' | 'PREP' | 'FBS_P4' | 'FBS_G5';
@@ -655,5 +673,4 @@ export function toDatabaseSchool(program: CanonicalProgramRecord): DatabaseSchoo
     lastSyncedAt: program.lastSyncedAt,
   };
 }
-
 

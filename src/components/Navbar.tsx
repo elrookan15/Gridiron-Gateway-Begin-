@@ -1,12 +1,13 @@
 import React from "react";
 import { Shield, Award, Calendar, UserCheck, Sparkles, GraduationCap, MessageSquare, Flame, Video, Users, RefreshCw, ListFilter, Code, ShieldCheck, Building2, FileCheck, Sun, Moon } from "lucide-react";
+import { ActiveTab, UserRole } from "../types";
 import { GridironLogo } from "./GridironLogo";
 
 interface NavbarProps {
-  activeTab: string;
-  setActiveTab: (tab: any) => void;
-  userRole: any;
-  setUserRole: (role: any) => void;
+  activeTab: ActiveTab;
+  setActiveTab: React.Dispatch<React.SetStateAction<ActiveTab>>;
+  userRole: UserRole;
+  setUserRole: React.Dispatch<React.SetStateAction<UserRole>>;
   athleteName?: string;
   gradClass?: number;
   position?: string;
@@ -45,9 +46,9 @@ export const Navbar: React.FC<NavbarProps> = ({
             <span className="text-slate-400 text-[11px]">Mode:</span>
             <div className="flex bg-slate-900 rounded-lg p-0.5 border border-slate-800">
               <button
-                onClick={() => setUserRole("athlete")}
+                onClick={() => setUserRole("Athlete")}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "athlete"
+                  userRole === "Athlete"
                     ? "bg-emerald-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -55,9 +56,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Athlete / Parent
               </button>
               <button
-                onClick={() => setUserRole("coach")}
+                onClick={() => setUserRole("Coach")}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "coach"
+                  userRole === "Coach"
                     ? "bg-amber-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -65,9 +66,9 @@ export const Navbar: React.FC<NavbarProps> = ({
                 College Coach
               </button>
               <button
-                onClick={() => setUserRole("fan")}
+                onClick={() => setUserRole("Fan")}
                 className={`px-2.5 py-0.5 rounded-md text-[11px] font-medium transition-all ${
-                  userRole === "fan"
+                  userRole === "Fan"
                     ? "bg-cyan-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
@@ -105,7 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Nav Tabs */}
           <nav className="hidden lg:flex items-center gap-1">
             <button
-              onClick={() => setActiveTab("gateway_center" as any)}
+              onClick={() => setActiveTab("gateway_center")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "gateway_center"
                   ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
@@ -179,7 +180,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
-                activeTab === "onboarding"
+                activeTab === "profile"
                   ? "bg-slate-800 text-cyan-400 border border-cyan-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
@@ -408,7 +409,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <button
             onClick={() => (onOpenOnboarding ? onOpenOnboarding() : setActiveTab("profile"))}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
-              activeTab === "onboarding" ? "bg-cyan-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
+              activeTab === "profile" ? "bg-cyan-500 text-slate-950 font-bold" : "bg-slate-900 text-slate-300"
             }`}
           >
             Profile Builder
