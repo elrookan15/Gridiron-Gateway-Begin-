@@ -378,6 +378,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       coach_id: req.coach_id,
       recruit_id: req.recruit_id,
       contact_method: req.contact_method,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: true
     });
 
@@ -443,6 +444,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       recruit_id: spoofedReq.recruit_id,
       contact_method: spoofedReq.contact_method,
       raw_request_body: spoofedReq,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: true
     });
 
@@ -503,6 +505,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       coach_id: req.coach_id,
       recruit_id: req.recruit_id,
       contact_method: req.contact_method,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: false
     });
 
@@ -530,6 +533,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       coach_id: req.coach_id,
       recruit_id: req.recruit_id,
       contact_method: req.contact_method,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: true
     });
 
@@ -591,6 +595,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       coach_id: req.coach_id,
       recruit_id: req.recruit_id,
       contact_method: req.contact_method,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: true
     });
 
@@ -599,6 +604,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       coach_id: req.coach_id,
       recruit_id: req.recruit_id,
       contact_method: req.contact_method,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: true
     });
 
@@ -660,6 +666,7 @@ export function runComplianceTestSuite(): TestCaseResult[] {
       recruit_id: spoofedReq.recruit_id,
       contact_method: spoofedReq.contact_method,
       raw_request_body: spoofedReq,
+      override_timestamp: "2026-08-15T12:00:00.000Z",
       writeAuditLog: true
     });
 

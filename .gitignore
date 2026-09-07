@@ -12,6 +12,9 @@ build/
 .env.development.local
 .env.production.local
 
+# Ingestion pipeline artifacts (verified dumps — do not commit scraped PII blindly)
+data/ingestion/output/
+
 # Logs
 *.log
 npm-debug.log*

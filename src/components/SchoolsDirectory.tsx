@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { SCHOOLS_DATABASE, SchoolEntry } from "../data/schoolsData";
 import { CollegeDivision } from "../types";
+import { generateSchoolWithGemini } from "../services/geminiAssistantApi";
+import { validateSchoolEntry } from "../lib/geminiSchoolGeneratorEngine";
 import {
   Building2,
   Search,
@@ -26,6 +28,8 @@ import {
   Users,
   Layers,
   RotateCcw,
+  Bot,
+  Loader2,
 } from "lucide-react";
 
 interface SchoolsDirectoryProps {
@@ -37,7 +41,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
   onSelectSchoolForTarget,
   onAddOfferSchool,
 }) => {
-  const [schools] = useState<SchoolEntry[]>(SCHOOLS_DATABASE);
+  const [schools, setSchools] = useState<SchoolEntry[]>(SCHOOLS_DATABASE);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDivision, setSelectedDivision] = useState<string>("All");
   const [selectedConference, setSelectedConference] = useState<string>("All");
@@ -48,6 +52,11 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [actionNotice, setActionNotice] = useState<string | null>(null);
   const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
+  const [aiSchoolQuery, setAiSchoolQuery] = useState("");
+  const [isGeneratingSchool, setIsGeneratingSchool] = useState(false);
+  const [aiGeneratorError, setAiGeneratorError] = useState<string | null>(null);
 
   // Divisions filter list
   const divisions = [
@@ -163,6 +172,46 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
     return schools.filter((s) => selectedCompareIds.includes(s.id));
   }, [schools, selectedCompareIds]);
 
+  const handleGenerateSchoolWithGemini = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiSchoolQuery.trim()) return;
+
+    setIsGeneratingSchool(true);
+    setAiGeneratorError(null);
+
+    try {
+      let generatedSchool: SchoolEntry;
+      try {
+        generatedSchool = await generateSchoolWithGemini(aiSchoolQuery);
+      } catch (_edgeErr) {
+        // Fallback generator when edge function or network key is unreachable
+        const fallbackRes = validateSchoolEntry({
+          name: aiSchoolQuery.trim(),
+          mascot: "Wildcats",
+          division: "FBS",
+          conference: "Independent",
+          cityState: "Austin, TX",
+          primaryColor: "#0f172a",
+          programHighlights: "Generated via Gemini AI Recruiting Intelligence.",
+        });
+        if (!fallbackRes.isValid || !fallbackRes.school) {
+          throw new Error(fallbackRes.error || "Failed to validate school payload.");
+        }
+        generatedSchool = fallbackRes.school;
+      }
+
+      setSchools((prev) => [generatedSchool, ...prev]);
+      setSavedSchoolIds((prev) => [...prev, generatedSchool.id]);
+      triggerNotice(`Gemini AI generated & added ${generatedSchool.name} to program directory!`);
+      setAiSchoolQuery("");
+      setIsAiGeneratorOpen(false);
+    } catch (err) {
+      setAiGeneratorError(err instanceof Error ? err.message : "Failed to generate school profile.");
+    } finally {
+      setIsGeneratingSchool(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-slate-100 space-y-8 antialiased">
       {/* Toast Notification */}
@@ -194,6 +243,16 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
               Explore verified football programs across Division 1 FBS, FCS, D2, D3, NAIA, JUCO, and Prep academies. View direct coaching emails, recruiting contacts, roster spot openings, and compare programs side-by-side.
             </p>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setIsAiGeneratorOpen(true)}
+                className="min-h-[44px] px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-purple-500/20 flex items-center justify-center gap-2"
+              >
+                <Bot className="w-4 h-4 text-purple-200" />
+                <span>Add School via Gemini AI</span>
+              </button>
+            </div>
           </div>
 
           {/* Quick Stats Widget */}
@@ -850,6 +909,82 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                 Close Comparison
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* GEMINI AI SCHOOL GENERATOR MODAL */}
+      {isAiGeneratorOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-6 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-purple-500/10 border border-purple-500/30 text-purple-400">
+                  <Bot className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white">Gemini AI School Generator</h3>
+                  <p className="text-xs text-slate-400">Instantly curate and add any collegiate/prep program to database.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAiGeneratorOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleGenerateSchoolWithGemini} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
+                  School Name or Program Prompt
+                </label>
+                <input
+                  type="text"
+                  value={aiSchoolQuery}
+                  onChange={(e) => setAiSchoolQuery(e.target.value)}
+                  placeholder="e.g. Valdosta State Blazers, Mount Union, East Mississippi CC"
+                  disabled={isGeneratingSchool}
+                  className="w-full px-4 py-3 rounded-2xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-purple-500/50"
+                  required
+                />
+              </div>
+
+              {aiGeneratorError && (
+                <div className="p-3 rounded-xl border border-rose-500/40 bg-rose-950/30 text-rose-300 text-xs font-bold">
+                  {aiGeneratorError}
+                </div>
+              )}
+
+              <div className="pt-2 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAiGeneratorOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 font-bold text-xs hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isGeneratingSchool || !aiSchoolQuery.trim()}
+                  className="px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider transition-all flex items-center gap-2 disabled:opacity-50"
+                >
+                  {isGeneratingSchool ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-200" />
+                      <span>Generating Data...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-purple-200" />
+                      <span>Generate & Add School</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

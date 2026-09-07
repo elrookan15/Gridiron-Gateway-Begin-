@@ -1,7 +1,8 @@
-import React, { useState } from "react";
-import { CoachView } from "../types";
+import React, { useMemo, useState } from "react";
 import { MOCK_COACH_VIEWS } from "../data/mockData";
-import { Eye, ShieldCheck, MessageSquare, Send, Calendar, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
+import { dispatchComplianceGate } from "../services/complianceGateApi";
+import { getCurrentNcaaPeriod } from "../complianceEngine";
+import { Eye, ShieldCheck, MessageSquare, Send, Calendar, CheckCircle2 } from "lucide-react";
 
 export const CoachMessagingFeed: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"views" | "messages">("views");
@@ -22,20 +23,46 @@ export const CoachMessagingFeed: React.FC = () => {
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
+  const [gateError, setGateError] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const activePeriod = useMemo(() => getCurrentNcaaPeriod(new Date()), []);
+  const messagingLocked = activePeriod === "DEAD";
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputMessage.trim()) return;
+    const text = inputMessage.trim();
+    if (!text || isSending) return;
 
-    const newMsg = {
-      id: Date.now().toString(),
-      sender: "You (Caden Carter)",
-      text: inputMessage.trim(),
-      time: "Just now",
-      isCoach: false,
-    };
+    setIsSending(true);
+    setGateError(null);
 
-    setMessages((prev) => [...prev, newMsg]);
+    const evaluation = await dispatchComplianceGate({
+      schoolId: "sch_ohio_state",
+      coachId: "cch_hartline_osu",
+      athleteId: "ath_caden_carter",
+      athleteAge: 18,
+      hasParentalConsent: false,
+      messagePayload: text,
+      actionType: "DIRECT_MESSAGE",
+    });
+
+    setIsSending(false);
+
+    if (!evaluation.isCleared) {
+      setGateError(evaluation.reason);
+      return;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: evaluation.auditLogId ?? `m-${Date.now()}`,
+        sender: "You (Caden Carter)",
+        text,
+        time: "Just now",
+        isCoach: false,
+      },
+    ]);
     setInputMessage("");
   };
 
@@ -49,13 +76,19 @@ export const CoachMessagingFeed: React.FC = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 bg-emerald-500 text-slate-950 font-black text-[10px] rounded uppercase tracking-wider">
-                CURRENT NCAA PERIOD: CONTACT PERIOD
+              <span
+                className={`px-2.5 py-0.5 font-black text-[10px] rounded uppercase tracking-wider ${
+                  messagingLocked ? "bg-rose-500 text-slate-950" : "bg-emerald-500 text-slate-950"
+                }`}
+              >
+                CURRENT NCAA PERIOD: {activePeriod} PERIOD
               </span>
               <span className="text-xs text-slate-400">Class of 2026</span>
             </div>
             <p className="text-xs text-slate-300 mt-1">
-              Direct phone, text, and in-person contact permitted by NCAA Division I legislation.
+              {messagingLocked
+                ? "DEAD period: in-person and digital recruiting contact is blocked."
+                : "Direct phone, text, and in-person contact permitted by NCAA Division I legislation."}
             </p>
           </div>
         </div>
@@ -168,20 +201,29 @@ export const CoachMessagingFeed: React.FC = () => {
             ))}
           </div>
 
-          <form onSubmit={handleSendMessage} className="flex gap-2">
-            <input
-              type="text"
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type your reply to Coach..."
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-emerald-500"
-            />
-            <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5"
-            >
-              Send <Send className="w-3.5 h-3.5" />
-            </button>
+          <form onSubmit={handleSendMessage} className="flex flex-col gap-2">
+            {gateError ? (
+              <p className="text-xs font-mono text-rose-400" role="alert">
+                {gateError}
+              </p>
+            ) : null}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder={messagingLocked ? "Messaging locked during NCAA DEAD period" : "Type your reply to Coach..."}
+                disabled={messagingLocked || isSending}
+                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-4 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 min-h-[44px] disabled:opacity-50"
+              />
+              <button
+                type="submit"
+                disabled={messagingLocked || isSending}
+                className="shrink-0 min-h-[44px] px-5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none"
+              >
+                Send <Send className="w-3.5 h-3.5 shrink-0" />
+              </button>
+            </div>
           </form>
         </div>
       )}

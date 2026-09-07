@@ -563,6 +563,17 @@ export const COLLEGE_PROGRAMS: CollegeProgram[] = [
 
   // --- ACC ---
   {
+    id: "fbs-acc-boston-college",
+    institutionName: "Boston College",
+    mascot: "Eagles",
+    abbreviation: "BC",
+    tier: "FBS_POWER_4",
+    conference: "ACC",
+    location: { city: "Chestnut Hill", state: "MA" },
+    brandColors: { primary: "#800020", secondary: "#DAA520" },
+    stadiumCapacity: 44500,
+  },
+  {
     id: "fbs-acc-clemson",
     institutionName: "Clemson University",
     mascot: "Tigers",
@@ -1009,6 +1020,17 @@ export const COLLEGE_PROGRAMS: CollegeProgram[] = [
     location: { city: "Williamstown", state: "MA" },
     brandColors: { primary: "#502D79", secondary: "#FFC72C" },
     stadiumCapacity: 5000,
+  },
+  {
+    id: "d3-dean-college",
+    institutionName: "Dean College",
+    mascot: "Bulldogs",
+    abbreviation: "DEAN",
+    tier: "D3",
+    conference: "MASCAC / ECFC",
+    location: { city: "Franklin", state: "MA" },
+    brandColors: { primary: "#800020", secondary: "#FFFFFF" },
+    stadiumCapacity: 2500,
   },
 
   // =========================================================================

@@ -24,4 +24,5 @@ Enterprise recruiting / analytics / NCAA compliance platform for 2026: $20.5M re
 - Master shell: `src/components/GridironGatewayDashboard.tsx`
 - Backend: `server.ts` (REST RallySafe/Laser + WS BioScan)
 
-Prefer extending existing named components over inventing parallel files.
+## Product Guide Source of Truth
+`README.md` is the canonical feature map, API table, design tokens, and setup guide. When adding or refactoring modules, match the named components and endpoints documented there. Prefer verified/instrumented metrics, fail-closed compliance, integer-cents FinTech, and RBAC persona isolation.
