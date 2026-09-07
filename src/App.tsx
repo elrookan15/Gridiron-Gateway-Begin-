@@ -81,9 +81,9 @@ export function App() {
       {/* Top Navbar */}
       <Navbar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => setActiveTab(tab as any)}
         userRole={userRole}
-        setUserRole={setUserRole}
+        setUserRole={(role) => setUserRole(role as any)}
         onOpenOnboarding={() => setShowOnboarding(true)}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -243,3 +243,4 @@ export function App() {
 }
 
 export default App;
+
