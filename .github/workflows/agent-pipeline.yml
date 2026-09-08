@@ -1,0 +1,69 @@
+name: Fedorov & Jules Agent Pipeline
+
+on:
+  issues:
+    types: [labeled]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  # Step 1: Fedorov converts issues into executable architectural specs
+  fedorov-plan:
+    if: github.event_name == 'issues' && github.event.label.name == 'agent:fedorov'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Fedorov Spec Planner
+        uses: fedorov-ai/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: 'plan'
+          target-label: 'agent:jules-execute'
+
+  # Step 2: Jules executes code changes based on Fedorov's specification
+  jules-implement:
+    if: github.event_name == 'issues' && contains(github.event.issue.labels.*.name, 'agent:jules-execute')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Jules Developer Agent
+        uses: google-jules/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: 'implement'
+          branch-prefix: 'jules-feat/'
+
+  # Step 3: Jules reviews PR code while Fedorov verifies architectural compliance
+  agent-review:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Jules PR Code Review
+        uses: google-jules/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: 'review'
+
+      - name: Fedorov Architecture Verification
+        uses: fedorov-ai/action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          mode: 'verify'
