@@ -49,7 +49,7 @@ async function main(): Promise<void> {
     assert.equal(parseGatewayStaffRole("nope"), null);
   });
 
-  await check("RBAC: staffContextFromUser reads JWT claims", () => {
+  await check("RBAC: staffContextFromUser reads app_metadata claims", () => {
     const user = {
       id: "user-1",
       email: "coach@example.com",
@@ -61,6 +61,20 @@ async function main(): Promise<void> {
     assert.equal(ctx?.role, "HEAD_COACH_GM");
     assert.equal(ctx?.schoolId, "cfbd-251");
     assert.equal(ctx?.user.permissions.canAccessCapGM, true);
+  });
+
+  await check("RBAC: rejects user_metadata-only role/school spoof", () => {
+    const spoofed = {
+      id: "user-2",
+      email: "attacker@example.com",
+      app_metadata: {},
+      user_metadata: {
+        gateway_role: "HEAD_COACH_GM",
+        school_id: "cfbd-251",
+        full_name: "Spoof",
+      },
+    } as unknown as User;
+    assert.equal(staffContextFromUser(spoofed), null);
   });
 
   await check("telemetry persist fails closed without service role", async () => {

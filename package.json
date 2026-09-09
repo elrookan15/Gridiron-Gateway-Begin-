@@ -28,7 +28,8 @@
     "ingest:cfbd": "tsx scripts/ingestion/cfbdTeamsSync.ts",
     "ingest:sidearm": "tsx scripts/ingestion/sidearmStaffScraper.ts",
     "ingest:juco-csv": "tsx scripts/ingestion/jucoPrepCsvImport.ts data/ingestion/templates/juco_prep_programs.template.csv",
-    "ingest:monthly": "tsx scripts/ingestion/runMonthlyPipeline.ts"
+    "ingest:monthly": "tsx scripts/ingestion/runMonthlyPipeline.ts",
+    "ops:stamp-coach-claims": "tsx scripts/ops/stampCoachClaims.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

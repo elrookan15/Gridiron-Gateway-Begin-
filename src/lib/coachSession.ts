@@ -1,7 +1,7 @@
 /**
  * Resolve coach-scoped school id from Supabase JWT claims.
- * Prefer app_metadata.school_id (server-set); fall back to user_metadata.school_id.
- * Never invent a demo school for product pipeline queries.
+ * Authorization source: app_metadata.school_id only (server-set).
+ * user_metadata is client-editable — never trust for tenant binding.
  */
 import type { User } from "@supabase/supabase-js";
 import { isSupabaseConfigured, supabase } from "./supabaseClient";
@@ -9,9 +9,7 @@ import { isSupabaseConfigured, supabase } from "./supabaseClient";
 function schoolIdFromUser(user: User | null | undefined): string | null {
   if (!user) return null;
   const appId = user.app_metadata?.school_id;
-  const userId = user.user_metadata?.school_id;
   if (typeof appId === "string" && appId.trim()) return appId.trim();
-  if (typeof userId === "string" && userId.trim()) return userId.trim();
   return null;
 }
 

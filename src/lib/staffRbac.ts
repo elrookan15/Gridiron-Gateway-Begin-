@@ -1,7 +1,8 @@
 /**
  * JWT → Gateway staff permissions.
- * Claims: app_metadata.gateway_role | user_metadata.gateway_role
- *         app_metadata.school_id | user_metadata.school_id
+ * Authorization claims (app_metadata only — user-editable user_metadata is ignored):
+ *   app_metadata.gateway_role | app_metadata.role_tier
+ *   app_metadata.school_id (via coachSession)
  */
 import type { User } from "@supabase/supabase-js";
 import type { MultiTenantUser, UserRole } from "../types";
@@ -88,9 +89,7 @@ export function permissionsForGatewayRole(role: GatewayStaffRole) {
 export function staffContextFromUser(user: User): StaffSessionContext | null {
   const role =
     parseGatewayStaffRole(user.app_metadata?.gateway_role) ??
-    parseGatewayStaffRole(user.user_metadata?.gateway_role) ??
-    parseGatewayStaffRole(user.app_metadata?.role_tier) ??
-    parseGatewayStaffRole(user.user_metadata?.role_tier);
+    parseGatewayStaffRole(user.app_metadata?.role_tier);
 
   if (!role) return null;
 
