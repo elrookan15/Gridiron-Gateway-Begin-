@@ -44,6 +44,18 @@ import {
   persistProgramsToPostgres,
 } from "./src/lib/directoryPersist";
 import {
+  fetchBioscanTelemetry,
+  persistBioscanTelemetry,
+  persistLaserCombineEntry,
+  listLaserCombineEntries,
+} from "./src/lib/telemetryPersist";
+import {
+  listEscrowCampaigns,
+  persistEscrowCampaign,
+  type EscrowCampaignRecord,
+} from "./src/lib/escrowPersist";
+import { isServiceRoleConfigured } from "./src/lib/supabaseAdmin";
+import {
   isComplianceAuditPostgresConfigured,
   persistComplianceAuditToPostgres,
 } from "./src/lib/complianceAuditPersist";
@@ -700,7 +712,7 @@ const PARENT_CONSENT_DB: ParentConsentDbRecord[] = [];
 app.post(
   "/api/v1/combines/webhooks/laser",
   requireWebhookSecret("x-laser-secret", "LASER_WEBHOOK_SECRET"),
-  (req, res) => {
+  async (req, res) => {
     try {
       const {
         athleteName,
@@ -744,6 +756,7 @@ app.post(
       };
 
       LASER_COMBINE_DB.unshift(record);
+      const postgres = await persistLaserCombineEntry(record);
 
       return res.status(201).json({
         status: "LASER_TIMING_INGESTED",
@@ -757,6 +770,8 @@ app.post(
         verticalJumpInches: record.verticalJumpInches,
         broadJumpInches: record.broadJumpInches,
         timestamp: record.timestamp,
+        postgresConfigured: isServiceRoleConfigured(),
+        postgres,
       });
     } catch (err: unknown) {
       console.error("Laser webhook error:", err);
@@ -767,8 +782,17 @@ app.post(
   }
 );
 
-app.get("/api/v1/combines/laser-entries", (_req, res) => {
-  res.json({ total: LASER_COMBINE_DB.length, entries: LASER_COMBINE_DB });
+app.get("/api/v1/combines/laser-entries", async (_req, res) => {
+  const fromPg = await listLaserCombineEntries(200);
+  const merged =
+    fromPg.length > 0
+      ? fromPg
+      : LASER_COMBINE_DB;
+  res.json({
+    total: merged.length,
+    entries: merged,
+    source: fromPg.length > 0 ? "postgres" : "memory",
+  });
 });
 
 app.post("/api/v1/compliance/parent-consent", mutateRateLimit, (req, res) => {
@@ -1015,7 +1039,7 @@ Provide a JSON object with:
 app.post(
   "/api/v1/bioscan/webhooks/catapult",
   requireWebhookSecret("x-bioscan-secret", "BIOSCAN_WEBHOOK_SECRET"),
-  (req, res) => {
+  async (req, res) => {
     const { session_id, athlete_external_id, timestamp, metrics } = req.body ?? {};
 
     if (
@@ -1050,6 +1074,7 @@ app.post(
     };
 
     BIOSCAN_TELEMETRY_DB[athlete_external_id] = normalizedTelemetry;
+    const postgres = await persistBioscanTelemetry(normalizedTelemetry);
 
     broadcastTelemetryUpdate(athlete_external_id, maxVelocity || 22.8, load || 512.0);
 
@@ -1062,33 +1087,37 @@ app.post(
       message: "Payload accepted for asynchronous processing and WebSocket broadcast.",
       session_id,
       timestamp: normalizedTelemetry.processed_at,
+      postgresConfigured: isServiceRoleConfigured(),
+      postgres,
     });
   }
 );
 
-app.get("/api/v1/bioscan/telemetry/:athleteId", (req, res) => {
+app.get("/api/v1/bioscan/telemetry/:athleteId", async (req, res) => {
   const { athleteId } = req.params;
   if (!athleteId || athleteId.length > 128) {
     return res.status(400).json({ error: "INVALID_ATHLETE_ID" });
   }
 
-  const telemetry = BIOSCAN_TELEMETRY_DB[athleteId] || {
-    athlete_external_id: athleteId,
-    max_velocity_mph: 22.4,
-    acceleration_rate: 5.6,
-    player_load_total: 492.5,
-    heart_rate_bpm: 168,
-    timestamp: new Date().toISOString(),
-  };
+  const fromMemory = BIOSCAN_TELEMETRY_DB[athleteId];
+  const fromPg = fromMemory ? null : await fetchBioscanTelemetry(athleteId);
+  const telemetry = fromMemory ?? fromPg;
 
-  return res.json(telemetry);
+  if (!telemetry) {
+    return res.status(404).json({
+      error: "TELEMETRY_NOT_FOUND",
+      message: "No BioScan snapshot for this athlete_external_id (fail-closed — no invented metrics).",
+    });
+  }
+
+  return res.json({ ...telemetry, source: fromMemory ? "memory" : "postgres" });
 });
 
 // ============================================================================
 // GATEWAY RALLYSAFE: STRIPE CONNECT & COMPLIANT NIL ESCROW API
 // ============================================================================
 
-app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, (req, res) => {
+app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, async (req, res) => {
   const { sponsorId, athleteId, amountUsd, milestoneConditions } = req.body ?? {};
 
   if (
@@ -1112,6 +1141,7 @@ app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, (req, res) => {
 
   const newCampaign: EscrowCampaign = {
     campaignId,
+    id: campaignId,
     sponsorId,
     athleteId,
     amountUsdCents: amountUsd,
@@ -1130,6 +1160,7 @@ app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, (req, res) => {
   };
 
   ESCROW_CAMPAIGNS_DB.push(newCampaign);
+  const postgres = await persistEscrowCampaign(newCampaign as EscrowCampaignRecord);
 
   console.log(
     `[RallySafe FinTech] Campaign ${campaignId} created PENDING (CSC NIL Go). Sponsor ${sponsorId} ($${(amountUsd / 100).toFixed(2)})`
@@ -1140,22 +1171,27 @@ app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, (req, res) => {
     stripeClientSecret,
     escrowStatus: "AWAITING_FUNDING",
     clearinghouseStatus: "PENDING",
+    postgresConfigured: isServiceRoleConfigured(),
+    postgres,
     message:
       "Deal defaulted to PENDING. Third-party NIL ≥ $600 aggregate must be reported to NIL Go within 5 business days. RallySafe will not release until CLEARED.",
   });
 });
 
-app.get("/api/v1/rallysafe/campaigns", (_req, res) => {
+app.get("/api/v1/rallysafe/campaigns", async (_req, res) => {
+  const fromPg = await listEscrowCampaigns();
+  const source = fromPg.length > 0 ? fromPg : ESCROW_CAMPAIGNS_DB;
   return res.json({
     plane: "THIRD_PARTY_NIL_GO",
     excludedPlane: "INSTITUTIONAL_CAPS",
-    campaigns: ESCROW_CAMPAIGNS_DB.filter((c) => c.regulatoryPlane === "THIRD_PARTY_NIL_GO").map(
-      toNilEscrowCampaign,
-    ),
+    source: fromPg.length > 0 ? "postgres" : "memory",
+    campaigns: source
+      .filter((c) => c.regulatoryPlane === "THIRD_PARTY_NIL_GO")
+      .map((c) => toNilEscrowCampaign(c as EscrowCampaign)),
   });
 });
 
-app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (req, res) => {
+app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, async (req, res) => {
   const { campaignId } = req.params;
   const { milestoneId, verificationProofUrl, complianceOfficerId } = req.body ?? {};
 
@@ -1224,6 +1260,7 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (re
   campaign.disbursedCents = (campaign.disbursedCents ?? 0) + held;
   campaign.heldCents = 0;
   campaign.escrowStatus = "RELEASED";
+  const postgres = await persistEscrowCampaign(campaign as EscrowCampaignRecord);
 
   const auditEntry = {
     event: "ESCROW_MILESTONE_RELEASE",
@@ -1248,11 +1285,13 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, (re
     campaignId,
     milestoneId,
     stripeTransferId,
+    postgresConfigured: isServiceRoleConfigured(),
+    postgres,
     auditEntry,
   });
 });
 
-app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, (req, res) => {
+app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, async (req, res) => {
   const { id, type, data } = req.body ?? {};
 
   if (typeof id !== "string" || typeof type !== "string" || !id || !type) {
@@ -1283,6 +1322,7 @@ app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, (req, res) =>
       if (verified && campaign) {
         campaign.stripeMilestoneVerified = true;
         campaign.escrowStatus = "FUNDED";
+        await persistEscrowCampaign(campaign as EscrowCampaignRecord);
       }
       console.log(
         `[Stripe Webhook] Escrow funded for PaymentIntent ${data?.object?.id || id} hmac=${verified}`
@@ -1294,6 +1334,7 @@ app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, (req, res) =>
       eventOutcome = verified ? "MILESTONE_HMAC_VERIFIED" : "MILESTONE_HMAC_MISSING";
       if (verified && campaign) {
         campaign.stripeMilestoneVerified = true;
+        await persistEscrowCampaign(campaign as EscrowCampaignRecord);
       }
       break;
 

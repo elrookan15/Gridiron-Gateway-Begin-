@@ -2,37 +2,19 @@
  * Server-only Postgres writer for production `schools` + `college_coaches`.
  * Never import from the Vite SPA — service role must stay off the bundle.
  */
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { CanonicalProgramRecord, DatabaseCoach, DatabaseSchool } from "../types";
 import { toDatabaseSchool } from "../types";
-
-let adminClient: SupabaseClient | null | undefined;
-
-function getServiceRoleClient(): SupabaseClient | null {
-  if (adminClient !== undefined) return adminClient;
-
-  const url = (process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL)?.trim();
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!url || !serviceKey) {
-    adminClient = null;
-    return null;
-  }
-
-  adminClient = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  return adminClient;
-}
+import {
+  getServiceRoleClient,
+  isServiceRoleConfigured,
+  type PersistResult,
+} from "./supabaseAdmin";
 
 export function isDirectoryPostgresConfigured(): boolean {
-  return getServiceRoleClient() !== null;
+  return isServiceRoleConfigured();
 }
 
-export interface DirectoryPersistResult {
-  ok: boolean;
-  upserted: number;
-  error?: string;
-}
+export type DirectoryPersistResult = PersistResult;
 
 function toSchoolInsert(school: DatabaseSchool): Record<string, unknown> {
   return {
@@ -62,7 +44,6 @@ function toCoachInsert(coach: DatabaseCoach): Record<string, unknown> {
     source_url: coach.sourceUrl,
     last_verified_at: coach.lastVerifiedAt,
   };
-  // Only set PK when caller provides a UUID-shaped id (Sidearm may use uuid).
   if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(coach.coachId)) {
     row.coach_id = coach.coachId;
   }
@@ -107,8 +88,6 @@ export async function persistCoachesToPostgres(
     return { ok: true, upserted: 0 };
   }
 
-  // Prefer conflict on (school_id, full_name, title) when coach_id omitted —
-  // production PK is coach_id UUID. Upsert by coach_id when present; else insert.
   const withId = coaches.filter((c) =>
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(c.coachId),
   );

@@ -56,6 +56,9 @@ jobs:
           npm run test:directory-mappers
           npm run test:directory-persist
 
+      - name: Telemetry Persist & JWT RBAC Gate
+        run: npm run test:telemetry-rbac
+
       - name: Federov Correction Kernel Gate
         run: npm run test:federov-kernel
 

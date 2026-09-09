@@ -49,12 +49,16 @@ try {
   execSync("npx tsx src/directoryPersistTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("1️⃣2️⃣ Executing Federov Correction Kernel Toolkit Gate...");
+  console.log("1️⃣2️⃣ Executing Telemetry Persist + JWT RBAC Gate...");
+  execSync("npx tsx src/telemetryRbacTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣3️⃣ Executing Federov Correction Kernel Toolkit Gate...");
   execSync("npx tsx scripts/federov/runFederovKernelTests.ts", { stdio: "inherit" });
   console.log("");
 
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, DIRECTORY, FEDEROV & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, DIRECTORY, TELEMETRY, FEDEROV & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

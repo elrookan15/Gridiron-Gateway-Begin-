@@ -5,6 +5,8 @@ import {
   mapDatabaseSchoolToGatewayCard,
   type GatewaySchoolCard,
 } from "../lib/directoryMappers";
+import { resolveStaffSessionContext } from "../lib/staffRbac";
+import type { MultiTenantUser } from "../types";
 import {
   School,
   Search,
@@ -473,10 +475,23 @@ export const GridironGatewayDashboard: React.FC = () => {
     | "csv_importer"
   >("directory");
 
-  const [activeUser, setActiveUser] = useState(
+  const [activeUser, setActiveUser] = useState<MultiTenantUser>(
     MOCK_MULTI_TENANT_USERS.find((u) => u.role === "POSITION_COACH") ??
       MOCK_MULTI_TENANT_USERS[0],
   );
+  const [sessionBound, setSessionBound] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void resolveStaffSessionContext().then((ctx) => {
+      if (cancelled || !ctx) return;
+      setActiveUser(ctx.user);
+      setSessionBound(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Copy toast notification state
   const [copyToast, setCopyToast] = useState<string | null>(null);
@@ -669,9 +684,20 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
       {/* MULTI-TENANT ROLE SWITCHER BAR */}
       <MultiTenantRoleSelector
         activeUser={activeUser}
-        onSelectUser={(user) => setActiveUser(user)}
+        onSelectUser={(user) => {
+          if (sessionBound) {
+            // Demo override allowed for local UX, but badge stays JWT-aware until reload.
+            setSessionBound(false);
+          }
+          setActiveUser(user);
+        }}
       />
-
+      {sessionBound && (
+        <div className="bg-lime-500/10 border-b border-lime-500/30 px-4 py-2 text-[11px] text-lime-300 font-semibold">
+          CapGM / Film / Escrow gates bound from JWT <code className="font-mono">gateway_role</code>{" "}
+          claim — demo persona switch clears session binding for this tab session.
+        </div>
+      )}
       {/* Toast Notification */}
       {copyToast && (
         <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2 text-xs animate-bounce">
