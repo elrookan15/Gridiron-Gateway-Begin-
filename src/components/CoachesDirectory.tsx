@@ -1,6 +1,8 @@
-import React, { useState } from "react";
-import { CollegeCoachProfile, Position, CollegeDivision } from "../types";
-import { MOCK_COLLEGE_COACHES } from "../data/mockData";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { CollegeCoachProfile, Position } from "../types";
+import { fetchCoaches } from "../services/schoolsApi";
+import { isSupabaseConfigured } from "../lib/supabaseClient";
+import { mapDirectoryCoachToProfile } from "../lib/directoryMappers";
 import {
   Users,
   Search,
@@ -17,10 +19,17 @@ import {
   Filter,
   MessageSquare,
   BookOpen,
+  Loader2,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 
+type LoadState = "idle" | "loading" | "success" | "error";
+
 export const CoachesDirectory: React.FC = () => {
-  const [coaches] = useState<CollegeCoachProfile[]>(MOCK_COLLEGE_COACHES);
+  const [coaches, setCoaches] = useState<CollegeCoachProfile[]>([]);
+  const [loadState, setLoadState] = useState<LoadState>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedConference, setSelectedConference] = useState<string>("All");
   const [selectedDivision, setSelectedDivision] = useState<string>("All");
@@ -33,6 +42,32 @@ export const CoachesDirectory: React.FC = () => {
   const [messageBody, setMessageBody] = useState("");
   const [messageSentSuccess, setMessageSentSuccess] = useState(false);
 
+  const loadLiveCoaches = useCallback(async () => {
+    setLoadState("loading");
+    setErrorMessage(null);
+    if (!isSupabaseConfigured()) {
+      setCoaches([]);
+      setLoadState("error");
+      setErrorMessage(
+        "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to load verified coaching staff.",
+      );
+      return;
+    }
+    try {
+      const rows = await fetchCoaches({ limit: 2000 });
+      setCoaches(rows.map(mapDirectoryCoachToProfile));
+      setLoadState("success");
+    } catch (err) {
+      setCoaches([]);
+      setLoadState("error");
+      setErrorMessage(err instanceof Error ? err.message : "Failed to load coaches.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadLiveCoaches();
+  }, [loadLiveCoaches]);
+
   const divisions = [
     { value: "All", label: "All Divisions" },
     { value: "FBS", label: "Division 1 FBS" },
@@ -44,7 +79,11 @@ export const CoachesDirectory: React.FC = () => {
     { value: "PREP", label: "PREP / Post-Grad" },
   ];
 
-  const conferences = ["All", "SEC", "Big Ten", "ACC", "Big 12", "Missouri Valley (MVFC)", "GLIAC", "Ohio Athletic (OAC)", "MACCC", "National Prep", "Independent"];
+  const conferences = useMemo(() => {
+    const set = new Set(coaches.map((c) => c.conference).filter(Boolean));
+    return ["All", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [coaches]);
+
   const positions: Position[] = [
     "QB",
     "RB",
@@ -93,7 +132,41 @@ export const CoachesDirectory: React.FC = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 text-white space-y-8">
+    <div className="max-w-6xl mx-auto px-4 py-8 text-white space-y-8 min-h-[640px]">
+      {(loadState === "loading" || loadState === "idle") && (
+        <div className="min-h-[140px] rounded-3xl border border-slate-800 bg-slate-900 flex items-center justify-center gap-3 text-slate-300">
+          <Loader2 className="w-5 h-5 animate-spin text-sky-400 shrink-0" />
+          <span className="text-sm font-semibold">Loading verified coaching staff from Supabase…</span>
+        </div>
+      )}
+
+      {loadState === "error" && (
+        <div className="min-h-[140px] rounded-3xl border border-red-500/40 bg-slate-900 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold">Live coaches directory unavailable</p>
+              <p className="text-xs text-slate-400 mt-0.5">{errorMessage}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadLiveCoaches()}
+            className="min-h-[44px] px-4 rounded-2xl bg-slate-950 border border-slate-700 text-sky-300 text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4 shrink-0" />
+            Retry
+          </button>
+        </div>
+      )}
+
+      {loadState === "success" && coaches.length === 0 && (
+        <div className="min-h-[100px] rounded-3xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-300">
+          No rows in production <code className="text-sky-300">college_coaches</code>. Run Sidearm/CSV
+          ingest upserts — <code className="text-slate-500">MOCK_COLLEGE_COACHES</code> is fixtures only.
+        </div>
+      )}
+
       {/* Header Banner */}
       <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 border-2 border-blue-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -101,27 +174,26 @@ export const CoachesDirectory: React.FC = () => {
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-blue-400" /> College Football Coaches Directory
+              <span className="px-3 py-1 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-sky-300" /> Live College Coaches Directory
               </span>
-              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
-                450+ Verified NCAA Programs
+              <span className="text-[10px] text-lime-400 font-bold bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/30">
+                {coaches.length} Verified Staff Rows
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
               College Coaches & Staff Directory
             </h1>
             <p className="text-sm text-slate-300 max-w-2xl mt-1 leading-relaxed">
-              Detailed bios, recruiting territories, target position requirements, and verified contact channels for Division I, II & III college coaches.
+              Production <code className="text-sky-300">college_coaches</code> joined to schools. Null email/phone → Contact not verified.
             </p>
           </div>
 
           <div className="bg-slate-950/80 p-4 rounded-2xl border border-slate-800 text-center shrink-0 space-y-1">
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-              Direct Recruiter Access
+              Live Rows
             </span>
-            <p className="text-2xl font-black text-blue-400">100% Verified</p>
-            <p className="text-[10px] text-emerald-400 font-medium">NCAA Compliant Directory</p>
+            <span className="text-2xl font-mono font-bold text-lime-400">{filteredCoaches.length}</span>
           </div>
         </div>
       </div>

@@ -1,4 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { fetchSchools, fetchCoaches } from "../services/schoolsApi";
+import { isSupabaseConfigured } from "../lib/supabaseClient";
+import {
+  mapDatabaseSchoolToGatewayCard,
+  type GatewaySchoolCard,
+} from "../lib/directoryMappers";
 import {
   School,
   Search,
@@ -42,6 +48,8 @@ import {
   Database,
   FileSpreadsheet,
   Coins,
+  Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { NILValuationChart } from "./NILValuationChart";
 import { NILCalculator } from "./NILCalculator";
@@ -296,6 +304,7 @@ const LatestCommitsTickerBar: React.FC = () => {
 
 export type DivisionTier = "FBS_P4" | "FBS_G5" | "FCS" | "D2" | "D3" | "JUCO";
 
+/** @deprecated Prefer GatewaySchoolCard from directoryMappers — kept for dossier offer tiers. */
 export interface SchoolRecord {
   id: string;
   name: string;
@@ -361,129 +370,6 @@ export interface AthleteDossierData {
 // ============================================================================
 // MOCK DATASETS
 // ============================================================================
-
-const MOCK_SCHOOLS: SchoolRecord[] = [
-  {
-    id: "sch-1",
-    name: "University of Texas",
-    mascot: "Longhorns",
-    city: "Austin",
-    state: "TX",
-    divisionTier: "FBS_P4",
-    conference: "SEC",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Business Administration", "Kinesiology", "Petroleum Engineering"],
-    programHighlights: ["2023 CFP Semifinalist", "DKR Texas Memorial Stadium (100k+)", "Premier Texas Recruiting Hub"],
-    logoUrl: "https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Steve Sarkisian",
-  },
-  {
-    id: "sch-2",
-    name: "University of Georgia",
-    mascot: "Bulldogs",
-    city: "Athens",
-    state: "GA",
-    divisionTier: "FBS_P4",
-    conference: "SEC",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Sport Management", "Finance", "Agricultural Sciences"],
-    programHighlights: ["2x Back-to-Back CFP National Champions", "Top NFL Draft First Round Producer", "Sanford Stadium Atmosphere"],
-    logoUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Kirby Smart",
-  },
-  {
-    id: "sch-3",
-    name: "Ohio State University",
-    mascot: "Buckeyes",
-    city: "Columbus",
-    state: "OH",
-    divisionTier: "FBS_P4",
-    conference: "Big Ten",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Business", "Kinesiology", "Mechanical Engineering"],
-    programHighlights: ["8-Time National Champions", "Woody Hayes Athletic Center", "WR U Recruiting Tradition"],
-    logoUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Ryan Day",
-  },
-  {
-    id: "sch-4",
-    name: "University of Oregon",
-    mascot: "Ducks",
-    city: "Eugene",
-    state: "OR",
-    divisionTier: "FBS_P4",
-    conference: "Big Ten",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Journalism & Media", "Business", "Human Physiology"],
-    programHighlights: ["World-class Nike Athletic Innovation Center", "Autzen Stadium Loudness", "High-Tempo Offense"],
-    logoUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Dan Lanning",
-  },
-  {
-    id: "sch-5",
-    name: "Appalachian State University",
-    mascot: "Mountaineers",
-    city: "Boone",
-    state: "NC",
-    divisionTier: "FBS_G5",
-    conference: "Sun Belt",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Building Science", "Recreation Management", "Criminal Justice"],
-    programHighlights: ["Famous Giant-Killer Heritage", "Multiple Sun Belt Titles", "Kidd Brewer Stadium Altitude Advantage"],
-    logoUrl: "https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Shawn Clark",
-  },
-  {
-    id: "sch-6",
-    name: "North Dakota State University",
-    mascot: "Bison",
-    city: "Fargo",
-    state: "ND",
-    divisionTier: "FCS",
-    conference: "Missouri Valley",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Agricultural Sciences", "Construction Management", "Industrial Engineering"],
-    programHighlights: ["9-Time FCS National Champions", "Fargodome Home Dominance", "NFL Quarterback Pipeline"],
-    logoUrl: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Tim Polasek",
-  },
-  {
-    id: "sch-7",
-    name: "Grand Valley State University",
-    mascot: "Lakers",
-    city: "Allendale",
-    state: "MI",
-    divisionTier: "D2",
-    conference: "GLIAC",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Nursing", "Biomedical Science", "Supply Chain Management"],
-    programHighlights: ["4-Time NCAA Division II Champions", "Lubbers Stadium 17k+ Capacity", "Elite Midwest Facility"],
-    logoUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Scott Wooster",
-  },
-  {
-    id: "sch-8",
-    name: "Keiser University",
-    mascot: "Seahawks",
-    city: "West Palm Beach",
-    state: "FL",
-    divisionTier: "JUCO",
-    conference: "Sun Conference",
-    primaryRecruitingEmail: null,
-    coachingPhone: null,
-    topMajors: ["Sports Management", "Business Administration", "Exercise Science"],
-    programHighlights: ["2023 NAIA National Champions", "Florida Recruiting Pipeline", "Year-round Sunshine Training"],
-    logoUrl: "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=120&auto=format&fit=crop&q=80",
-    headCoach: "Myles Russ",
-  },
-];
 
 const MOCK_ATHLETE_DOSSIER: AthleteDossierData = {
   id: "ath-2026-001",
@@ -598,14 +484,62 @@ export const GridironGatewayDashboard: React.FC = () => {
   };
 
   // --------------------------------------------------------------------------
-  // TAB 1: COLLEGIATE DIRECTORY STATE & FILTERS
+  // TAB 1: COLLEGIATE DIRECTORY STATE & FILTERS (live Supabase schools)
   // --------------------------------------------------------------------------
+  const [directorySchools, setDirectorySchools] = useState<GatewaySchoolCard[]>([]);
+  const [directoryLoadState, setDirectoryLoadState] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [directoryError, setDirectoryError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedState, setSelectedState] = useState<string>("All");
   const [selectedDivision, setSelectedDivision] = useState<string>("All");
 
+  const loadDirectory = useCallback(async () => {
+    setDirectoryLoadState("loading");
+    setDirectoryError(null);
+    if (!isSupabaseConfigured()) {
+      setDirectorySchools([]);
+      setDirectoryLoadState("error");
+      setDirectoryError(
+        "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY for the live Command Center directory.",
+      );
+      return;
+    }
+    try {
+      const [schools, coaches] = await Promise.all([
+        fetchSchools({ limit: 2000 }),
+        fetchCoaches({ limit: 2000 }).catch(() => []),
+      ]);
+      const headCoachBySchool = new Map<string, string>();
+      for (const coach of coaches) {
+        const title = coach.title.toLowerCase();
+        if (
+          !headCoachBySchool.has(coach.schoolId) &&
+          (title.includes("head coach") || title === "hc" || title.includes("head football"))
+        ) {
+          headCoachBySchool.set(coach.schoolId, coach.fullName);
+        }
+      }
+      setDirectorySchools(
+        schools.map((s) =>
+          mapDatabaseSchoolToGatewayCard(s, headCoachBySchool.get(s.schoolId) ?? null),
+        ),
+      );
+      setDirectoryLoadState("success");
+    } catch (err) {
+      setDirectorySchools([]);
+      setDirectoryLoadState("error");
+      setDirectoryError(err instanceof Error ? err.message : "Failed to load directory.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadDirectory();
+  }, [loadDirectory]);
+
   const filteredSchools = useMemo(() => {
-    return MOCK_SCHOOLS.filter((school) => {
+    return directorySchools.filter((school) => {
       const matchesSearch =
         school.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         school.mascot.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -617,7 +551,13 @@ export const GridironGatewayDashboard: React.FC = () => {
 
       return matchesSearch && matchesState && matchesDivision;
     });
-  }, [searchQuery, selectedState, selectedDivision]);
+  }, [directorySchools, searchQuery, selectedState, selectedDivision]);
+
+  const directoryStates = useMemo(() => {
+    return Array.from(
+      new Set(directorySchools.map((s) => s.state).filter((s) => s && s !== "—")),
+    ).sort();
+  }, [directorySchools]);
 
   const handleResetDirectoryFilters = () => {
     setSearchQuery("");
@@ -955,24 +895,55 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {/* TAB 1: COLLEGIATE DIRECTORY                                           */}
         {/* ==================================================================== */}
         {activeTab === "directory" && (
-          <div className="space-y-6 animate-fadeIn">
+          <div className="space-y-6 animate-fadeIn min-h-[480px]">
+            {(directoryLoadState === "loading" || directoryLoadState === "idle") && (
+              <div className="min-h-[120px] rounded-3xl border border-slate-800 bg-slate-900 flex items-center justify-center gap-3 text-slate-300">
+                <Loader2 className="w-5 h-5 animate-spin text-lime-400 shrink-0" />
+                <span className="text-sm font-semibold">Loading live collegiate directory…</span>
+              </div>
+            )}
+            {directoryLoadState === "error" && (
+              <div className="min-h-[120px] rounded-3xl border border-red-500/40 bg-slate-900 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-bold text-white">Directory unavailable</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{directoryError}</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void loadDirectory()}
+                  className="min-h-[44px] px-4 rounded-2xl bg-slate-950 border border-slate-700 text-lime-400 text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2"
+                >
+                  <RefreshCw className="w-4 h-4 shrink-0" />
+                  Retry
+                </button>
+              </div>
+            )}
+            {directoryLoadState === "success" && directorySchools.length === 0 && (
+              <div className="min-h-[100px] rounded-3xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-300">
+                No production <code className="text-lime-400">schools</code> rows. Ingest CFBD/CSV into Supabase —
+                Command Center no longer ships embedded MOCK_SCHOOLS.
+              </div>
+            )}
             {/* Header Banner */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4 relative overflow-hidden shadow-2xl">
               <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <Building2 className="w-6 h-6 text-emerald-400" />
+                    <Building2 className="w-6 h-6 text-lime-400" />
                     <h1 className="text-2xl font-black text-white uppercase tracking-tight">
                       Collegiate Program Directory
                     </h1>
                   </div>
                   <p className="text-xs text-slate-400 max-w-2xl">
-                    Search and filter verified college football programs across Power 4, Group of 5, FCS, D2, and JUCO tiers. Access recruiting contacts, coaching phones, and academic majors.
+                    Live Supabase production schools. Recruiting contacts stay null until Sidearm/CSV verification — Contact not verified.
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-black">
+                  <span className="px-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-lime-400 text-xs font-black">
                     {filteredSchools.length} Programs Found
                   </span>
                 </div>
@@ -1008,14 +979,11 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                     className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-emerald-500/60 appearance-none cursor-pointer"
                   >
                     <option value="All">All States</option>
-                    <option value="TX">Texas (TX)</option>
-                    <option value="GA">Georgia (GA)</option>
-                    <option value="OH">Ohio (OH)</option>
-                    <option value="OR">Oregon (OR)</option>
-                    <option value="NC">North Carolina (NC)</option>
-                    <option value="ND">North Dakota (ND)</option>
-                    <option value="MI">Michigan (MI)</option>
-                    <option value="FL">Florida (FL)</option>
+                    {directoryStates.map((st) => (
+                      <option key={st} value={st}>
+                        {st}
+                      </option>
+                    ))}
                   </select>
                   <ChevronDown className="w-4 h-4 text-slate-500 absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>

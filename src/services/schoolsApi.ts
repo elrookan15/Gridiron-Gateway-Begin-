@@ -6,6 +6,7 @@
 import {
   type AthleteFullProfile,
   type DatabaseAthleteProfile,
+  type DatabaseCoach,
   type DatabaseSchool,
   type DivisionTierEnum,
   type GradYear,
@@ -13,6 +14,7 @@ import {
   type Position,
   type RecruitingPipelineStage,
 } from "../types";
+import type { DirectoryCoachJoined } from "../lib/directoryMappers";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
 
 export type { AthleteFullProfile };
@@ -76,6 +78,62 @@ export interface FetchSchoolsOptions {
   state?: string;
   search?: string;
   limit?: number;
+}
+
+export interface FetchCoachesOptions {
+  schoolId?: string;
+  search?: string;
+  limit?: number;
+}
+
+/** PostgREST row for `college_coaches` (+ optional embedded `schools`). */
+interface CoachSchoolEmbed {
+  institution_name: string;
+  conference: string | null;
+  tier: DivisionTierEnum;
+  city: string | null;
+  state: string | null;
+}
+
+interface CoachRow {
+  coach_id: string;
+  school_id: string;
+  full_name: string;
+  title: string;
+  email: string | null;
+  office_phone: string | null;
+  twitter_handle: string | null;
+  source_url: string | null;
+  last_verified_at: string;
+  /** PostgREST may type many-to-one embeds as object or array depending on codegen. */
+  schools?: CoachSchoolEmbed | CoachSchoolEmbed[] | null;
+}
+
+function normalizeCoachSchoolEmbed(
+  schools: CoachRow["schools"],
+): CoachSchoolEmbed | null {
+  if (!schools) return null;
+  return Array.isArray(schools) ? (schools[0] ?? null) : schools;
+}
+
+function mapCoachRow(row: CoachRow): DirectoryCoachJoined {
+  const school = normalizeCoachSchoolEmbed(row.schools);
+  return {
+    coachId: row.coach_id,
+    schoolId: row.school_id,
+    fullName: row.full_name,
+    title: row.title,
+    email: row.email,
+    officePhone: row.office_phone,
+    twitterHandle: row.twitter_handle,
+    sourceUrl: row.source_url,
+    lastVerifiedAt: row.last_verified_at,
+    institutionName: school?.institution_name ?? "Institution not verified",
+    conference: school?.conference ?? null,
+    tier: school?.tier ?? "FCS",
+    city: school?.city ?? null,
+    state: school?.state ?? null,
+  };
 }
 
 export interface FetchLeaderboardOptions {
@@ -271,6 +329,59 @@ export async function fetchSchools(options: FetchSchoolsOptions = {}): Promise<D
   }
 
   return ((data ?? []) as SchoolRow[]).map(mapSchoolRow);
+}
+
+/**
+ * Live coaching staff from production `college_coaches` joined to `schools`.
+ * Email/phone remain null when unpublished — never invent contacts.
+ */
+export async function fetchCoaches(
+  options: FetchCoachesOptions = {},
+): Promise<DirectoryCoachJoined[]> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).");
+  }
+
+  const supabase = getSupabaseClient();
+  let query = supabase
+    .from("college_coaches")
+    .select(
+      "coach_id, school_id, full_name, title, email, office_phone, twitter_handle, source_url, last_verified_at, schools!inner(institution_name, conference, tier, city, state)",
+    )
+    .order("full_name", { ascending: true });
+
+  if (options.schoolId?.trim()) {
+    query = query.eq("school_id", options.schoolId.trim());
+  }
+  if (options.search?.trim()) {
+    const q = options.search.trim();
+    query = query.or(`full_name.ilike.%${q}%,title.ilike.%${q}%`);
+  }
+  if (typeof options.limit === "number" && options.limit > 0) {
+    query = query.limit(options.limit);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    throw new Error(`Failed to fetch college coaches: ${error.message}`);
+  }
+
+  return ((data ?? []) as unknown as CoachRow[]).map(mapCoachRow);
+}
+
+/** Narrow export for callers that only need the lean coach row. */
+export function toDatabaseCoach(joined: DirectoryCoachJoined): DatabaseCoach {
+  return {
+    coachId: joined.coachId,
+    schoolId: joined.schoolId,
+    fullName: joined.fullName,
+    title: joined.title,
+    email: joined.email,
+    officePhone: joined.officePhone,
+    twitterHandle: joined.twitterHandle,
+    sourceUrl: joined.sourceUrl,
+    lastVerifiedAt: joined.lastVerifiedAt,
+  };
 }
 
 export async function fetchAthleteProfiles(): Promise<DatabaseAthleteProfile[]> {
