@@ -22,16 +22,40 @@ END $$;
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'division_tier_enum') THEN
+    -- Labels must match schema.production.sql / DivisionTierEnum (SPA + CFBD ingest).
     CREATE TYPE public.division_tier_enum AS ENUM (
       'FBS_POWER_4',
-      'FBS_GROUP_5',
+      'FBS_GROUP_OF_5',
       'FCS',
-      'DII',
-      'DIII',
-      'JUCO',
+      'D2',
+      'D3',
       'NAIA',
+      'JUCO',
       'PREP'
     );
+  ELSE
+    -- Repair wrong cutover labels if an earlier revision of this migration already ran.
+    IF EXISTS (
+      SELECT 1 FROM pg_enum e
+      JOIN pg_type t ON e.enumtypid = t.oid
+      WHERE t.typname = 'division_tier_enum' AND e.enumlabel = 'FBS_GROUP_5'
+    ) THEN
+      ALTER TYPE public.division_tier_enum RENAME VALUE 'FBS_GROUP_5' TO 'FBS_GROUP_OF_5';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM pg_enum e
+      JOIN pg_type t ON e.enumtypid = t.oid
+      WHERE t.typname = 'division_tier_enum' AND e.enumlabel = 'DII'
+    ) THEN
+      ALTER TYPE public.division_tier_enum RENAME VALUE 'DII' TO 'D2';
+    END IF;
+    IF EXISTS (
+      SELECT 1 FROM pg_enum e
+      JOIN pg_type t ON e.enumtypid = t.oid
+      WHERE t.typname = 'division_tier_enum' AND e.enumlabel = 'DIII'
+    ) THEN
+      ALTER TYPE public.division_tier_enum RENAME VALUE 'DIII' TO 'D3';
+    END IF;
   END IF;
 END $$;
 
@@ -137,9 +161,23 @@ BEGIN
     EXECUTE format('ALTER TABLE public.scholarship_offers DROP CONSTRAINT IF EXISTS %I', fk_name);
   END LOOP;
 
-  ALTER TABLE public.scholarship_offers
-    ADD CONSTRAINT scholarship_offers_school_id_fkey
-    FOREIGN KEY (school_id) REFERENCES public.schools_mvp_archive(id);
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'scholarship_offers_school_id_fkey'
+  ) THEN
+    ALTER TABLE public.scholarship_offers
+      ADD CONSTRAINT scholarship_offers_school_id_fkey
+      FOREIGN KEY (school_id) REFERENCES public.schools_mvp_archive(id);
+  END IF;
+
+  -- Restore athlete binding dropped with the MVP school FK rewire (schema.sql).
+  IF to_regclass('public.athlete_profiles') IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1 FROM pg_constraint WHERE conname = 'scholarship_offers_athlete_id_fkey'
+     ) THEN
+    ALTER TABLE public.scholarship_offers
+      ADD CONSTRAINT scholarship_offers_athlete_id_fkey
+      FOREIGN KEY (athlete_id) REFERENCES public.athlete_profiles(user_id) ON DELETE CASCADE;
+  END IF;
 EXCEPTION
   WHEN duplicate_object THEN NULL;
   WHEN undefined_column THEN NULL;
@@ -164,4 +202,11 @@ CREATE POLICY "college_coaches_public_read"
 
 COMMENT ON TABLE public.schools IS 'CFBD/CSV production directory. PK = school_id (cfbd-{id}).';
 COMMENT ON TABLE public.college_coaches IS 'Verified staff; email may be NULL — never invent contacts.';
-COMMENT ON TABLE public.schools_mvp_archive IS 'Pre-cutover UUID schools retained for dossier / scholarship_offers joins.';
+
+-- Archive exists only on the MVP rename path; greenfield / already-production skip it.
+DO $$
+BEGIN
+  IF to_regclass('public.schools_mvp_archive') IS NOT NULL THEN
+    EXECUTE $c$COMMENT ON TABLE public.schools_mvp_archive IS 'Pre-cutover UUID schools retained for dossier / scholarship_offers joins.'$c$;
+  END IF;
+END $$;

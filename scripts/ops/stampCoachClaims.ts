@@ -72,6 +72,36 @@ function normalizeStamp(input: ClaimStamp): ClaimStamp {
   return { email, schoolId, role };
 }
 
+type AuthUserRow = {
+  id: string;
+  email?: string;
+  app_metadata?: Record<string, unknown>;
+};
+
+/** Paginate GoTrue listUsers until email match or pages exhausted (perPage max 200). */
+async function findAuthUserByEmail(
+  admin: ReturnType<typeof createClient>,
+  email: string,
+): Promise<AuthUserRow | null> {
+  const perPage = 200;
+  let page = 1;
+  for (;;) {
+    const { data: listed, error: listErr } = await admin.auth.admin.listUsers({
+      page,
+      perPage,
+    });
+    if (listErr || !listed?.users) {
+      throw new Error(listErr?.message ?? "listUsers empty response");
+    }
+    const user = listed.users.find(
+      (u: AuthUserRow) => (u.email ?? "").toLowerCase() === email,
+    );
+    if (user) return user;
+    if (listed.users.length < perPage) return null;
+    page += 1;
+  }
+}
+
 async function main(): Promise<void> {
   const url = process.env.SUPABASE_URL?.trim();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -87,18 +117,15 @@ async function main(): Promise<void> {
 
   let failures = 0;
   for (const stamp of stamps) {
-    const { data: listed, error: listErr } = await admin.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
-    });
-    if (listErr || !listed?.users) {
-      console.error(`[FAIL] listUsers: ${listErr?.message ?? "empty response"}`);
+    let user: AuthUserRow | null;
+    try {
+      user = await findAuthUserByEmail(admin, stamp.email);
+    } catch (err) {
+      console.error(
+        `[FAIL] listUsers: ${err instanceof Error ? err.message : String(err)}`,
+      );
       process.exit(1);
     }
-    const user = listed.users.find(
-      (u: { id: string; email?: string; app_metadata?: Record<string, unknown> }) =>
-        (u.email ?? "").toLowerCase() === stamp.email,
-    );
     if (!user) {
       console.error(`[FAIL] no auth user for ${stamp.email}`);
       failures += 1;
