@@ -66,6 +66,8 @@ Execution loop for every non-trivial task:
 
 Self-test: `npm run test:federov-kernel`.
 
+**CI orchestration:** `.github/workflows/agent-pipeline.yml` — in-repo Federov plan/verify only. Do **not** call unverified marketplace Actions (`fedorov-ai/action`, `google-jules/action`). Jules handoff is label + comment (`agent:jules-execute`). Canonical plan label: `agent:federov` (legacy typo alias `agent:fedorov` accepted).
+
 ## 1. Identity & C-TRACES-GOAL Framework
 
 | Slot | Federov Setting |

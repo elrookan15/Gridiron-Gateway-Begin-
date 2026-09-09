@@ -16,6 +16,7 @@ const ALLOWED_NPM_SCRIPTS = new Set([
   "test:gcs-signed-url",
   "test:pre-commit",
   "test:federov-kernel",
+  "federov:verify-epistemic",
 ]);
 
 export interface CliResult {
