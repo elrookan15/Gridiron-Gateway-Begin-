@@ -39,6 +39,11 @@ import type {
 } from "./src/types";
 import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
 import {
+  isDirectoryPostgresConfigured,
+  persistCoachesToPostgres,
+  persistProgramsToPostgres,
+} from "./src/lib/directoryPersist";
+import {
   isComplianceAuditPostgresConfigured,
   persistComplianceAuditToPostgres,
 } from "./src/lib/complianceAuditPersist";
@@ -111,24 +116,26 @@ interface RolePermissions {
 const BIOSCAN_TELEMETRY_DB: Record<string, BioscanTelemetry> = {};
 const ACTIVE_WS_CLIENTS = new Set<WebSocket>();
 
-/** In-memory program/coach directory until Supabase upsert is wired. */
+/** In-memory program/coach directory mirror; Postgres is product SOT when service role is set. */
 const PROGRAM_DIRECTORY_DB: CanonicalProgramRecord[] = [];
 const COLLEGE_COACHES_DB: DatabaseCoach[] = [];
 
-function upsertPrograms(programs: CanonicalProgramRecord[]) {
+async function upsertPrograms(programs: CanonicalProgramRecord[]) {
   for (const program of programs) {
     const idx = PROGRAM_DIRECTORY_DB.findIndex((p) => p.id === program.id);
     if (idx >= 0) PROGRAM_DIRECTORY_DB[idx] = program;
     else PROGRAM_DIRECTORY_DB.push(program);
   }
+  return persistProgramsToPostgres(programs);
 }
 
-function upsertCoaches(coaches: DatabaseCoach[]) {
+async function upsertCoaches(coaches: DatabaseCoach[]) {
   for (const coach of coaches) {
     const idx = COLLEGE_COACHES_DB.findIndex((c) => c.coachId === coach.coachId);
     if (idx >= 0) COLLEGE_COACHES_DB[idx] = coach;
     else COLLEGE_COACHES_DB.push(coach);
   }
+  return persistCoachesToPostgres(coaches);
 }
 
 /** Server-authoritative portal flags — never trust client claims. */
@@ -346,17 +353,19 @@ const adminRateLimit = createRateLimiter({ windowMs: 60_000, max: 10, name: "adm
 // ============================================================================
 
 /**
- * Admin: Trigger CFBD sync → upsert into in-memory PROGRAM_DIRECTORY_DB.
+ * Admin: Trigger CFBD sync → RAM mirror + Supabase `schools` upsert (service role).
  * Body: none required.
  */
 app.post("/api/v1/admin/sync-cfbd", adminRateLimit, async (_req, res) => {
   try {
     const result = await syncCfbdTeams();
-    upsertPrograms(result.programs);
+    const postgres = await upsertPrograms(result.programs);
     return res.status(200).json({
       ...result,
       programsUpserted: result.count,
       totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
+      postgresConfigured: isDirectoryPostgresConfigured(),
+      postgres,
     });
   } catch (err: unknown) {
     console.error("CFBD sync error:", err);
@@ -382,7 +391,7 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
 
     if (schoolId && directoryUrl) {
       const coaches = await scrapeSidearmDirectory(schoolId, directoryUrl);
-      upsertCoaches(coaches);
+      const postgres = await upsertCoaches(coaches);
       return res.status(200).json({
         status: "success",
         count: coaches.length,
@@ -390,12 +399,14 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
         coaches,
         missingEmailCount: coaches.filter((c) => !c.email).length,
         totalCoachesInMemory: COLLEGE_COACHES_DB.length,
+        postgresConfigured: isDirectoryPostgresConfigured(),
+        postgres,
       });
     }
 
     if (programs?.length) {
       const result = await runSidearmDirectoryScraper({ programs });
-      upsertCoaches(result.databaseCoaches);
+      const postgres = await upsertCoaches(result.databaseCoaches);
       return res.status(200).json({
         status: "success",
         count: result.count,
@@ -406,6 +417,8 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
         errors: result.errors,
         totalCoachesInMemory: COLLEGE_COACHES_DB.length,
         artifactPath: result.artifactPath,
+        postgresConfigured: isDirectoryPostgresConfigured(),
+        postgres,
       });
     }
 
@@ -426,7 +439,7 @@ app.post("/api/v1/admin/scrape-sidearm", adminRateLimit, async (req, res) => {
  * Admin: JUCO/Prep CSV import — real parse via parseSchoolsCsv when csvText provided.
  * SchoolsCsvImporter depends on this contract (programsUpserted / coachesUpserted).
  */
-app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
+app.post("/api/v1/admin/import-schools-csv", adminRateLimit, async (req, res) => {
   try {
     const csvText = typeof req.body?.csvText === "string" ? req.body.csvText : "";
     if (!csvText.trim()) {
@@ -445,8 +458,8 @@ app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
       });
     }
 
-    upsertPrograms(result.programs);
-    upsertCoaches(result.coaches);
+    const schoolsPostgres = await upsertPrograms(result.programs);
+    const coachesPostgres = await upsertCoaches(result.coaches);
 
     return res.status(200).json({
       status: "CSV_IMPORT_COMPLETE",
@@ -459,6 +472,8 @@ app.post("/api/v1/admin/import-schools-csv", adminRateLimit, (req, res) => {
       totalProgramsInMemory: PROGRAM_DIRECTORY_DB.length,
       totalCoachesInMemory: COLLEGE_COACHES_DB.length,
       artifactPath: result.artifactPath,
+      postgresConfigured: isDirectoryPostgresConfigured(),
+      postgres: { schools: schoolsPostgres, coaches: coachesPostgres },
     });
   } catch (err: unknown) {
     console.error("CSV import error:", err);

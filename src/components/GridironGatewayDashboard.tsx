@@ -473,7 +473,10 @@ export const GridironGatewayDashboard: React.FC = () => {
     | "csv_importer"
   >("directory");
 
-  const [activeUser, setActiveUser] = useState(MOCK_MULTI_TENANT_USERS[0]);
+  const [activeUser, setActiveUser] = useState(
+    MOCK_MULTI_TENANT_USERS.find((u) => u.role === "POSITION_COACH") ??
+      MOCK_MULTI_TENANT_USERS[0],
+  );
 
   // Copy toast notification state
   const [copyToast, setCopyToast] = useState<string | null>(null);

@@ -19,6 +19,7 @@
     "test:gemini-school": "tsx src/geminiSchoolGeneratorTestSuite.ts",
     "test:gcs-signed-url": "tsx src/gcsSignedUrlTestSuite.ts",
     "test:directory-mappers": "tsx src/directoryMappersTestSuite.ts",
+    "test:directory-persist": "tsx src/directoryPersistTestSuite.ts",
     "test:pre-commit": "tsx scripts/runAllPreCommitChecks.ts",
     "test:federov-kernel": "tsx scripts/federov/runFederovKernelTests.ts",
     "federov:issue-plan": "tsx scripts/federov/ciIssuePlanComment.ts",

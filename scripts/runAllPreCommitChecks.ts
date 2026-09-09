@@ -45,7 +45,11 @@ try {
   execSync("npx tsx src/directoryMappersTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("1️⃣1️⃣ Executing Federov Correction Kernel Toolkit Gate...");
+  console.log("1️⃣1️⃣ Executing Directory Persist Fail-Closed Gate...");
+  execSync("npx tsx src/directoryPersistTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣2️⃣ Executing Federov Correction Kernel Toolkit Gate...");
   execSync("npx tsx scripts/federov/runFederovKernelTests.ts", { stdio: "inherit" });
   console.log("");
 
