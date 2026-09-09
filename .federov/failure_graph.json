@@ -1,0 +1,12 @@
+{
+  "Build.Epistemic.HaltThreshold.001": {
+    "nodeId": "Build.Epistemic.HaltThreshold.001",
+    "category": "Build.Epistemic",
+    "badAssumption": "Epistemic halt threshold can be raised silently",
+    "correctiveRuleId": "FK-EPISTEMIC-001",
+    "correctiveDescription": "Halt when Re >= 0.40",
+    "testPath": "scripts/federov/guards/Build.Epistemic.HaltThreshold.001.ts",
+    "assertionExpression": "EPISTEMIC_HALT_THRESHOLD",
+    "assertionExpected": 0.4
+  }
+}
