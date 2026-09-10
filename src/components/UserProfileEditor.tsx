@@ -9,6 +9,7 @@ import {
   type Position,
 } from "../types";
 import { GraduationCap, Ruler, Timer, Link2, User, X, Save } from "lucide-react";
+import { FieldLabel } from "./ui/FieldLabel";
 
 type EditorSection = "identity" | "physical" | "combine" | "academics" | "media";
 
@@ -49,13 +50,6 @@ const SECTION_META: { id: EditorSection; label: string; icon: React.ReactNode }[
   { id: "media", label: "Media", icon: <Link2 className="w-3.5 h-3.5 shrink-0" /> },
 ];
 
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
-  return (
-    <label htmlFor={htmlFor} className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-      {children}
-    </label>
-  );
-}
 
 function FieldInput(
   props: React.InputHTMLAttributes<HTMLInputElement> & { id: string },
