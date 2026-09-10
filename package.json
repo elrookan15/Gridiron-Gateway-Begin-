@@ -38,13 +38,12 @@
     "@vitejs/plugin-react": "^5.0.4",
     "axios": "^1.19.0",
     "cheerio": "^1.2.0",
-    "chrome-devtools-mcp": "^1.7.0",
+    "chrome-devtools-mcp": "^1.9.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.2.3",
-    "express": "^4.21.2",
+    "express": "^4.22.2",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
-    "n8n-nodes-chrome-devtools": "^0.1.1",
     "react": "^19.0.1",
     "react-dom": "^19.0.1",
     "recharts": "^3.10.1",
@@ -63,5 +62,8 @@
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }
