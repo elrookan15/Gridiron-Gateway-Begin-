@@ -13,6 +13,10 @@ try {
   execSync("npx tsx scripts/runComplianceTests.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("2️⃣b Executing NCAA Clearance Engine Suite (evalDate fail-closed)...");
+  execSync("npx tsx src/ncaaClearanceTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("3️⃣ Executing RallySafe NIL Escrow Clearinghouse Test Suite (6/6 Fail-Closed)...");
   execSync("npx tsx src/rallySafeClearinghouseTestSuite.ts", { stdio: "inherit" });
   console.log("");

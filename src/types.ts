@@ -960,6 +960,11 @@ export interface ComplianceGateDispatchRequest {
   hasParentalConsent: boolean;
   messagePayload: string;
   actionType: ComplianceAuditLog["actionType"];
+  /**
+   * In-process / test-only calendar pin. HTTP dispatch MUST strip this via
+   * `complianceDispatchFromUntrustedBody` — a client ISO timestamp would
+   * otherwise move the NCAA dead-period gate.
+   */
   evalDate?: string;
 }
 
