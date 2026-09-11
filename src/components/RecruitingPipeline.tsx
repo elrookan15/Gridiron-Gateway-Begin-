@@ -78,7 +78,7 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
   const [offers, setOffers] = useState<PipelineOffer[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [movingId, setMovingId] = useState<string | null>(null);
+  const [movingIds, setMovingIds] = useState<string[]>([]);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const loadPipeline = useCallback(async () => {
@@ -126,28 +126,33 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
 
   const moveOffer = async (offerId: string, direction: -1 | 1) => {
     const current = offers.find((o) => o.id === offerId);
-    if (!current) return;
+    if (!current || movingIds.includes(offerId)) return;
 
     const nextIdx = stageIndex(current.stage) + direction;
     if (nextIdx < 0 || nextIdx >= PIPELINE_STAGES.length) return;
 
     const nextStage = PIPELINE_STAGES[nextIdx];
-    const previous = offers;
+    const previousStage = current.stage;
 
     // Optimistic UI — preserve column heights / avoid CLS
     setOffers((prev) =>
       prev.map((o) => (o.id === offerId ? { ...o, stage: nextStage } : o)),
     );
-    setMovingId(offerId);
+    setMovingIds((prev) => [...prev, offerId]);
     setActionError(null);
 
     try {
       await updatePipelineOfferStage(offerId, nextStage);
     } catch (err) {
-      setOffers(previous);
+      // Targeted rollback: restore ONLY this offer's stage. The legacy
+      // whole-board snapshot clobbered concurrent refreshes and any other
+      // offer's successful move (stale-snapshot rollback defect).
+      setOffers((prev) =>
+        prev.map((o) => (o.id === offerId ? { ...o, stage: previousStage } : o)),
+      );
       setActionError(err instanceof Error ? err.message : "Stage update failed.");
     } finally {
-      setMovingId(null);
+      setMovingIds((prev) => prev.filter((id) => id !== offerId));
     }
   };
 
@@ -211,7 +216,7 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
             stage={stage}
             offers={loadState === "loading" ? [] : columns[stage]}
             loading={loadState === "loading"}
-            movingId={movingId}
+            movingIds={movingIds}
             onMoveLeft={(id) => void moveOffer(id, -1)}
             onMoveRight={(id) => void moveOffer(id, 1)}
           />
@@ -225,7 +230,7 @@ interface PipelineColumnProps {
   stage: RecruitingPipelineStage;
   offers: PipelineOffer[];
   loading: boolean;
-  movingId: string | null;
+  movingIds: string[];
   onMoveLeft: (id: string) => void;
   onMoveRight: (id: string) => void;
 }
@@ -234,7 +239,7 @@ const PipelineColumn: React.FC<PipelineColumnProps> = ({
   stage,
   offers,
   loading,
-  movingId,
+  movingIds,
   onMoveLeft,
   onMoveRight,
 }) => {
@@ -277,7 +282,7 @@ const PipelineColumn: React.FC<PipelineColumnProps> = ({
               offer={offer}
               canMoveLeft={idx > 0}
               canMoveRight={idx < PIPELINE_STAGES.length - 1}
-              isMoving={movingId === offer.id}
+              isMoving={movingIds.includes(offer.id)}
               onMoveLeft={() => onMoveLeft(offer.id)}
               onMoveRight={() => onMoveRight(offer.id)}
             />

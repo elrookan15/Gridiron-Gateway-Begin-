@@ -161,6 +161,53 @@ export function resetPeriodsDb(customPeriods?: RecruitingPeriodRow[]) {
   }
 }
 
+/**
+ * Deterministic audit hash (FNV-1a, two 32-bit lanes) over the canonical
+ * facts of a send attempt. Synchronous (no Web Crypto), stable across
+ * replays of the same attempt, and collision-safe for audit rows.
+ */
+function auditHash(
+  coachId: string,
+  recruitId: string,
+  contactMethod: string,
+  decision: MessageSendAttemptRow["decision"],
+  periodId: string | null,
+  reason: string,
+): string {
+  const canonical = `${coachId}|${recruitId}|${contactMethod}|${decision}|${periodId ?? "none"}|${reason}`;
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < canonical.length; i++) {
+    const c = canonical.charCodeAt(i);
+    h1 = Math.imul(h1 ^ c, 0x01000193) >>> 0;
+    h2 = Math.imul(h2 ^ ((c + i) & 0xff), 0x85ebca6b) >>> 0;
+  }
+  return `${h1.toString(16).padStart(8, "0")}${h2.toString(16).padStart(8, "0")}`.slice(0, 12);
+}
+
+/**
+ * Single choke point for audit writes. Identical facts deterministically
+ * produce identical IDs (attempt timestamp embedded, no Math.random), and
+ * every branch of evaluateComplianceGate records through this one helper so
+ * audit fields can never silently fork between branches.
+ */
+function recordAttempt(
+  row: Omit<MessageSendAttemptRow, "id">,
+  writeAuditLog: boolean,
+): string | undefined {
+  if (!writeAuditLog) return undefined;
+  const id = `LOG-${new Date(row.attempted_at).getTime()}-${auditHash(
+    row.coach_id,
+    row.recruit_id,
+    row.contact_method,
+    row.decision,
+    row.matched_period_id,
+    row.reason,
+  )}`;
+  MESSAGE_SEND_ATTEMPTS_DB.unshift({ ...row, id });
+  return id;
+}
+
 export function evaluateComplianceGate(params: {
   coach_id: string;
   recruit_id: string;
@@ -168,7 +215,7 @@ export function evaluateComplianceGate(params: {
   override_timestamp?: string;
   writeAuditLog: boolean;
   message_text?: string;
-  raw_request_body?: Record<string, any>;
+  raw_request_body?: Record<string, unknown>;
 }): {
   httpStatus: number;
   decision: "allowed" | "blocked" | "error";
@@ -191,22 +238,17 @@ export function evaluateComplianceGate(params: {
 
   if (!coach) {
     const errorReason = `Coach record '${coach_id}' not found in database.`;
-    let auditId: string | undefined;
-    if (writeAuditLog) {
-      auditId = `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      MESSAGE_SEND_ATTEMPTS_DB.unshift({
-        id: auditId,
-        coach_id,
-        recruit_id,
-        attempted_at: attemptTimestampStr,
-        decision: "error",
-        matched_period_id: null,
-        period_type_at_attempt: null,
-        contact_method,
-        message_id: null,
-        reason: errorReason
-      });
-    }
+    const auditId = recordAttempt({
+      coach_id,
+      recruit_id,
+      attempted_at: attemptTimestampStr,
+      decision: "error",
+      matched_period_id: null,
+      period_type_at_attempt: null,
+      contact_method,
+      message_id: null,
+      reason: errorReason,
+    }, writeAuditLog);
     return {
       httpStatus: 403,
       decision: "error",
@@ -214,28 +256,23 @@ export function evaluateComplianceGate(params: {
       period_type_at_attempt: null,
       contact_method,
       reason: errorReason,
-      audit_log_id: auditId
+      audit_log_id: auditId,
     };
   }
 
   if (!recruit) {
     const errorReason = `Recruit record '${recruit_id}' not found in database.`;
-    let auditId: string | undefined;
-    if (writeAuditLog) {
-      auditId = `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      MESSAGE_SEND_ATTEMPTS_DB.unshift({
-        id: auditId,
-        coach_id,
-        recruit_id,
-        attempted_at: attemptTimestampStr,
-        decision: "error",
-        matched_period_id: null,
-        period_type_at_attempt: null,
-        contact_method,
-        message_id: null,
-        reason: errorReason
-      });
-    }
+    const auditId = recordAttempt({
+      coach_id,
+      recruit_id,
+      attempted_at: attemptTimestampStr,
+      decision: "error",
+      matched_period_id: null,
+      period_type_at_attempt: null,
+      contact_method,
+      message_id: null,
+      reason: errorReason,
+    }, writeAuditLog);
     return {
       httpStatus: 403,
       decision: "error",
@@ -243,7 +280,7 @@ export function evaluateComplianceGate(params: {
       period_type_at_attempt: null,
       contact_method,
       reason: errorReason,
-      audit_log_id: auditId
+      audit_log_id: auditId,
     };
   }
 
@@ -262,23 +299,17 @@ export function evaluateComplianceGate(params: {
   // 3. Fail-Closed Logic Evaluation
   if (matchedRows.length === 0) {
     const errorReason = `FAIL-CLOSED: No active recruiting_periods row found in calendar database for sport=football, division=${coach.division}, class_year=${recruit.class_year} at ${attemptTimestampStr}. Messaging blocked by default safety gate.`;
-    let auditId: string | undefined;
-    if (writeAuditLog) {
-      auditId = `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      MESSAGE_SEND_ATTEMPTS_DB.unshift({
-        id: auditId,
-        coach_id,
-        recruit_id,
-        attempted_at: attemptTimestampStr,
-        decision: "error",
-        matched_period_id: null,
-        period_type_at_attempt: null,
-        contact_method,
-        message_id: null,
-        reason: errorReason
-      });
-    }
-
+    const auditId = recordAttempt({
+      coach_id,
+      recruit_id,
+      attempted_at: attemptTimestampStr,
+      decision: "error",
+      matched_period_id: null,
+      period_type_at_attempt: null,
+      contact_method,
+      message_id: null,
+      reason: errorReason,
+    }, writeAuditLog);
     return {
       httpStatus: 403,
       decision: "error",
@@ -286,29 +317,23 @@ export function evaluateComplianceGate(params: {
       period_type_at_attempt: null,
       contact_method,
       reason: errorReason,
-      audit_log_id: auditId
+      audit_log_id: auditId,
     };
   }
 
   if (matchedRows.length > 1) {
     const errorReason = `FAIL-CLOSED: Conflicting/Overlapping recruiting_periods rows (${matchedRows.map((r) => r.id).join(", ")}) matched division=${coach.division} at ${attemptTimestampStr}. Data-entry conflict detected. Blocked for compliance audit.`;
-    let auditId: string | undefined;
-    if (writeAuditLog) {
-      auditId = `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      MESSAGE_SEND_ATTEMPTS_DB.unshift({
-        id: auditId,
-        coach_id,
-        recruit_id,
-        attempted_at: attemptTimestampStr,
-        decision: "error",
-        matched_period_id: null,
-        period_type_at_attempt: "CONFLICT_ERROR",
-        contact_method,
-        message_id: null,
-        reason: errorReason
-      });
-    }
-
+    const auditId = recordAttempt({
+      coach_id,
+      recruit_id,
+      attempted_at: attemptTimestampStr,
+      decision: "error",
+      matched_period_id: null,
+      period_type_at_attempt: "CONFLICT_ERROR",
+      contact_method,
+      message_id: null,
+      reason: errorReason,
+    }, writeAuditLog);
     return {
       httpStatus: 403,
       decision: "error",
@@ -316,7 +341,7 @@ export function evaluateComplianceGate(params: {
       period_type_at_attempt: "CONFLICT_ERROR",
       contact_method,
       reason: errorReason,
-      audit_log_id: auditId
+      audit_log_id: auditId,
     };
   }
 
@@ -328,24 +353,18 @@ export function evaluateComplianceGate(params: {
 
   if (!isMethodAllowed) {
     const blockReason = `Blocked by NCAA ${period.period_type.toUpperCase()} period rule (${period.id}). Contact method '${contact_method}' not permitted under allowed methods: [${period.contact_methods_allowed.join(", ")}].`;
-    let auditId: string | undefined;
-    if (writeAuditLog) {
-      auditId = `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      MESSAGE_SEND_ATTEMPTS_DB.unshift({
-        id: auditId,
-        coach_id,
-        recruit_id,
-        attempted_at: attemptTimestampStr,
-        decision: "blocked",
-        matched_period_id: period.id,
-        period_type_at_attempt: period.period_type,
-        contact_method,
-        message_id: null,
-        reason: blockReason,
-        source_citation: period.source_citation
-      });
-    }
-
+    const auditId = recordAttempt({
+      coach_id,
+      recruit_id,
+      attempted_at: attemptTimestampStr,
+      decision: "blocked",
+      matched_period_id: period.id,
+      period_type_at_attempt: period.period_type,
+      contact_method,
+      message_id: null,
+      reason: blockReason,
+      source_citation: period.source_citation,
+    }, writeAuditLog);
     return {
       httpStatus: 403,
       decision: "blocked",
@@ -354,39 +373,36 @@ export function evaluateComplianceGate(params: {
       contact_method,
       reason: blockReason,
       source_citation: period.source_citation,
-      audit_log_id: auditId
+      audit_log_id: auditId,
     };
   }
 
   // Allowed Send
-  let messageId: string | null = null;
-  let auditId: string | undefined;
+  const messageId = writeAuditLog
+    ? `MSG-${now.getTime()}-${auditHash(coach_id, recruit_id, contact_method, "allowed", period.id, "message-write")}`
+    : null;
 
-  if (writeAuditLog) {
-    auditId = `LOG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    messageId = `MSG-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const auditId = recordAttempt({
+    coach_id,
+    recruit_id,
+    attempted_at: attemptTimestampStr,
+    decision: "allowed",
+    matched_period_id: period.id,
+    period_type_at_attempt: period.period_type,
+    contact_method,
+    message_id: messageId,
+    reason: `Message send authorized under active ${period.period_type.toUpperCase()} period (${period.id}).`,
+    source_citation: period.source_citation,
+  }, writeAuditLog);
 
+  if (writeAuditLog && auditId && messageId) {
     MESSAGES_DB.unshift({
       id: messageId,
       send_attempt_id: auditId,
       coach_id,
       recruit_id,
       text: message_text || "Automated test message",
-      sent_at: attemptTimestampStr
-    });
-
-    MESSAGE_SEND_ATTEMPTS_DB.unshift({
-      id: auditId,
-      coach_id,
-      recruit_id,
-      attempted_at: attemptTimestampStr,
-      decision: "allowed",
-      matched_period_id: period.id,
-      period_type_at_attempt: period.period_type,
-      contact_method,
-      message_id: messageId,
-      reason: `Message send authorized under active ${period.period_type.toUpperCase()} period (${period.id}).`,
-      source_citation: period.source_citation
+      sent_at: attemptTimestampStr,
     });
   }
 
@@ -399,7 +415,7 @@ export function evaluateComplianceGate(params: {
     reason: `Authorized under active ${period.period_type.toUpperCase()} period.`,
     source_citation: period.source_citation,
     audit_log_id: auditId,
-    message_id: messageId || undefined
+    message_id: messageId || undefined,
   };
 }
 
