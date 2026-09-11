@@ -201,10 +201,13 @@ CREATE TABLE athlete_profiles (
 COMMENT ON TABLE athlete_profiles IS 'Detailed athletic, combine, academic, and NIL market valuation profile for high school and JUCO recruits.';
 
 -- Scholarship Offers Table
+-- school_id is production VARCHAR (cfbd-*). Do NOT FK to legacy UUID schools(id).
+-- Live FK → public.schools(school_id) is applied by
+-- supabase/migrations/20260911120000_dossier_offers_production_schools.sql
 CREATE TABLE scholarship_offers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   athlete_id UUID NOT NULL REFERENCES athlete_profiles(user_id) ON DELETE CASCADE,
-  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  school_id VARCHAR(100) NOT NULL,
   is_official BOOLEAN DEFAULT FALSE NOT NULL,
   offer_date DATE DEFAULT CURRENT_DATE NOT NULL,
   commitment_status commitment_status DEFAULT 'Uncommitted' NOT NULL,
@@ -213,7 +216,8 @@ CREATE TABLE scholarship_offers (
   UNIQUE(athlete_id, school_id)
 );
 
-COMMENT ON TABLE scholarship_offers IS 'Tracks verbal and written official scholarship offers extended to athletes by schools.';
+COMMENT ON TABLE scholarship_offers IS 'Tracks verbal/written official offers. school_id = production schools.school_id (MVP UUID archive retired).';
+COMMENT ON COLUMN scholarship_offers.school_id IS 'Production schools.school_id (cfbd-* / csv-*). Never a legacy MVP UUID.';
 
 -- Athlete Social Handles & Media Film Links
 CREATE TABLE athlete_media (

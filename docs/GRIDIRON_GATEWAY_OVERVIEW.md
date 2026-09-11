@@ -751,7 +751,7 @@ Gridiron-Gateway/
 
 ### 5.7 Duplicate / transitional paths
 
-The repo still contains **two school identity models**: UUID MVP `schools` in parts of `schema.sql` vs production `school_id VARCHAR` in `schema.production.sql`. Client mappers exist in both `src/lib/supabaseClient.ts` and `src/types.ts` (`DatabaseSchool`). Prefer production ingest ids (`cfbd-{id}`).
+Live directory uses production `schools.school_id` (`cfbd-{id}`). MVP UUID `schools` was archived then **dropped** after `scholarship_offers` rewired to production FKs (`20260911120000_dossier_offers_production_schools.sql`). Prefer `schema.production.sql` for greenfield deploys; `schema.sql` MVP school CREATE is historical and must not be applied alongside production.
 
 `utils/supabase/*` and `src/utils/supabase/*` are SSR-shaped helpers; the running app is the Vite SPA.
 
