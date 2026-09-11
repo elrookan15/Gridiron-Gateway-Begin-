@@ -11,6 +11,7 @@
     "clean": "rm -rf dist server.cjs",
     "lint": "tsc --noEmit",
     "test:compliance": "tsx scripts/runComplianceTests.ts",
+    "test:ncaa-clearance": "tsx src/ncaaClearanceTestSuite.ts",
     "test:rallysafe": "tsx src/rallySafeClearinghouseTestSuite.ts",
     "test:capgm": "tsx src/capGmTestSuite.ts",
     "test:parental-consent": "tsx src/parentalConsentTestSuite.ts",

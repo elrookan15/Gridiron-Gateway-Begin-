@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-11 | HTTP evalDate spoofed NCAA calendar | compliance | security | Active |
 
 ## Entries
 
@@ -37,3 +38,16 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-11] HTTP evalDate spoofed NCAA calendar to CONTACT
+
+- Category: compliance
+- Persona: security
+- File(s): `server.ts`, `src/complianceEngine.ts`, `src/ncaaClearanceTestSuite.ts`
+- Root Cause: `/api/v1/compliance/messaging-clearance` forwarded client `evalDate` into `executeAndLogComplianceGate`. `getCurrentNcaaPeriod` treated Invalid Date as CONTACT (NaN month missed every branch).
+- Patch: `complianceDispatchFromUntrustedBody` strips `evalDate`; invalid Date → DEAD.
+- Red Test: `evalDate: "2026-06-15T12:00:00.000Z"` on HTTP body would evaluate June CONTACT during a live December DEAD window; `new Date("bogus")` returned CONTACT.
+- Green Test: `npx tsx src/ncaaClearanceTestSuite.ts` — adapter omits evalDate; Invalid Date → BLOCKED_CALENDAR.
+- Regression Guard: ncaaClearance suite wired into `scripts/runAllPreCommitChecks.ts`.
+- Recurrence Count: 1
+- Status: Active

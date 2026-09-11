@@ -3,6 +3,7 @@ import {
   evaluateMessagingClearance,
   executeAndLogComplianceGate,
   getCurrentNcaaPeriod,
+  complianceDispatchFromUntrustedBody,
   resetComplianceAuditLedger,
   scanForInducements,
   setComplianceAuditPersister,
@@ -73,7 +74,29 @@ async function runNcaaClearanceTestSuite() {
 
   assert(getCurrentNcaaPeriod(new Date(2026, 11, 20)) === "DEAD", "Dec 20 → DEAD");
   assert(getCurrentNcaaPeriod(new Date(2026, 4, 20)) === "EVALUATION", "May 20 → EVALUATION");
+  assert(getCurrentNcaaPeriod(new Date(Number.NaN)) === "DEAD", "Invalid Date → fail-closed DEAD (not CONTACT)");
+  assert(
+    evaluateMessagingClearance(18, true, "Checking in on Friday night film.", new Date("not-a-timestamp")).status ===
+      "BLOCKED_CALENDAR",
+    "Garbage evalDate cannot clear the messaging gate",
+  );
   assert(scanForInducements("free housing off campus").includes("free housing"), "scanForInducements hits free housing");
+
+  const spoofedDispatch = complianceDispatchFromUntrustedBody({
+    schoolId: base.schoolId,
+    coachId: base.coachId,
+    athleteId: base.athleteId,
+    athleteAge: 18,
+    hasParentalConsent: true,
+    messagePayload: base.messagePayload,
+    actionType: "DIRECT_MESSAGE",
+    evalDate: "2026-06-15T12:00:00.000Z",
+  });
+  assert(
+    spoofedDispatch.evalDate === undefined,
+    "HTTP adapter strips client evalDate (cannot spoof CONTACT during DEAD)",
+    String(spoofedDispatch.evalDate),
+  );
 
   resetComplianceAuditLedger();
   setComplianceAuditPersister(null);

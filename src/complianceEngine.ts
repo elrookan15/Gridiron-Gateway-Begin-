@@ -468,8 +468,10 @@ const CALENDAR_METHODS: Record<
  * Deterministic calendar evaluator.
  * Production must ingest the official NCAA calendar JSON for the season year.
  * MVP heuristic: Dec 15–Jan 15 DEAD, Apr 15–May 31 EVALUATION, else CONTACT.
+ * Invalid Date is fail-closed DEAD — NaN month previously fell through to CONTACT.
  */
 export const getCurrentNcaaPeriod = (evalDate: Date = new Date()): NcaaRecruitingPeriod => {
+  if (Number.isNaN(evalDate.getTime())) return "DEAD";
   const month = evalDate.getMonth();
   const date = evalDate.getDate();
 
@@ -478,6 +480,26 @@ export const getCurrentNcaaPeriod = (evalDate: Date = new Date()): NcaaRecruitin
   if ((month === 3 && date >= 15) || month === 4) return "EVALUATION";
   return "CONTACT";
 };
+
+/**
+ * HTTP / SPA dispatch adapter. Drops `evalDate` so an untrusted body cannot
+ * pick the NCAA calendar day (spoofed June ISO → CONTACT during a live DEAD
+ * window). In-process tests may still pass `evalDate` to
+ * `executeAndLogComplianceGate` directly.
+ */
+export function complianceDispatchFromUntrustedBody(
+  body: Omit<ComplianceGateDispatchRequest, "evalDate"> & { evalDate?: string },
+): ComplianceGateDispatchRequest {
+  return {
+    schoolId: body.schoolId,
+    coachId: body.coachId,
+    athleteId: body.athleteId,
+    athleteAge: body.athleteAge,
+    hasParentalConsent: body.hasParentalConsent,
+    messagePayload: body.messagePayload,
+    actionType: body.actionType,
+  };
+}
 
 export const scanForInducements = (message: string): string[] => {
   return INDUCEMENT_PATTERNS.map((pattern) => {

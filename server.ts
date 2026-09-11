@@ -6,6 +6,7 @@ import { createServer as createViteServer } from "vite";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import {
+  complianceDispatchFromUntrustedBody,
   evaluateComplianceGate,
   executeAndLogComplianceGate,
   MESSAGE_SEND_ATTEMPTS_DB,
@@ -615,16 +616,18 @@ app.post("/api/v1/compliance/messaging-clearance", mutateRateLimit, async (req, 
     });
   }
 
-  const evaluation = await executeAndLogComplianceGate({
-    schoolId,
-    coachId,
-    athleteId,
-    athleteAge,
-    hasParentalConsent: body.hasParentalConsent === true,
-    messagePayload: clampMessageText(messagePayload),
-    actionType,
-    evalDate: typeof body.evalDate === "string" ? body.evalDate : undefined,
-  });
+  const evaluation = await executeAndLogComplianceGate(
+    complianceDispatchFromUntrustedBody({
+      schoolId,
+      coachId,
+      athleteId,
+      athleteAge,
+      hasParentalConsent: body.hasParentalConsent === true,
+      messagePayload: clampMessageText(messagePayload) ?? "",
+      actionType,
+      evalDate: typeof body.evalDate === "string" ? body.evalDate : undefined,
+    }),
+  );
 
   return res.status(evaluation.isCleared ? 200 : 403).json({
     isCleared: evaluation.isCleared,
