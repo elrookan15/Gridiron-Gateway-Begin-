@@ -56,14 +56,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Jules PR Code Review
-        uses: google-jules/action@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: 'review'
+          node-version: 22
+          cache: 'npm'
 
-      - name: Fedorov Architecture Verification
-        uses: fedorov-ai/action@v1
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          mode: 'verify'
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Pre-Commit Review Gates
+        run: npm run test:pre-commit
