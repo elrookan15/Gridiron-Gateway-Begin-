@@ -13,7 +13,7 @@
  * Claims written (app_metadata only — user_metadata is not authoritative):
  *   school_id, gateway_role
  */
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -80,7 +80,7 @@ type AuthUserRow = {
 
 /** Paginate GoTrue listUsers until email match or pages exhausted (perPage max 200). */
 async function findAuthUserByEmail(
-  admin: ReturnType<typeof createClient>,
+  admin: SupabaseClient,
   email: string,
 ): Promise<AuthUserRow | null> {
   const perPage = 200;
