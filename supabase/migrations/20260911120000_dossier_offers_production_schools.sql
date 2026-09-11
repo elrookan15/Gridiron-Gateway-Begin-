@@ -11,6 +11,11 @@ BEGIN
     RETURN;
   END IF;
 
+  -- Archive absent (greenfield / already-production cutover skip): nothing to detach.
+  IF to_regclass('public.schools_mvp_archive') IS NULL THEN
+    RETURN;
+  END IF;
+
   FOR fk_name IN
     SELECT con.conname
     FROM pg_constraint con
@@ -52,8 +57,15 @@ BEGIN
 END $$;
 
 -- 3) Pipeline stage tag column (SPA tags Official Visit in notes)
-ALTER TABLE public.scholarship_offers
-  ADD COLUMN IF NOT EXISTS notes TEXT;
+DO $$
+BEGIN
+  IF to_regclass('public.scholarship_offers') IS NULL THEN
+    RETURN;
+  END IF;
+
+  ALTER TABLE public.scholarship_offers
+    ADD COLUMN IF NOT EXISTS notes TEXT;
+END $$;
 
 -- 4) FK → production schools
 DO $$
@@ -81,13 +93,20 @@ BEGIN
   END IF;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_scholarship_offers_school_id
-  ON public.scholarship_offers (school_id);
+DO $$
+BEGIN
+  IF to_regclass('public.scholarship_offers') IS NULL THEN
+    RETURN;
+  END IF;
 
-COMMENT ON COLUMN public.scholarship_offers.school_id IS
-  'Production schools.school_id (cfbd-* / csv-*). MVP UUID archive retired.';
-COMMENT ON COLUMN public.scholarship_offers.notes IS
-  'Free-text + pipeline stage tags (e.g. [pipeline:Official Visit]).';
+  CREATE INDEX IF NOT EXISTS idx_scholarship_offers_school_id
+    ON public.scholarship_offers (school_id);
+
+  COMMENT ON COLUMN public.scholarship_offers.school_id IS
+    'Production schools.school_id (cfbd-* / csv-*). MVP UUID archive retired.';
+  COMMENT ON COLUMN public.scholarship_offers.notes IS
+    'Free-text + pipeline stage tags (e.g. [pipeline:Official Visit]).';
+END $$;
 
 -- 5) Drop MVP UUID archive (no remaining FKs)
 DO $$
