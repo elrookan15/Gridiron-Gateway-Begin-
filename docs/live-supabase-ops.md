@@ -16,7 +16,7 @@ Copy from `.env.example`. Never put `SUPABASE_SERVICE_ROLE_KEY` in Vite.
 
 ## Directory cutover (applied)
 
-1. MVP UUID `schools` → `schools_mvp_archive` (dossier / scholarship_offers debt).
+1. MVP UUID `schools` → `schools_mvp_archive` (then dropped — see dossier cleanup).
 2. Production `schools` (`school_id`, `institution_name`, `tier` / `division_tier_enum`).
 3. `college_coaches.school_id` → VARCHAR FK to production schools; PK column `coach_id`.
 4. Public SELECT RLS on `schools` + `college_coaches` (writes = service role).
@@ -26,6 +26,17 @@ Repo mirrors: `supabase/migrations/20260909150000_production_schools_directory_c
 `20260909155000_college_coaches_coach_id_align.sql`,  
 `20260909160000_bioscan_laser_escrow_persist.sql`,  
 `20260909140000_directory_public_read_rls.sql`.
+
+## Dossier archive cleanup (applied)
+
+1. `scholarship_offers.school_id` UUID → `VARCHAR(100)` FK → `schools(school_id)`.
+2. Added `scholarship_offers.notes` for pipeline stage tags.
+3. Dropped `schools_mvp_archive` (no remaining FKs; offers were empty).
+
+Repo mirror: `supabase/migrations/20260911120000_dossier_offers_production_schools.sql`.
+
+SPA dossier embeds: `schools(school_id, institution_name, primary_color, abbreviation)`  
+→ UI aliases `id` / `name` via `mapProductionOfferSchool`.
 
 ## JWT RBAC (app_metadata only)
 
@@ -55,6 +66,6 @@ Null `email` → UI shows **Contact not verified** (do not invent addresses).
 
 ## Residual debt
 
-- Dossier still may join `schools_mvp_archive` / UUID paths.
+- Athlete dossier still uses MVP `athlete_profiles.user_id` + `users` (lean `athlete_id` cutover pending).
 - RallySafe SPA `nil_transactions` vs Express `rallysafe_escrow_campaigns`.
 - Full CFBD / Sidearm ingest beyond seed rows (`npm run ingest:cfbd` with service role).

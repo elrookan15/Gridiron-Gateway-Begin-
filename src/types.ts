@@ -805,8 +805,9 @@ export interface DatabaseAthleteProfile {
 }
 
 /**
- * Full athlete dossier — joins `athlete_profiles` + `users` + `athlete_media` +
- * `scholarship_offers`→`schools` (MVP relational model in schema.sql).
+ * Full athlete dossier — MVP `athlete_profiles`/`users`/`athlete_media` plus
+ * `scholarship_offers`→ production `schools` (school_id / institution_name).
+ * Offer.school.id|name are UI aliases for school_id|institution_name.
  */
 export interface AthleteFullProfile {
   id: string;

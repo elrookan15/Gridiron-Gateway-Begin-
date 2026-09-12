@@ -1,7 +1,7 @@
 /**
  * Gridiron Gateway — Supabase schools + leaderboard athlete API
  * Tables: production `schools` / lean `athlete_profiles` (schema.production.sql)
- * Full dossier join: MVP `users` + `athlete_media` + `scholarship_offers` (schema.sql)
+ * Dossier: MVP `users` + `athlete_media` + `scholarship_offers` → production `schools`
  */
 import {
   type AthleteFullProfile,
@@ -15,6 +15,12 @@ import {
   type RecruitingPipelineStage,
 } from "../types";
 import type { DirectoryCoachJoined } from "../lib/directoryMappers";
+import {
+  mapProductionOfferSchool,
+  type ProductionOfferSchoolRow,
+  unwrapOne,
+} from "../lib/dossierMappers";
+
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
 
 export type { AthleteFullProfile };
@@ -442,7 +448,7 @@ export async function fetchLeaderboardRecruits(
   });
 }
 
-/** Nested PostgREST shapes for `getAthleteProfileFull` (MVP schema.sql). */
+/** Nested PostgREST shapes for `getAthleteProfileFull` (MVP athlete + production schools). */
 interface NestedUserName {
   first_name: string;
   last_name: string;
@@ -455,20 +461,12 @@ interface NestedAthleteMediaRow {
   youtube_film_url: string | null;
 }
 
-interface NestedSchoolRow {
-  id: string;
-  name: string;
-  primary_color?: string | null;
-  abbreviation?: string | null;
-  logo_url?: string | null;
-}
-
 interface NestedScholarshipOfferRow {
   id: string;
   is_official: boolean;
   offer_date: string;
   commitment_status: string;
-  schools: NestedSchoolRow | NestedSchoolRow[] | null;
+  schools: ProductionOfferSchoolRow | ProductionOfferSchoolRow[] | null;
 }
 
 interface AthleteFullProfileRow {
@@ -482,24 +480,6 @@ interface AthleteFullProfileRow {
   users: NestedUserName | NestedUserName[] | null;
   athlete_media: NestedAthleteMediaRow | NestedAthleteMediaRow[] | null;
   scholarship_offers: NestedScholarshipOfferRow[] | null;
-}
-
-function unwrapOne<T>(value: T | T[] | null | undefined): T | null {
-  if (value == null) return null;
-  return Array.isArray(value) ? (value[0] ?? null) : value;
-}
-
-function mapOfferSchool(
-  school: NestedSchoolRow | NestedSchoolRow[] | null,
-): AthleteFullProfile["offers"][number]["school"] {
-  const row = unwrapOne(school);
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    primary_color: row.primary_color ?? null,
-    abbreviation: row.abbreviation ?? null,
-  };
 }
 
 function mapAthleteMedia(
@@ -517,7 +497,8 @@ function mapAthleteMedia(
 
 /**
  * Join athlete_profiles → users (name) → athlete_media → scholarship_offers → schools.
- * PK filter uses `user_id` per schema.sql MVP athlete_profiles.
+ * Offers embed production `schools(school_id, institution_name, …)` — MVP UUID archive retired.
+ * Athlete PK remains MVP `user_id` until lean athlete_profiles cutover.
  */
 export async function getAthleteProfileFull(
   athleteId: string,
@@ -534,10 +515,6 @@ export async function getAthleteProfileFull(
 
   const supabase = getSupabaseClient();
 
-  // Column names match schema.sql MVP:
-  // - athlete_profiles.user_id (PK)
-  // - athlete_media.hudl_url / youtube_film_url (mapped → hudl_link / youtube_link)
-  // - schools.id / name (+ optional primary_color / abbreviation if migrated)
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
@@ -556,7 +533,7 @@ export async function getAthleteProfileFull(
         is_official,
         offer_date,
         commitment_status,
-        schools(id, name)
+        schools(school_id, institution_name, primary_color, abbreviation)
       )
     `,
     )
@@ -581,7 +558,7 @@ export async function getAthleteProfileFull(
       is_official: Boolean(offer.is_official),
       offer_date: offer.offer_date,
       commitment_status: offer.commitment_status,
-      school: mapOfferSchool(offer.schools),
+      school: mapProductionOfferSchool(offer.schools),
     }))
     .sort(
       (a, b) => new Date(b.offer_date).getTime() - new Date(a.offer_date).getTime(),
