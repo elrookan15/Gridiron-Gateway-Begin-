@@ -1,6 +1,12 @@
-import React, { useState, useMemo } from "react";
-import { SCHOOLS_DATABASE, SchoolEntry } from "../data/schoolsData";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import type { SchoolEntry as GeminiSchoolEntry } from "../data/schoolsData";
 import { CollegeDivision } from "../types";
+import { fetchSchools } from "../services/schoolsApi";
+import { isSupabaseConfigured } from "../lib/supabaseClient";
+import {
+  mapDatabaseSchoolToDirectoryCard,
+  type DirectorySchoolCard,
+} from "../lib/directoryMappers";
 import { generateSchoolWithGemini } from "../services/geminiAssistantApi";
 import { validateSchoolEntry } from "../lib/geminiSchoolGeneratorEngine";
 import {
@@ -30,7 +36,32 @@ import {
   RotateCcw,
   Bot,
   Loader2,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
+
+type LoadState = "idle" | "loading" | "success" | "error";
+
+function geminiEntryToDirectoryCard(entry: GeminiSchoolEntry): DirectorySchoolCard {
+  return {
+    id: entry.id,
+    name: entry.name,
+    mascot: entry.mascot,
+    division: entry.division,
+    divisionLabel: entry.divisionLabel,
+    conference: entry.conference,
+    cityState: entry.cityState,
+    primaryColor: entry.primaryColor,
+    secondaryColor: entry.secondaryColor,
+    logoUrl: entry.logoUrl,
+    recruitingEmail: null,
+    recruitingPhone: null,
+    totalActiveRecruits: entry.totalActiveRecruits,
+    topMajors: entry.topMajors,
+    programHighlights: entry.programHighlights,
+    isFeatured: entry.isFeatured,
+  };
+}
 
 interface SchoolsDirectoryProps {
   onSelectSchoolForTarget?: (schoolName: string) => void;
@@ -41,12 +72,14 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
   onSelectSchoolForTarget,
   onAddOfferSchool,
 }) => {
-  const [schools, setSchools] = useState<SchoolEntry[]>(SCHOOLS_DATABASE);
+  const [schools, setSchools] = useState<DirectorySchoolCard[]>([]);
+  const [loadState, setLoadState] = useState<LoadState>("idle");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDivision, setSelectedDivision] = useState<string>("All");
   const [selectedConference, setSelectedConference] = useState<string>("All");
   const [selectedState, setSelectedState] = useState<string>("All");
-  const [savedSchoolIds, setSavedSchoolIds] = useState<string[]>(["fbs-sec-1", "fcs-mvfc-1", "juco-maccc-1"]);
+  const [savedSchoolIds, setSavedSchoolIds] = useState<string[]>([]);
   const [selectedCompareIds, setSelectedCompareIds] = useState<string[]>([]);
   const [isCompareModalOpen, setIsCompareModalOpen] = useState(false);
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
@@ -57,6 +90,34 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
   const [aiSchoolQuery, setAiSchoolQuery] = useState("");
   const [isGeneratingSchool, setIsGeneratingSchool] = useState(false);
   const [aiGeneratorError, setAiGeneratorError] = useState<string | null>(null);
+
+  const loadLiveSchools = useCallback(async () => {
+    setLoadState("loading");
+    setErrorMessage(null);
+
+    if (!isSupabaseConfigured()) {
+      setSchools([]);
+      setLoadState("error");
+      setErrorMessage(
+        "Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to load the live program directory.",
+      );
+      return;
+    }
+
+    try {
+      const rows = await fetchSchools({ limit: 2000 });
+      setSchools(rows.map(mapDatabaseSchoolToDirectoryCard));
+      setLoadState("success");
+    } catch (err) {
+      setSchools([]);
+      setLoadState("error");
+      setErrorMessage(err instanceof Error ? err.message : "Failed to load schools.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadLiveSchools();
+  }, [loadLiveSchools]);
 
   // Divisions filter list
   const divisions = [
@@ -184,7 +245,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
     setAiGeneratorError(null);
 
     try {
-      let generatedSchool: SchoolEntry;
+      let generatedSchool: GeminiSchoolEntry;
       try {
         generatedSchool = await generateSchoolWithGemini(aiSchoolQuery);
       } catch (_edgeErr) {
@@ -204,9 +265,13 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
         generatedSchool = fallbackRes.school;
       }
 
-      setSchools((prev) => [generatedSchool, ...prev]);
-      setSavedSchoolIds((prev) => [...prev, generatedSchool.id]);
-      triggerNotice(`Gemini AI generated & added ${generatedSchool.name} to program directory!`);
+      // AI overlays are session-local only; contacts forced null (never invent).
+      const card = geminiEntryToDirectoryCard(generatedSchool);
+      setSchools((prev) => [card, ...prev]);
+      setSavedSchoolIds((prev) => [...prev, card.id]);
+      triggerNotice(
+        `Gemini AI added session overlay for ${card.name} (not persisted; contacts unverified).`,
+      );
       setAiSchoolQuery("");
       setIsAiGeneratorOpen(false);
     } catch (err) {
@@ -217,12 +282,46 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-slate-100 space-y-8 antialiased">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 text-slate-100 space-y-8 antialiased min-h-[640px]">
       {/* Toast Notification */}
       {actionNotice && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2.5 text-xs animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-lime-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-lime-300 flex items-center gap-2.5 text-xs animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
           <span>{actionNotice}</span>
+        </div>
+      )}
+
+      {(loadState === "loading" || loadState === "idle") && (
+        <div className="min-h-[160px] rounded-3xl border border-slate-800 bg-slate-900 flex items-center justify-center gap-3 text-slate-300">
+          <Loader2 className="w-5 h-5 animate-spin text-lime-400 shrink-0" />
+          <span className="text-sm font-semibold">Loading live program directory from Supabase…</span>
+        </div>
+      )}
+
+      {loadState === "error" && (
+        <div className="min-h-[160px] rounded-3xl border border-red-500/40 bg-slate-900 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-white">Live directory unavailable</p>
+              <p className="text-xs text-slate-400 mt-0.5">{errorMessage}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadLiveSchools()}
+            className="min-h-[44px] min-w-[44px] px-4 rounded-2xl bg-slate-950 border border-slate-700 text-lime-400 text-xs font-black uppercase tracking-wider inline-flex items-center justify-center gap-2"
+          >
+            <RefreshCw className="w-4 h-4 shrink-0" />
+            Retry
+          </button>
+        </div>
+      )}
+
+      {loadState === "success" && schools.length === 0 && (
+        <div className="min-h-[120px] rounded-3xl border border-slate-800 bg-slate-900 p-6 text-sm text-slate-300">
+          No programs in production <code className="text-lime-400">schools</code>. Run CFBD/JUCO ingest
+          upserts into Supabase — static <code className="text-slate-400">schoolsData</code> is fixtures only.
         </div>
       )}
 
@@ -234,18 +333,18 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-3">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
-                <Compass className="w-3.5 h-3.5 text-emerald-400" /> College & Prep School Database
+              <span className="px-3 py-1 rounded-full bg-lime-500/10 text-lime-400 border border-lime-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+                <Compass className="w-3.5 h-3.5 text-lime-400" /> Live Supabase Program Directory
               </span>
               <span className="text-[10px] text-amber-300 font-bold bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/30">
-                6 Divisions • Real Contact Info • Side-by-Side Comparison
+                Production schools · Contacts null until Sidearm/CSV verify
               </span>
             </div>
             <h1 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
               Collegiate Recruiting & Programs Directory
             </h1>
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Explore verified football programs across Division 1 FBS, FCS, D2, D3, NAIA, JUCO, and Prep academies. View direct coaching emails, recruiting contacts, roster spot openings, and compare programs side-by-side.
+              Live CFBD/CSV program rows from Postgres. Unpublished athletics contacts render as Contact not verified — never invented.
             </p>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <button

@@ -18,6 +18,9 @@
     "test:laser": "tsx src/combineLaserTestSuite.ts",
     "test:gemini-school": "tsx src/geminiSchoolGeneratorTestSuite.ts",
     "test:gcs-signed-url": "tsx src/gcsSignedUrlTestSuite.ts",
+    "test:directory-mappers": "tsx src/directoryMappersTestSuite.ts",
+    "test:directory-persist": "tsx src/directoryPersistTestSuite.ts",
+    "test:telemetry-rbac": "tsx src/telemetryRbacTestSuite.ts",
     "test:pre-commit": "tsx scripts/runAllPreCommitChecks.ts",
     "test:federov-kernel": "tsx scripts/federov/runFederovKernelTests.ts",
     "federov:issue-plan": "tsx scripts/federov/ciIssuePlanComment.ts",
@@ -25,7 +28,8 @@
     "ingest:cfbd": "tsx scripts/ingestion/cfbdTeamsSync.ts",
     "ingest:sidearm": "tsx scripts/ingestion/sidearmStaffScraper.ts",
     "ingest:juco-csv": "tsx scripts/ingestion/jucoPrepCsvImport.ts data/ingestion/templates/juco_prep_programs.template.csv",
-    "ingest:monthly": "tsx scripts/ingestion/runMonthlyPipeline.ts"
+    "ingest:monthly": "tsx scripts/ingestion/runMonthlyPipeline.ts",
+    "ops:stamp-coach-claims": "tsx scripts/ops/stampCoachClaims.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

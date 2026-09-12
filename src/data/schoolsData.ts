@@ -1,3 +1,8 @@
+/**
+ * FIXTURES ONLY — not the product database.
+ * Live SPA directories use `fetchSchools` / production `public.schools`.
+ * Kept for Gemini school-generator tests and offline Storybook-style demos.
+ */
 import { CollegeDivision, CollegeProgram, DivisionTier } from "../types";
 import { COLLEGE_PROGRAMS } from "./collegeProgramsData";
 

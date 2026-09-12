@@ -67,6 +67,8 @@ COMMENT ON TABLE college_coaches IS 'Sidearm/CSV verified staff contacts. email 
 COMMENT ON TABLE athlete_profiles IS 'Scouting-agent athlete facts (TrueSpeed + Cognition) for scheme-fit matching.';
 COMMENT ON COLUMN college_coaches.email IS 'Extracted from published athletics pages or verified CSV only — never hallucinated.';
 
+-- Directory public-read RLS: supabase/migrations/20260909140000_directory_public_read_rls.sql
+
 -- RallySafe third-party NIL Go ledger (fail-closed clearinghouse). Apply:
 -- supabase/migrations/20260814120000_nil_transactions.sql
 -- Do not store CapGM / CAPS institutional revenue-share rows here.

@@ -41,12 +41,24 @@ try {
   execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("🔟 Executing Federov Correction Kernel Toolkit Gate...");
+  console.log("🔟 Executing Directory Mapper Gate (live schools/coaches adapters)...");
+  execSync("npx tsx src/directoryMappersTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣1️⃣ Executing Directory Persist Fail-Closed Gate...");
+  execSync("npx tsx src/directoryPersistTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣2️⃣ Executing Telemetry Persist + JWT RBAC Gate...");
+  execSync("npx tsx src/telemetryRbacTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣3️⃣ Executing Federov Correction Kernel Toolkit Gate...");
   execSync("npx tsx scripts/federov/runFederovKernelTests.ts", { stdio: "inherit" });
   console.log("");
 
   console.log("⚡ ==================================================");
-  console.log("🟢 ALL PRE-COMMIT STATUTORY, COPPA, CAPGM, SCOUTING, LASER, GEMINI, GCS, FEDEROV & TYPE CHECKS PASSED");
+  console.log("🟢 ALL PRE-COMMIT STATUTORY, DIRECTORY, TELEMETRY, FEDEROV & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");
   process.exit(0);
 } catch (error) {

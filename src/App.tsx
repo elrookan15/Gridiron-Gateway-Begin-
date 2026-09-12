@@ -146,7 +146,7 @@ export function App() {
         {activeTab === "coach_pipeline" && (
           <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
             <AuthManager />
-            <RecruitingPipeline schoolId="fbs-texas" />
+            <RecruitingPipeline />
             <details className="bg-slate-900 border border-slate-800 rounded-2xl p-4">
               <summary className="cursor-pointer text-xs font-bold text-slate-400 uppercase tracking-wider min-h-[44px] flex items-center">
                 Legacy mock pipeline board

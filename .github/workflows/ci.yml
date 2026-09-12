@@ -51,5 +51,16 @@ jobs:
       - name: GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)
         run: npm run test:gcs-signed-url
 
+      - name: Directory Mapper & Persist Gates
+        run: |
+          npm run test:directory-mappers
+          npm run test:directory-persist
+
+      - name: Telemetry Persist & JWT RBAC Gate
+        run: npm run test:telemetry-rbac
+
+      - name: Federov Correction Kernel Gate
+        run: npm run test:federov-kernel
+
       - name: Production Bundle Verification
         run: npm run build

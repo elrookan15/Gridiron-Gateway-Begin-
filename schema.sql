@@ -129,7 +129,14 @@ CREATE TABLE users (
 COMMENT ON TABLE users IS 'Primary profile table linked to auth.users with self-referencing guardian linkage for minors.';
 COMMENT ON COLUMN users.guardian_id IS 'Self-referencing FK linking minor athletes to verified parent/guardian user account.';
 
--- Colleges, Universities & Prep Programs Directory (legacy MVP UUID model)
+-- Colleges, Universities & Prep Programs Directory (LEGACY MVP UUID model)
+-- =============================================================================
+-- WARNING: This second `CREATE TABLE schools` conflicts with production
+-- `schools(school_id VARCHAR)` defined earlier (IF NOT EXISTS). On greenfield,
+-- apply schema.production.sql only. This MVP block remains for historical
+-- scholarship_offers UUID joins / dossier debt — do not deploy both blindly.
+-- Live SPA directories use production schools + college_coaches exclusively.
+-- =============================================================================
 CREATE TABLE schools (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
@@ -147,7 +154,7 @@ CREATE TABLE schools (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-COMMENT ON TABLE schools IS 'Comprehensive directory of collegiate and prep football programs across all divisions.';
+COMMENT ON TABLE schools IS 'LEGACY MVP UUID directory OR production VARCHAR school_id depending on which migration landed first. Prefer schema.production.sql for new deploys.';
 
 -- Athlete Physical, Academic & NIL Profiles (1-to-1 with users)
 CREATE TABLE athlete_profiles (

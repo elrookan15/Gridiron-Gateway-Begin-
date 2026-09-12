@@ -13,6 +13,7 @@ import {
   updatePipelineOfferStage,
 } from "../services/schoolsApi";
 import { isSupabaseConfigured } from "../lib/supabaseClient";
+import { resolveCoachSchoolIdFromSession } from "../lib/coachSession";
 import {
   AlertTriangle,
   ChevronLeft,
@@ -25,9 +26,6 @@ import {
   ShieldCheck,
   Star,
 } from "lucide-react";
-
-/** Simulated logged-in coach school until auth + RLS session is wired. */
-const DEMO_COACH_SCHOOL_ID = "fbs-texas";
 
 const PIPELINE_STAGES: RecruitingPipelineStage[] = [
   "Evaluating",
@@ -73,8 +71,11 @@ function stageIndex(stage: RecruitingPipelineStage): number {
 }
 
 export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
-  schoolId = DEMO_COACH_SCHOOL_ID,
+  schoolId: schoolIdProp,
 }) => {
+  const [resolvedSchoolId, setResolvedSchoolId] = useState<string | null>(
+    schoolIdProp?.trim() || null,
+  );
   const [offers, setOffers] = useState<PipelineOffer[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -95,6 +96,22 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
       return;
     }
 
+    const schoolId =
+      schoolIdProp?.trim() ||
+      (await resolveCoachSchoolIdFromSession());
+
+    if (!schoolId) {
+      setResolvedSchoolId(null);
+      setLoadState("error");
+      setErrorMessage(
+        "No coach school_id on the JWT. Sign in via AuthManager with app_metadata.school_id (or user_metadata.school_id). Demo school ids are no longer injected.",
+      );
+      setOffers([]);
+      return;
+    }
+
+    setResolvedSchoolId(schoolId);
+
     try {
       const rows = await getPipelineOffers(schoolId);
       setOffers(rows);
@@ -105,7 +122,7 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
       setOffers([]);
       setLoadState("error");
     }
-  }, [schoolId]);
+  }, [schoolIdProp]);
 
   useEffect(() => {
     void loadPipeline();
@@ -168,7 +185,7 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
             Target Progression Board
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
-            School scope: <span className="font-mono text-cyan-400">{schoolId}</span>
+            School scope: <span className="font-mono text-cyan-400">{resolvedSchoolId ?? "unresolved"}</span>
             {" · "}
             Evaluating → Offered → Official Visit → Committed
           </p>
