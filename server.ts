@@ -50,10 +50,15 @@ import {
   listLaserCombineEntries,
 } from "./src/lib/telemetryPersist";
 import {
+  fetchEscrowCampaign,
   listEscrowCampaigns,
   persistEscrowCampaign,
   type EscrowCampaignRecord,
 } from "./src/lib/escrowPersist";
+import {
+  hydrateEscrowStore,
+  isEscrowAlreadyReleased,
+} from "./src/lib/escrowCampaignStore";
 import { isServiceRoleConfigured } from "./src/lib/supabaseAdmin";
 import {
   isComplianceAuditPostgresConfigured,
@@ -152,6 +157,15 @@ async function upsertCoaches(coaches: DatabaseCoach[]) {
 
 /** Server-authoritative portal flags — never trust client claims. */
 const PORTAL_FLAGGED_ATHLETE_IDS = new Set<string>(["ath_portal_flagged_demo"]);
+
+const ESCROW_RELEASE_IN_FLIGHT = new Set<string>();
+
+async function getMutableEscrowCampaign(
+  campaignId: string,
+): Promise<EscrowCampaign | undefined> {
+  const fromPg = await fetchEscrowCampaign(campaignId);
+  return hydrateEscrowStore(ESCROW_CAMPAIGNS_DB, fromPg, campaignId);
+}
 
 const ESCROW_CAMPAIGNS_DB: EscrowCampaign[] = [
   {
@@ -1217,9 +1231,17 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, asy
     });
   }
 
-  const campaign = ESCROW_CAMPAIGNS_DB.find(
-    (c) => c.campaignId === campaignId || c.id === campaignId
-  );
+  if (ESCROW_RELEASE_IN_FLIGHT.has(campaignId)) {
+    return res.status(409).json({
+      error: "ESCROW_RELEASE_IN_FLIGHT",
+      campaignId,
+      message: "A release for this campaign is already in progress.",
+    });
+  }
+  ESCROW_RELEASE_IN_FLIGHT.add(campaignId);
+
+  try {
+  const campaign = await getMutableEscrowCampaign(campaignId);
   if (!campaign) {
     return res.status(404).json({ error: "CAMPAIGN_NOT_FOUND", campaignId });
   }
@@ -1235,6 +1257,7 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, asy
     stripeMilestoneVerified: campaign.stripeMilestoneVerified,
     athleteInTransferPortal: campaign.athleteInTransferPortal,
     regulatoryPlane: campaign.regulatoryPlane,
+    payoutReleased: isEscrowAlreadyReleased(campaign.escrowStatus),
   });
 
   if (gate.ok === false) {
@@ -1289,6 +1312,9 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, asy
     postgres,
     auditEntry,
   });
+  } finally {
+    ESCROW_RELEASE_IN_FLIGHT.delete(campaignId);
+  }
 });
 
 app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, async (req, res) => {
@@ -1311,7 +1337,7 @@ app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, async (req, r
       ? data.object.metadata.campaignId
       : undefined;
   const campaign = campaignId
-    ? ESCROW_CAMPAIGNS_DB.find((c) => c.campaignId === campaignId || c.id === campaignId)
+    ? await getMutableEscrowCampaign(campaignId)
     : undefined;
 
   let eventOutcome = "PROCESSED";
