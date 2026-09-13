@@ -7,10 +7,25 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 
 | Date | Title | Category | Persona | Status |
 |---|---|---|---|---|
+| 2026-09-13 | RallySafe release/webhook ignored Postgres SOT | nil-capgm | integration | Active |
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
 
 ## Entries
+
+## [2026-09-13] RallySafe release/webhook ignored Postgres SOT
+
+- Category: nil-capgm
+- Persona: integration
+- File(s): `server.ts`, `src/lib/escrowPersist.ts`, `src/lib/escrowCampaignStore.ts`
+- Root Cause: Sept 9 persist wrote `rallysafe_escrow_campaigns` on create/release, but `GET /campaigns` reads PG while `POST .../release` and Stripe webhook only `find` in `ESCROW_CAMPAIGNS_DB`. After restart, created campaigns 404 on release; seed `esc-cleared` can be re-released over a persisted RELEASED row because `payoutReleased` was never passed to `canReleaseNilEscrow`.
+- Patch: `fetchEscrowCampaign` + `hydrateEscrowStore` (PG wins) on mutation paths; `payoutReleased` from `escrowStatus === "RELEASED"`; per-campaign in-flight lock.
+- Red Test: RAM seed FUNDED + PG RELEASED → old finder returns seed and gate allows. `hydrateEscrowStore` test fails on old RAM-only find.
+- Green Test: `npx tsx src/rallySafeClearinghouseTestSuite.ts` — PG RELEASED overwrites seed; PG-only id hydrates; `ALREADY_RELEASED` when `payoutReleased`.
+- Regression Guard: RallySafe suite hydrate + already-released asserts (pre-commit step 3).
+- Residual Risk: List still treats PG read error as empty (`[]`) and falls back to RAM seeds; no row-level SQL lock across Node processes.
+- Recurrence Count: 1
+- Status: Active
 
 ## [2026-09-07] Compliance Test Clock-Drift / September 2026 Boundary Violation
 
