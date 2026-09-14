@@ -3,6 +3,7 @@
  */
 import assert from "node:assert/strict";
 import {
+  coachIdToUuid,
   isDirectoryPostgresConfigured,
   persistCoachesToPostgres,
   persistProgramsToPostgres,
@@ -44,6 +45,30 @@ async function main(): Promise<void> {
   await check("isDirectoryPostgresConfigured reflects env", () => {
     assert.equal(typeof isDirectoryPostgresConfigured(), "boolean");
   });
+
+  await check("Sidearm/CSV slug ids hash to a stable UUID v5", () => {
+    const sidearm = "staff-cfbd-251-steve-sarkisian-head-coach";
+    const first = coachIdToUuid(sidearm);
+    const second = coachIdToUuid(sidearm);
+    assert.equal(first, second);
+    assert.match(
+      first,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    const csvId = coachIdToUuid("csv-coach-csv-juco-dean-college-example-coach");
+    assert.notEqual(csvId, first);
+    assert.match(
+      csvId,
+      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+  });
+
+  await check("existing UUID coach_id is preserved (not re-hashed)", () => {
+    const uuid = "11111111-1111-4111-8111-111111111111";
+    assert.equal(coachIdToUuid(uuid), uuid);
+    assert.equal(coachIdToUuid(` ${uuid.toUpperCase()} `), uuid);
+  });
+
 
   await check("persistPrograms fails closed without service role (or upserts when set)", async () => {
     const result = await persistProgramsToPostgres([sampleProgram]);
