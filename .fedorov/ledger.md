@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-14 | Sidearm/CSV coach persist duplicate INSERT | persistence | integration | Active |
 
 ## Entries
 
@@ -37,3 +38,16 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-14] Sidearm/CSV coach persist duplicate INSERT
+
+- Category: persistence
+- Persona: integration
+- File(s): `src/lib/directoryPersist.ts`
+- Root Cause: `toCoachInsert` dropped non-UUID `coachId` (`staff-*` / `csv-coach-*`). `persistCoachesToPostgres` then `insert()`d so Postgres `gen_random_uuid()` minted a new PK on every scrape/CSV re-run.
+- Patch: UUID v5 from the stable slug; always `upsert` on `coach_id`.
+- Red Test: Same Sidearm slug twice → two rows (old insert path omitted `coach_id`).
+- Green Test: `coachIdToUuid` is deterministic UUID v5; existing UUIDs pass through; `npx tsx src/directoryPersistTestSuite.ts`.
+- Regression Guard: directory persist suite (pre-commit step 11).
+- Recurrence Count: 1
+- Status: Active
