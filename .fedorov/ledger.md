@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-15 | Pipeline stage UPDATE treated 0-row as success | persistence | integration | Active |
 
 ## Entries
 
@@ -37,3 +38,17 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-15] Pipeline Kanban UPDATE treated 0-row PostgREST as success
+
+- Category: persistence
+- Persona: integration
+- File(s): `src/services/schoolsApi.ts` (`updatePipelineOfferStage`)
+- Root Cause: Supabase JS UPDATE with RLS/no-match returns `{ data: null, error: null }` unless `.select()` is requested. Optimistic RecruitingPipeline moves stayed on the new column while `scholarship_offers` never changed — especially after JWT `app_metadata` stamps that do not populate MVP `users.role` checked by offer UPDATE RLS.
+- Patch: Require the offer row on read; `.update().select("id").maybeSingle()`; `assertPipelineStageWriteReturned` throws on null/mismatch so the UI targeted rollback runs.
+- Red Test: `assertPipelineStageWriteReturned(null, offerId)` throws `/no row returned/`.
+- Green Test: matching `{ id }` is a no-op success; `npx tsx src/pipelineOfferWriteTestSuite.ts`.
+- Regression Guard: `test:pipeline-offer-write` in `scripts/runAllPreCommitChecks.ts`.
+- Residual Risk: RLS still keys off `users.role` not `app_metadata.gateway_role` / `school_id` — a 0-row throw is fail-closed UX, not tenant isolation.
+- Recurrence Count: 1
+- Status: Active

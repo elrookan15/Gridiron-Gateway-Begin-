@@ -53,7 +53,11 @@ try {
   execSync("npx tsx src/telemetryRbacTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("1️⃣3️⃣ Executing Federov Correction Kernel Toolkit Gate...");
+  console.log("1️⃣3️⃣ Executing Pipeline Offer Write Fail-Closed Gate...");
+  execSync("npx tsx src/pipelineOfferWriteTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣4️⃣ Executing Federov Correction Kernel Toolkit Gate...");
   execSync("npx tsx scripts/federov/runFederovKernelTests.ts", { stdio: "inherit" });
   console.log("");
 

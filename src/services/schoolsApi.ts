@@ -720,6 +720,22 @@ export async function getPipelineOffers(schoolId: string): Promise<PipelineOffer
 }
 
 /**
+ * PostgREST/RLS returns `{ data: null, error: null }` for 0-row UPDATEs.
+ * Treating that as success left optimistic Kanban moves unpersisted.
+ */
+export function assertPipelineStageWriteReturned(
+  data: { id?: string } | null | undefined,
+  offerId: string,
+): void {
+  const id = typeof data?.id === "string" ? data.id.trim() : "";
+  if (!id || id !== offerId) {
+    throw new Error(
+      `Failed to update pipeline stage: no row returned for offer ${offerId} (missing, concurrent delete, or RLS denied).`,
+    );
+  }
+}
+
+/**
  * Persist a stage move. Maps Kanban columns onto `is_official` + `commitment_status`
  * (+ notes tag for Official Visit) until a dedicated pipeline_stage column exists.
  */
@@ -736,12 +752,17 @@ export async function updatePipelineOfferStage(
   // Preserve non-pipeline notes while toggling the OV tag
   const { data: existing, error: readError } = await supabase
     .from("scholarship_offers")
-    .select("notes")
+    .select("id, notes")
     .eq("id", offerId)
     .maybeSingle();
 
   if (readError) {
     throw new Error(`Failed to read offer notes: ${readError.message}`);
+  }
+  if (!existing) {
+    throw new Error(
+      `Failed to update pipeline stage: offer ${offerId} not found or RLS denied.`,
+    );
   }
 
   const priorNotes = ((existing as { notes?: string | null } | null)?.notes ?? "")
@@ -758,12 +779,16 @@ export async function updatePipelineOfferStage(
     notes,
   };
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("scholarship_offers")
     .update(patch)
-    .eq("id", offerId);
+    .eq("id", offerId)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     throw new Error(`Failed to update pipeline stage: ${error.message}`);
   }
+
+  assertPipelineStageWriteReturned(updated as { id?: string } | null, offerId);
 }
