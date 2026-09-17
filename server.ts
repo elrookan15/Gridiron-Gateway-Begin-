@@ -55,6 +55,7 @@ import {
   type EscrowCampaignRecord,
 } from "./src/lib/escrowPersist";
 import { isServiceRoleConfigured } from "./src/lib/supabaseAdmin";
+import { resolveComplianceAthleteGate } from "./src/lib/complianceAthleteLookup";
 import {
   isComplianceAuditPostgresConfigured,
   persistComplianceAuditToPostgres,
@@ -560,12 +561,17 @@ app.post("/api/messages/send", mutateRateLimit, async (req, res) => {
 
   const safeText = clampMessageText(message_text);
 
+  const coppaFacts = await resolveComplianceAthleteGate(
+    recruit_id,
+    typeof req.body?.athlete_age === "number" ? req.body.athlete_age : 0,
+  );
+
   const messagingGate = await executeAndLogComplianceGate({
     schoolId: typeof req.body?.school_id === "string" ? req.body.school_id : "unspecified",
     coachId: coach_id,
     athleteId: recruit_id,
-    athleteAge: typeof req.body?.athlete_age === "number" ? req.body.athlete_age : 0,
-    hasParentalConsent: req.body?.has_parental_consent === true,
+    athleteAge: coppaFacts.athleteAge,
+    hasParentalConsent: coppaFacts.hasParentalConsent,
     messagePayload: safeText,
     actionType: "DIRECT_MESSAGE",
   });
@@ -642,15 +648,16 @@ app.post("/api/v1/compliance/messaging-clearance", mutateRateLimit, async (req, 
     });
   }
 
+  const coppaFacts = await resolveComplianceAthleteGate(athleteId, athleteAge);
+
   const evaluation = await executeAndLogComplianceGate({
     schoolId,
     coachId,
     athleteId,
-    athleteAge,
-    hasParentalConsent: body.hasParentalConsent === true,
-    messagePayload: clampMessageText(messagePayload),
+    athleteAge: coppaFacts.athleteAge,
+    hasParentalConsent: coppaFacts.hasParentalConsent,
+    messagePayload: clampMessageText(messagePayload) ?? "",
     actionType,
-    evalDate: typeof body.evalDate === "string" ? body.evalDate : undefined,
   });
 
   return res.status(evaluation.isCleared ? 200 : 403).json({

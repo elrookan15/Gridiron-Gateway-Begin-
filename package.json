@@ -14,6 +14,7 @@
     "test:rallysafe": "tsx src/rallySafeClearinghouseTestSuite.ts",
     "test:capgm": "tsx src/capGmTestSuite.ts",
     "test:parental-consent": "tsx src/parentalConsentTestSuite.ts",
+    "test:coppa-lookup": "tsx src/complianceAthleteLookupTestSuite.ts",
     "test:scouting": "tsx src/autonomousScoutingTestSuite.ts",
     "test:laser": "tsx src/combineLaserTestSuite.ts",
     "test:gemini-school": "tsx src/geminiSchoolGeneratorTestSuite.ts",
