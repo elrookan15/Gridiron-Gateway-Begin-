@@ -25,6 +25,10 @@ try {
   execSync("npx tsx src/parentalConsentTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("5️⃣b Executing COPPA messaging-gate DOB/consent lookup suite...");
+  execSync("npx tsx src/complianceAthleteLookupTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("6️⃣ Executing Autonomous Scouting AI Scheme Fit Suite (7/7 Metric Audit)...");
   execSync("npx tsx src/autonomousScoutingTestSuite.ts", { stdio: "inherit" });
   console.log("");

@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-17 | HTTP COPPA age/consent spoof | compliance | security | Active |
 
 ## Entries
 
@@ -37,3 +38,16 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-17] HTTP COPPA age/consent spoofed messaging clearance
+
+- Category: compliance
+- Persona: security
+- File(s): `server.ts`, `src/lib/complianceAthleteLookup.ts`, `src/complianceAthleteLookupTestSuite.ts`
+- Root Cause: `/api/v1/compliance/messaging-clearance` and `/api/messages/send` forwarded client `athleteAge` / `hasParentalConsent` into `executeAndLogComplianceGate`. Postgres `athlete_profiles.date_of_birth` + `contact_authorized` (parental_consents trigger) were never consulted, so a coach could POST age 18 or `hasParentalConsent: true` and message a minor.
+- Patch: `resolveComplianceAthleteGate` overrides gate facts from the profile row (service role). Client consent is never treated as true. Missing row / prod without service role fail-closed as age 0 + no consent. Dev without service role keeps client age only, consent forced false.
+- Red Test: `gateFactsFromAthleteRow({ date_of_birth: "2010-06-01", contact_authorized: false })` + `evaluateMessagingClearance` → BLOCKED_MINOR_CONSENT; raw client `(18, true)` → CLEARED.
+- Green Test: `npx tsx src/complianceAthleteLookupTestSuite.ts`
+- Regression Guard: suite wired into `scripts/runAllPreCommitChecks.ts` (`test:coppa-lookup`).
+- Recurrence Count: 1
+- Status: Active
