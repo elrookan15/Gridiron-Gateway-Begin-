@@ -541,6 +541,60 @@ function periodToEvalDate(period: NcaaRecruitingPeriod): Date {
   return new Date(2026, 5, 15);
 }
 
+/**
+ * Authoritative football calendar lookup used by the production dispatch gate.
+ * Invalid timestamps match nothing (fail-closed). Does not invent CONTACT.
+ */
+export function footballPeriodsCovering(evalDate: Date): RecruitingPeriodRow[] {
+  if (Number.isNaN(evalDate.getTime())) {
+    return [];
+  }
+  return RECRUITING_PERIODS_DB.filter((row) => {
+    if (row.sport !== "football") return false;
+    const start = new Date(row.start_date);
+    const end = new Date(row.end_date);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+    return evalDate >= start && evalDate <= end;
+  });
+}
+
+const UNSCHEDULED_CALENDAR_BLOCK: ComplianceEvaluation = {
+  isCleared: false,
+  status: "BLOCKED_CALENDAR",
+  flaggedKeywords: [],
+  reason:
+    "FAIL-CLOSED: No active recruiting_periods row found for football at this evaluation time. Messaging blocked by default safety gate.",
+};
+
+function deadPeriodCalendarBlock(periodId: string): ComplianceEvaluation {
+  return {
+    isCleared: false,
+    status: "BLOCKED_CALENDAR",
+    flaggedKeywords: [],
+    reason: `Active NCAA Dead Period (${periodId}). In-person contact and digital messaging restricted.`,
+  };
+}
+
+/**
+ * Overlay for `executeAndLogComplianceGate`: a CLEARED heuristic must still
+ * have a matching `RECRUITING_PERIODS_DB` row, and must not overlap DEAD.
+ */
+export function applyPeriodTableFailClosed(
+  evalDate: Date,
+  evaluation: ComplianceEvaluation,
+): ComplianceEvaluation {
+  if (!evaluation.isCleared) return evaluation;
+  const matched = footballPeriodsCovering(evalDate);
+  if (matched.length === 0) {
+    return { ...UNSCHEDULED_CALENDAR_BLOCK };
+  }
+  const dead = matched.find((row) => row.period_type === "dead");
+  if (dead) {
+    return deadPeriodCalendarBlock(dead.id);
+  }
+  return evaluation;
+}
+
 function recordClearanceAudit(
   request: Pick<NcaaClearanceRequest, "schoolId" | "coachId" | "athleteId" | "actionType">,
   evaluation: ComplianceEvaluation,
@@ -567,11 +621,15 @@ function recordClearanceAudit(
 export const executeAndLogComplianceGate = async (
   request: ComplianceGateDispatchRequest,
 ): Promise<ComplianceEvaluation> => {
-  const evaluation = evaluateMessagingClearance(
-    request.athleteAge,
-    request.hasParentalConsent,
-    request.messagePayload,
-    request.evalDate ? new Date(request.evalDate) : new Date(),
+  const evalDate = request.evalDate ? new Date(request.evalDate) : new Date();
+  const evaluation = applyPeriodTableFailClosed(
+    evalDate,
+    evaluateMessagingClearance(
+      request.athleteAge,
+      request.hasParentalConsent,
+      request.messagePayload,
+      evalDate,
+    ),
   );
 
   if (remoteAuditPersister) {

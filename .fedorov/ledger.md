@@ -9,8 +9,22 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-18 | Messaging-clearance fail-open CONTACT on unscheduled months | compliance | integration | Active |
 
 ## Entries
+
+## [2026-09-18] Messaging-clearance heuristic invented CONTACT when recruiting_periods had no row
+
+- Category: compliance
+- Persona: integration
+- File(s): `src/complianceEngine.ts`, `src/ncaaClearanceTestSuite.ts`
+- Root Cause: `executeAndLogComplianceGate` used `getCurrentNcaaPeriod`, which returns CONTACT for any month outside Dec 15–Jan 15 / Apr 15–May 31. Coach DMs via `/api/v1/compliance/messaging-clearance` therefore cleared in unscheduled months (e.g. 2026-09-18) even though `evaluateComplianceGate` fail-closes with zero period rows.
+- Patch: Overlay `applyPeriodTableFailClosed` on the production dispatch gate — CLEARED heuristic must match a football `RECRUITING_PERIODS_DB` row and must not overlap DEAD.
+- Red Test: `executeAndLogComplianceGate` with `evalDate: 2026-09-18` and default Aug/Dec seeds returned CLEARED.
+- Green Test: same call returns BLOCKED_CALENDAR; Aug 15 quiet / Dec 5 contact still CLEARED.
+- Regression Guard: `src/ncaaClearanceTestSuite.ts` unscheduled-month + invalid-evalDate asserts.
+- Recurrence Count: 1
+- Status: Active
 
 ## [2026-09-07] Compliance Test Clock-Drift / September 2026 Boundary Violation
 
