@@ -85,13 +85,61 @@ async function runNcaaClearanceTestSuite() {
     hasParentalConsent: base.hasParentalConsent,
     messagePayload: base.messagePayload,
     actionType: base.actionType,
-    evalDate: "2026-06-15T12:00:00.000Z",
+    evalDate: "2026-08-15T12:00:00.000Z",
   });
   assert(logged.isCleared === true && Boolean(logged.auditLogId), "executeAndLogComplianceGate CLEARED writes auditLogId");
   assert(
     COMPLIANCE_AUDIT_LEDGER[0]?.athleteId === base.athleteId &&
       COMPLIANCE_AUDIT_LEDGER[0]?.clearanceStatus === "CLEARED",
     "executeAndLogComplianceGate appends compliance audit ledger row",
+  );
+
+  const unscheduled = await executeAndLogComplianceGate({
+    schoolId: base.schoolId,
+    coachId: base.coachId,
+    athleteId: base.athleteId,
+    athleteAge: 18,
+    hasParentalConsent: true,
+    messagePayload: "Checking in on Friday night film.",
+    actionType: "DIRECT_MESSAGE",
+    evalDate: "2026-09-18T12:00:00.000Z",
+  });
+  assert(
+    unscheduled.isCleared === false && unscheduled.status === "BLOCKED_CALENDAR",
+    "Unscheduled month (no recruiting_periods row) fail-closes instead of inventing CONTACT",
+    unscheduled.status,
+  );
+
+  const invalidEvalDate = await executeAndLogComplianceGate({
+    schoolId: base.schoolId,
+    coachId: base.coachId,
+    athleteId: base.athleteId,
+    athleteAge: 18,
+    hasParentalConsent: true,
+    messagePayload: "Checking in on Friday night film.",
+    actionType: "DIRECT_MESSAGE",
+    evalDate: "not-a-date",
+  });
+  assert(
+    invalidEvalDate.isCleared === false && invalidEvalDate.status === "BLOCKED_CALENDAR",
+    "Invalid evalDate fail-closes (does not treat Invalid Date as CONTACT)",
+    invalidEvalDate.status,
+  );
+
+  const decemberContact = await executeAndLogComplianceGate({
+    schoolId: base.schoolId,
+    coachId: base.coachId,
+    athleteId: base.athleteId,
+    athleteAge: 18,
+    hasParentalConsent: true,
+    messagePayload: "Checking in on Friday night film.",
+    actionType: "DIRECT_MESSAGE",
+    evalDate: "2026-12-05T12:00:00.000Z",
+  });
+  assert(
+    decemberContact.isCleared === true,
+    "Scheduled CONTACT window in recruiting_periods still CLEARED",
+    decemberContact.status,
   );
 
   setComplianceAuditPersister(async () => ({ ok: false, error: "forced ledger outage" }));
@@ -103,7 +151,7 @@ async function runNcaaClearanceTestSuite() {
     hasParentalConsent: true,
     messagePayload: "Clean check-in.",
     actionType: "DIRECT_MESSAGE",
-    evalDate: "2026-06-15T12:00:00.000Z",
+    evalDate: "2026-08-15T12:00:00.000Z",
   });
   assert(
     ledgerDown.isCleared === false && ledgerDown.status === "BLOCKED_AUDIT_LEDGER",
