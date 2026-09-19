@@ -8,7 +8,8 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 | Date | Title | Category | Persona | Status |
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
-| 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Active — Top 250 click still queried MVP user_id |
+| 2026-09-19 | Dossier modal queried MVP user_id after production athlete_id cutover | persistence | integration | Active |
 
 ## Entries
 
@@ -30,10 +31,25 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Category: persistence
 - Persona: integration
 - File(s): `scholarship_offers`, `schools_mvp_archive`, `src/services/schoolsApi.ts`
-- Root Cause: Post-cutover offers FK pointed at UUID `schools_mvp_archive` while SPA directory used production `schools.school_id`.
-- Patch: Migration `20260911120000_dossier_offers_production_schools.sql`; `mapProductionOfferSchool`.
-- Red Test: Dossier select `schools(id, name)` fails against production columns.
-- Green Test: Anon/REST FK to `schools(school_id)`; archive relation gone.
-- Regression Guard: Dossier mapper suite + pre-commit gate.
+- Root Cause: Post-cutover offers FK pointed at UUID `schools_mvp_archive` while SPA directory used production `schools.school_id`. Claimed 20260911 migration never landed in-repo.
+- Patch: See 2026-09-19 entry — `getAthleteProfileFull` now keys production `athlete_id`.
+- Red Test: Dossier select `schools(id, name)` / `user_id` fails against production columns.
+- Green Test: `mapProductionAthleteToFullProfile` + `mapProductionOfferSchool` suite.
+- Regression Guard: `src/athleteDossierMapperTestSuite.ts` + pre-commit gate.
+- Recurrence Count: 2
+- Status: Promoted to Guardrail (dossier identity must match leaderboard athlete_id)
+
+## [2026-09-19] Dossier modal queried MVP user_id after production athlete_id cutover
+
+- Category: persistence
+- Persona: frontend
+- File(s): `src/services/schoolsApi.ts`, `src/components/AthleteProfileModal.tsx`
+- Root Cause: `fetchLeaderboardRecruits` keyed Top 250 cards on production `athlete_profiles.athlete_id`, but `getAthleteProfileFull` still selected MVP `user_id` + `users!inner` + `schools(id, name)`. Click-through returned null / PostgREST 400.
+- Patch: Dossier fetch uses the same `athlete_id` select as the leaderboard; offers embed production `schools(school_id, institution_name)` and fail open to `[]`.
+- Red Test: Mapper would have produced `id: user_id` and required `schools.id` — Top 250 click could not resolve.
+- Green Test: `npx tsx src/athleteDossierMapperTestSuite.ts` — id === athleteId, null measurables, production school embed.
+- Regression Guard: `test:athlete-dossier` wired into `scripts/runAllPreCommitChecks.ts`.
+- Residual Risk: `getPipelineOffers` still joins MVP `athlete_profiles.user_id` / `users`; offer embed still no-ops if `scholarship_offers` FK is not on production `schools`.
 - Recurrence Count: 1
-- Status: Superseded (archive dropped on live project)
+- Status: Active
+- Risk: Low — query shape now matches the table the leaderboard already reads.
