@@ -1,7 +1,7 @@
 /**
  * Gridiron Gateway — Supabase schools + leaderboard athlete API
  * Tables: production `schools` / lean `athlete_profiles` (schema.production.sql)
- * Full dossier join: MVP `users` + `athlete_media` + `scholarship_offers` (schema.sql)
+ * Dossier identity matches leaderboard `athlete_id` (never MVP `users.user_id`).
  */
 import {
   type AthleteFullProfile,
@@ -15,6 +15,11 @@ import {
   type RecruitingPipelineStage,
 } from "../types";
 import type { DirectoryCoachJoined } from "../lib/directoryMappers";
+import {
+  mapProductionAthleteToFullProfile,
+  mapProductionOfferEmbed,
+  type ProductionOfferEmbed,
+} from "../lib/athleteDossierMappers";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
 
 export type { AthleteFullProfile };
@@ -442,46 +447,10 @@ export async function fetchLeaderboardRecruits(
   });
 }
 
-/** Nested PostgREST shapes for `getAthleteProfileFull` (MVP schema.sql). */
+/** Nested PostgREST shapes for pipeline embeds. */
 interface NestedUserName {
   first_name: string;
   last_name: string;
-}
-
-interface NestedAthleteMediaRow {
-  twitter_handle: string | null;
-  instagram_handle: string | null;
-  hudl_url: string | null;
-  youtube_film_url: string | null;
-}
-
-interface NestedSchoolRow {
-  id: string;
-  name: string;
-  primary_color?: string | null;
-  abbreviation?: string | null;
-  logo_url?: string | null;
-}
-
-interface NestedScholarshipOfferRow {
-  id: string;
-  is_official: boolean;
-  offer_date: string;
-  commitment_status: string;
-  schools: NestedSchoolRow | NestedSchoolRow[] | null;
-}
-
-interface AthleteFullProfileRow {
-  user_id: string;
-  height_inches: number | null;
-  weight_lbs: number | null;
-  forty_yard_dash: number | null;
-  vertical_jump_inches: number | null;
-  position_tier: string | null;
-  star_rating: number | null;
-  users: NestedUserName | NestedUserName[] | null;
-  athlete_media: NestedAthleteMediaRow | NestedAthleteMediaRow[] | null;
-  scholarship_offers: NestedScholarshipOfferRow[] | null;
 }
 
 function unwrapOne<T>(value: T | T[] | null | undefined): T | null {
@@ -489,117 +458,66 @@ function unwrapOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
-function mapOfferSchool(
-  school: NestedSchoolRow | NestedSchoolRow[] | null,
-): AthleteFullProfile["offers"][number]["school"] {
-  const row = unwrapOne(school);
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    primary_color: row.primary_color ?? null,
-    abbreviation: row.abbreviation ?? null,
-  };
-}
-
-function mapAthleteMedia(
-  media: NestedAthleteMediaRow | NestedAthleteMediaRow[] | null,
-): AthleteFullProfile["media"] {
-  const row = unwrapOne(media);
-  if (!row) return null;
-  return {
-    twitter_handle: row.twitter_handle,
-    instagram_handle: row.instagram_handle,
-    hudl_link: row.hudl_url,
-    youtube_link: row.youtube_film_url,
-  };
-}
-
-/**
- * Join athlete_profiles → users (name) → athlete_media → scholarship_offers → schools.
- * PK filter uses `user_id` per schema.sql MVP athlete_profiles.
- */
-export async function getAthleteProfileFull(
-  athleteId: string,
-): Promise<AthleteFullProfile | null> {
-  if (!athleteId.trim()) {
-    console.error("getAthleteProfileFull: athleteId is required.");
-    return null;
-  }
-
-  if (!isSupabaseConfigured()) {
-    console.error("Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).");
-    return null;
-  }
-
-  const supabase = getSupabaseClient();
-
-  // Column names match schema.sql MVP:
-  // - athlete_profiles.user_id (PK)
-  // - athlete_media.hudl_url / youtube_film_url (mapped → hudl_link / youtube_link)
-  // - schools.id / name (+ optional primary_color / abbreviation if migrated)
-  const { data, error } = await supabase
-    .from("athlete_profiles")
-    .select(
-      `
-      user_id,
-      height_inches,
-      weight_lbs,
-      forty_yard_dash,
-      vertical_jump_inches,
-      position_tier,
-      star_rating,
-      users!inner(first_name, last_name),
-      athlete_media(twitter_handle, instagram_handle, hudl_url, youtube_film_url),
-      scholarship_offers(
+async function fetchAthleteOffersSafe(athleteId: string): Promise<AthleteFullProfile["offers"]> {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from("scholarship_offers")
+      .select(
+        `
         id,
         is_official,
         offer_date,
         commitment_status,
-        schools(id, name)
+        schools(school_id, institution_name, primary_color, abbreviation)
+      `,
       )
-    `,
+      .eq("athlete_id", athleteId)
+      .order("offer_date", { ascending: false });
+
+    if (error || !data) return [];
+
+    return (data as unknown as ProductionOfferEmbed[]).map(mapProductionOfferEmbed);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Dossier fetch keyed by production `athlete_profiles.athlete_id` — the same id
+ * `fetchLeaderboardRecruits` / `toLeaderboardRecruit` put on Top 250 cards.
+ */
+export async function getAthleteProfileFull(
+  athleteId: string,
+): Promise<AthleteFullProfile | null> {
+  const id = athleteId.trim();
+  if (!id) {
+    throw new Error("getAthleteProfileFull: athleteId is required.");
+  }
+
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY).");
+  }
+
+  const supabase = getSupabaseClient();
+  const { data, error } = await supabase
+    .from("athlete_profiles")
+    .select(
+      "athlete_id, first_name, last_name, grad_year, primary_position, state, star_rating, true_speed_mph, cognition_score",
     )
-    .eq("user_id", athleteId)
+    .eq("athlete_id", id)
     .maybeSingle();
 
   if (error) {
-    console.error(`Error fetching athlete ${athleteId}:`, error.message);
-    return null;
+    throw new Error(`Failed to fetch athlete profile: ${error.message}`);
   }
-
   if (!data) {
     return null;
   }
 
-  const row = data as unknown as AthleteFullProfileRow;
-  const user = unwrapOne(row.users);
-
-  const offers: AthleteFullProfile["offers"] = (row.scholarship_offers ?? [])
-    .map((offer) => ({
-      id: offer.id,
-      is_official: Boolean(offer.is_official),
-      offer_date: offer.offer_date,
-      commitment_status: offer.commitment_status,
-      school: mapOfferSchool(offer.schools),
-    }))
-    .sort(
-      (a, b) => new Date(b.offer_date).getTime() - new Date(a.offer_date).getTime(),
-    );
-
-  return {
-    id: row.user_id,
-    first_name: user?.first_name || "Unknown",
-    last_name: user?.last_name || "Athlete",
-    height_inches: row.height_inches,
-    weight_lbs: row.weight_lbs,
-    forty_yard_dash: row.forty_yard_dash,
-    vertical_jump_inches: row.vertical_jump_inches,
-    position_tier: row.position_tier,
-    star_rating: row.star_rating,
-    media: mapAthleteMedia(row.athlete_media),
-    offers,
-  };
+  const athlete = mapAthleteRow(data as AthleteProfileRow);
+  const offers = await fetchAthleteOffersSafe(athlete.athleteId);
+  return mapProductionAthleteToFullProfile(athlete, offers);
 }
 
 /** Nested shapes for `getPipelineOffers` (scholarship_offers → athlete_profiles → users). */

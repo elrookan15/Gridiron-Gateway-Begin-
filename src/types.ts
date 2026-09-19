@@ -805,8 +805,10 @@ export interface DatabaseAthleteProfile {
 }
 
 /**
- * Full athlete dossier — joins `athlete_profiles` + `users` + `athlete_media` +
- * `scholarship_offers`→`schools` (MVP relational model in schema.sql).
+ * Full athlete dossier for AthleteProfileModal.
+ * Identity/stars come from production `athlete_profiles` (`schema.production.sql`).
+ * Measurables/media are null until those columns exist on the live table.
+ * Offers, when present, embed production `schools(school_id, institution_name)`.
  */
 export interface AthleteFullProfile {
   id: string;

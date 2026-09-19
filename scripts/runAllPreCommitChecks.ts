@@ -45,6 +45,10 @@ try {
   execSync("npx tsx src/directoryMappersTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("🔟.1 Executing Athlete Dossier Production-Shape Gate...");
+  execSync("npx tsx src/athleteDossierMapperTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("1️⃣1️⃣ Executing Directory Persist Fail-Closed Gate...");
   execSync("npx tsx src/directoryPersistTestSuite.ts", { stdio: "inherit" });
   console.log("");
