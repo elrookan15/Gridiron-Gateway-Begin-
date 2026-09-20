@@ -45,6 +45,10 @@ try {
   execSync("npx tsx src/directoryMappersTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("🔟.1 Executing Pipeline Offer Mapper Gate (production athlete_id Kanban)...");
+  execSync("npx tsx src/pipelineOfferMapperTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("1️⃣1️⃣ Executing Directory Persist Fail-Closed Gate...");
   execSync("npx tsx src/directoryPersistTestSuite.ts", { stdio: "inherit" });
   console.log("");
