@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-20 | Pipeline Kanban MVP users embed after production athlete_id cutover | persistence | integration | Active |
 
 ## Entries
 
@@ -37,3 +38,17 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-20] Pipeline Kanban queried MVP user_id/users after production athlete_id cutover
+
+- Category: persistence
+- Persona: integration
+- File(s): `src/services/schoolsApi.ts` `getPipelineOffers`, `src/lib/pipelineOfferMappers.ts`
+- Root Cause: `fetchLeaderboardRecruits` keys production `athlete_profiles.athlete_id`, but `getPipelineOffers` still embedded MVP `user_id` + `users!inner`. PostgREST 400'd the coach Kanban.
+- Patch: Select offer columns only; second query loads lean athlete facts by `athlete_id`; `mapPipelineOffer` fail-opens missing names.
+- Red Test: Old `athlete_profiles!inner(user_id, users!inner(...))` cannot resolve a production `athlete_id`.
+- Green Test: `npx tsx src/pipelineOfferMapperTestSuite.ts` — mapper keys `athleteId` to production id; `tsc --noEmit` clean.
+- Regression Guard: `test:pipeline-offers` wired into `scripts/runAllPreCommitChecks.ts`.
+- Recurrence Count: 1
+- Status: Active
+- Residual Risk: Offer list stays empty if `scholarship_offers.school_id` is not production `schools.school_id`. 0-row stage writes remain PR 43. Dossier `getAthleteProfileFull` remains PR 46.

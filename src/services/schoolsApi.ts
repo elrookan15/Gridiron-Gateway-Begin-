@@ -2,6 +2,7 @@
  * Gridiron Gateway — Supabase schools + leaderboard athlete API
  * Tables: production `schools` / lean `athlete_profiles` (schema.production.sql)
  * Full dossier join: MVP `users` + `athlete_media` + `scholarship_offers` (schema.sql)
+ * Pipeline Kanban: production `athlete_id` facts via `pipelineOfferMappers` (no `users` embed).
  */
 import {
   type AthleteFullProfile,
@@ -15,7 +16,16 @@ import {
   type RecruitingPipelineStage,
 } from "../types";
 import type { DirectoryCoachJoined } from "../lib/directoryMappers";
+import {
+  OFFICIAL_VISIT_TAG,
+  derivePipelineStage,
+  mapPipelineOffer,
+  type PipelineAthleteFactsRow,
+  type PipelineOfferBaseRow,
+} from "../lib/pipelineOfferMappers";
 import { getSupabaseClient, isSupabaseConfigured } from "../lib/supabaseClient";
+
+export { derivePipelineStage, OFFICIAL_VISIT_TAG };
 
 export type { AthleteFullProfile };
 
@@ -602,53 +612,10 @@ export async function getAthleteProfileFull(
   };
 }
 
-/** Nested shapes for `getPipelineOffers` (scholarship_offers → athlete_profiles → users). */
-interface PipelineAthleteEmbed {
-  user_id: string;
-  primary_position: string | null;
-  position_tier: string | null;
-  star_rating: number | null;
-  users: NestedUserName | NestedUserName[] | null;
-}
-
-interface PipelineOfferRow {
-  id: string;
-  school_id: string;
-  athlete_id: string;
-  is_official: boolean;
-  offer_date: string;
-  commitment_status: string;
-  notes: string | null;
-  athlete_profiles: PipelineAthleteEmbed | PipelineAthleteEmbed[] | null;
-}
-
-const OFFICIAL_VISIT_TAG = "[pipeline:Official Visit]";
-
-/**
- * Derive Kanban stage from offer flags until a dedicated `pipeline_stage` column ships.
- * Official Visit is tagged in `notes` so it survives reload.
- */
-export function derivePipelineStage(
-  commitmentStatus: string,
-  isOfficial: boolean,
-  notes?: string | null,
-): RecruitingPipelineStage {
-  const status = commitmentStatus.trim().toLowerCase();
-  if (status === "committed" || status === "signed") {
-    return "Committed";
-  }
-  if (notes?.includes(OFFICIAL_VISIT_TAG)) {
-    return "Official Visit";
-  }
-  if (isOfficial) {
-    return "Offered";
-  }
-  return "Evaluating";
-}
-
 /**
  * Coach workspace: offers for a single school (RLS will scope by school_id when auth is wired).
- * Joins athlete name / position / star rating in one request.
+ * Loads lean production `athlete_profiles` by `athlete_id` — no MVP `users` embed.
+ * Missing athlete rows fail open to "Unknown Athlete" so the Kanban still renders.
  */
 export async function getPipelineOffers(schoolId: string): Promise<PipelineOffer[]> {
   if (!schoolId.trim()) {
@@ -662,24 +629,7 @@ export async function getPipelineOffers(schoolId: string): Promise<PipelineOffer
   const supabase = getSupabaseClient();
   const { data, error } = await supabase
     .from("scholarship_offers")
-    .select(
-      `
-      id,
-      school_id,
-      athlete_id,
-      is_official,
-      offer_date,
-      commitment_status,
-      notes,
-      athlete_profiles!inner(
-        user_id,
-        primary_position,
-        position_tier,
-        star_rating,
-        users!inner(first_name, last_name)
-      )
-    `,
-    )
+    .select("id, school_id, athlete_id, is_official, offer_date, commitment_status, notes")
     .eq("school_id", schoolId)
     .order("offer_date", { ascending: false });
 
@@ -687,36 +637,28 @@ export async function getPipelineOffers(schoolId: string): Promise<PipelineOffer
     throw new Error(`Failed to fetch pipeline offers: ${error.message}`);
   }
 
-  const rows = (data ?? []) as unknown as PipelineOfferRow[];
+  const rows = (data ?? []) as unknown as PipelineOfferBaseRow[];
+  const athleteIds = [
+    ...new Set(rows.map((row) => row.athlete_id).filter((id) => id.trim() !== "")),
+  ];
 
-  return rows.map((row) => {
-    const athlete = unwrapOne(row.athlete_profiles);
-    const user = unwrapOne(athlete?.users ?? null);
-    const first = user?.first_name?.trim() || "Unknown";
-    const last = user?.last_name?.trim() || "Athlete";
-    const position =
-      athlete?.primary_position?.trim() ||
-      athlete?.position_tier?.trim() ||
-      "ATH";
-    const starRating = Math.min(Math.max(athlete?.star_rating ?? 0, 0), 5);
+  const athleteById = new Map<string, PipelineAthleteFactsRow>();
+  if (athleteIds.length > 0) {
+    const { data: athletes, error: athleteError } = await supabase
+      .from("athlete_profiles")
+      .select("athlete_id, first_name, last_name, primary_position, star_rating")
+      .in("athlete_id", athleteIds);
 
-    return {
-      id: row.id,
-      schoolId: row.school_id,
-      athleteId: row.athlete_id,
-      isOfficial: Boolean(row.is_official),
-      offerDate: row.offer_date,
-      commitmentStatus: row.commitment_status,
-      stage: derivePipelineStage(
-        row.commitment_status,
-        Boolean(row.is_official),
-        row.notes,
-      ),
-      athleteName: `${first} ${last}`.trim(),
-      position,
-      starRating,
-    };
-  });
+    if (athleteError) {
+      throw new Error(`Failed to fetch pipeline athletes: ${athleteError.message}`);
+    }
+
+    for (const athlete of (athletes ?? []) as unknown as PipelineAthleteFactsRow[]) {
+      athleteById.set(athlete.athlete_id, athlete);
+    }
+  }
+
+  return rows.map((row) => mapPipelineOffer(row, athleteById.get(row.athlete_id) ?? null));
 }
 
 /**
