@@ -1,0 +1,19 @@
+{
+  "name": "ncaa-recruiting-auditor-asp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Frozen NCAA Recruiting Auditor ASP v1.0 — extractor boundary, PeriodGate, compliance harness",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vitest": "^3.0.9"
+  }
+}
