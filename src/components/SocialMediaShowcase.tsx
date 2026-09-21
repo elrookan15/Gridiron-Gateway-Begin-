@@ -193,7 +193,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
             <span className="px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" /> Scout Social & Film Hub
             </span>
-            <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+            <span className="text-[10px] text-lime-400 font-bold bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/30">
               Verified Recruit Handles
             </span>
           </div>
@@ -208,12 +208,12 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={handleCopyScoutPackage}
-            className="text-xs font-bold px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
+            className="text-xs font-bold px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-lime-400 border border-slate-700 transition-all flex items-center gap-1.5 cursor-pointer"
             title="Copy formatted links to send to college recruiters"
           >
             {copiedPackage ? (
               <>
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" />
                 <span>Package Copied!</span>
               </>
             ) : (
@@ -266,7 +266,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
               className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer shrink-0"
               title="Copy handle"
             >
-              {copiedHandle === "tw" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
+              {copiedHandle === "tw" ? <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" /> : <Link2 className="w-3.5 h-3.5" />}
             </button>
           )}
         </div>
@@ -301,7 +301,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
               className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer shrink-0"
               title="Copy handle"
             >
-              {copiedHandle === "ig" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
+              {copiedHandle === "ig" ? <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" /> : <Link2 className="w-3.5 h-3.5" />}
             </button>
           )}
         </div>
@@ -337,7 +337,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
                 className="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white transition-all cursor-pointer"
                 title="Copy Hudl URL"
               >
-                {copiedHandle === "hudl" ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5" />}
+                {copiedHandle === "hudl" ? <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" /> : <Link2 className="w-3.5 h-3.5" />}
               </button>
               <a
                 href={formattedHudlUrl}
@@ -373,7 +373,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
           </div>
           <div>
             <span className="text-slate-500 block">Verified Coach Reach</span>
-            <span className="font-black text-emerald-400">142 Coaches</span>
+            <span className="font-black text-lime-400">142 Coaches</span>
           </div>
         </div>
       </div>
@@ -471,8 +471,8 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
                       controls
                       className="w-full max-h-72 object-cover rounded-xl"
                     />
-                    <div className="absolute top-2 right-2 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded text-[9px] font-bold text-emerald-400 border border-slate-800 flex items-center gap-1">
-                      <Film className="w-3 h-3 text-emerald-400" /> Embedded Highlight Video
+                    <div className="absolute top-2 right-2 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded text-[9px] font-bold text-lime-400 border border-slate-800 flex items-center gap-1">
+                      <Film className="w-3 h-3 text-lime-400" /> Embedded Highlight Video
                     </div>
                   </div>
                 ) : post.mediaUrl ? (
@@ -503,15 +503,15 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
 
                     <button
                       onClick={() => handleToggleRepost(post.id)}
-                      className={`flex items-center gap-1 hover:text-emerald-400 transition-colors cursor-pointer ${
-                        isReposted ? "text-emerald-400 font-bold" : ""
+                      className={`flex items-center gap-1 hover:text-lime-400 transition-colors cursor-pointer ${
+                        isReposted ? "text-lime-400 font-bold" : ""
                       }`}
                     >
-                      <Repeat2 className="w-3.5 h-3.5 text-emerald-400" /> {currentReposts} Reposts
+                      <Repeat2 className="w-3.5 h-3.5 text-lime-400" /> {currentReposts} Reposts
                     </button>
                   </div>
 
-                  <span className="text-emerald-400 font-bold text-[9px] bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                  <span className="text-lime-400 font-bold text-[9px] bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/20">
                     Verified Scout Visible
                   </span>
                 </div>
@@ -699,7 +699,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
                     value={postVideoUrl}
                     onChange={(e) => setPostVideoUrl(e.target.value)}
                     placeholder="https://commondatastorage.googleapis.com/...mp4"
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-emerald-400 font-mono focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-lime-400 font-mono focus:outline-none focus:border-lime-500"
                   />
                   <p className="text-[10px] text-slate-500 mt-0.5">Embeds an HTML5 player directly into your profile social feed.</p>
                 </div>
@@ -714,7 +714,7 @@ ${youtubeFilmUrl ? `▶️ YouTube Film: ${youtubeFilmUrl}` : ""}`;
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs transition-all shadow-md cursor-pointer"
+                    className="px-5 py-2 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-extrabold text-xs transition-all shadow-md cursor-pointer"
                   >
                     Embed Post to Feed
                   </button>

@@ -64,7 +64,7 @@ const SEED_ROSTER: CapGmPlayer[] = [
 function getRiskBadge(risk: RetentionRiskLevel) {
   if (risk === "LOW") {
     return (
-      <span className="text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded text-[10px] font-bold">
+      <span className="text-lime-400 bg-lime-500/10 border border-lime-500/20 px-2 py-1 rounded text-[10px] font-bold">
         Stable
       </span>
     );
@@ -124,7 +124,7 @@ export const CapGMRosterSimulator: React.FC = () => {
           <div className="space-y-2">
             <div className="flex justify-between items-end">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cap Utilization</span>
-              <span className={`font-mono font-bold ${overCap ? "text-rose-400" : "text-emerald-400"}`}>
+              <span className={`font-mono font-bold ${overCap ? "text-rose-400" : "text-lime-400"}`}>
                 {formatCapUsagePercent(metrics.allocatedCents, CAP_GM_HARD_CAP_CENTS)}
               </span>
             </div>
@@ -151,7 +151,7 @@ export const CapGMRosterSimulator: React.FC = () => {
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Remaining</span>
               <span
-                className={`text-lg font-black tracking-tighter tabular-nums ${overCap ? "text-rose-500" : "text-emerald-500"}`}
+                className={`text-lg font-black tracking-tighter tabular-nums ${overCap ? "text-rose-500" : "text-lime-500"}`}
               >
                 {formatCapCents(metrics.remainingCents)}
               </span>
@@ -233,7 +233,7 @@ export const CapGMRosterSimulator: React.FC = () => {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cap Hit</span>
                       <span
                         className={`font-mono font-bold text-sm tabular-nums ${
-                          !player.isRetained ? "text-slate-500" : isCritical ? "text-rose-400" : "text-emerald-400"
+                          !player.isRetained ? "text-slate-500" : isCritical ? "text-rose-400" : "text-lime-400"
                         }`}
                       >
                         {formatCapCents(player.allocatedCents)}

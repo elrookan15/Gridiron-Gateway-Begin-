@@ -169,7 +169,7 @@ export const AIFilmStudio: React.FC<AIFilmStudioProps> = ({ videoId, sourceUrl }
             Vision Telemetry
           </h2>
           {session.status === "COMPLETED" && (
-            <div className="bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded text-[10px] font-bold text-emerald-400 tracking-widest uppercase">
+            <div className="bg-lime-500/10 border border-lime-500/20 px-2 py-1 rounded text-[10px] font-bold text-lime-400 tracking-widest uppercase">
               Tracking Active
             </div>
           )}

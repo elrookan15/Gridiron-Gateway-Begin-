@@ -91,7 +91,7 @@ export const CognitiveSchemeMatcher: React.FC = () => {
         {testInteractiveScore && (
           <div className="p-4 bg-slate-950/90 border border-purple-500/50 rounded-2xl text-purple-200 text-xs font-bold flex items-center justify-between animate-fade-in">
             <span>⚡ Interactive Decision Diagnostic Output:</span>
-            <span className="font-mono text-emerald-400 font-extrabold text-sm">{testInteractiveScore} ms Perception Speed (Top 2% National Benchmark)</span>
+            <span className="font-mono text-lime-400 font-extrabold text-sm">{testInteractiveScore} ms Perception Speed (Top 2% National Benchmark)</span>
           </div>
         )}
       </div>
@@ -152,7 +152,7 @@ export const CognitiveSchemeMatcher: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center">
                 <span className="text-xs text-slate-400 font-bold block">Perception Speed</span>
-                <span className="text-xl font-black text-emerald-400 font-mono mt-1 block">
+                <span className="text-xl font-black text-lime-400 font-mono mt-1 block">
                   {selectedProfile.perceptionSpeedMs} ms
                 </span>
                 <span className="text-[10px] text-slate-500">Top 1% Benchmark</span>
@@ -186,7 +186,7 @@ export const CognitiveSchemeMatcher: React.FC = () => {
                   <div key={idx} className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
                     <div className="flex items-center justify-between">
                       <h4 className="font-extrabold text-sm text-white">{scheme.schemeName}</h4>
-                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-black">
+                      <span className="px-2.5 py-0.5 rounded-full bg-lime-500/20 text-lime-300 border border-lime-500/40 text-xs font-mono font-black">
                         {scheme.matchPercentage}% Tactical Fit
                       </span>
                     </div>

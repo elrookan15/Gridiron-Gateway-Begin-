@@ -81,7 +81,7 @@ export const AutonomousScoutingAgent: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-800">
           <div>
             <h2 className="text-xl font-bold text-slate-100 uppercase tracking-widest flex items-center gap-2">
-              <Bot className="w-5 h-5 text-emerald-400" /> Autonomous Scouting Agent
+              <Bot className="w-5 h-5 text-lime-400" /> Autonomous Scouting Agent
             </h2>
             <p className="text-xs text-slate-400 mt-1 max-w-2xl">
               Continuously scans the Gateway Top 250 and Transfer Portal, matching TrueSpeed, S2 Cognition, and laser
@@ -100,7 +100,7 @@ export const AutonomousScoutingAgent: React.FC = () => {
         </div>
 
         {toast && (
-          <div className="p-3 rounded-xl border border-emerald-500/40 bg-emerald-950/30 text-emerald-300 text-xs font-bold">
+          <div className="p-3 rounded-xl border border-lime-500/40 bg-lime-950/30 text-lime-300 text-xs font-bold">
             {toast}
           </div>
         )}
@@ -142,7 +142,7 @@ export const AutonomousScoutingAgent: React.FC = () => {
                     </div>
                     <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg col-span-2 md:col-span-1">
                       <div className="text-[10px] text-slate-500 font-mono font-bold uppercase">SHUTTLE</div>
-                      <div className="text-emerald-400 font-bold font-mono text-sm mt-0.5">
+                      <div className="text-lime-400 font-bold font-mono text-sm mt-0.5">
                         {alert.keyMetrics.laserShuttle}s
                       </div>
                     </div>
@@ -153,11 +153,11 @@ export const AutonomousScoutingAgent: React.FC = () => {
                   type="button"
                   onClick={() => dispatchToPositionCoach(alert)}
                   disabled={dispatched}
-                  className="min-h-[44px] w-full md:w-auto md:self-end px-4 rounded-xl border border-slate-800 bg-slate-900 hover:border-emerald-500/50 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="min-h-[44px] w-full md:w-auto md:self-end px-4 rounded-xl border border-slate-800 bg-slate-900 hover:border-lime-500/50 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {dispatched ? (
                     <>
-                      <UserCheck className="w-4 h-4 text-emerald-400 shrink-0" /> Dispatched to Position Coach
+                      <UserCheck className="w-4 h-4 text-lime-400 shrink-0" /> Dispatched to Position Coach
                     </>
                   ) : (
                     <>

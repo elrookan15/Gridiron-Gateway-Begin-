@@ -147,7 +147,7 @@ export const AiFilmTaggingStudio: React.FC = () => {
                 <span className="text-[10px] text-indigo-400 uppercase font-bold block">Selected Film Play</span>
                 <h3 className="font-extrabold text-white text-lg">{selectedSession.athleteName} — Play #{selectedTag.playNumber} ({selectedTag.downAndDistance})</h3>
               </div>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-mono font-black">
+              <span className="px-2.5 py-0.5 rounded-full bg-lime-500/20 text-lime-300 border border-lime-500/40 text-xs font-mono font-black">
                 {selectedTag.confidenceScore}% Vision Confidence
               </span>
             </div>
@@ -156,7 +156,7 @@ export const AiFilmTaggingStudio: React.FC = () => {
             <div className="relative aspect-video rounded-2xl bg-slate-950 border border-indigo-500/30 overflow-hidden flex items-center justify-center group shadow-2xl">
               <div className="absolute top-4 left-4 z-10 bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl text-xs space-y-0.5">
                 <span className="text-slate-400 block text-[9px] uppercase font-bold">Detected Coverage Shell</span>
-                <span className="text-emerald-400 font-extrabold font-mono">{selectedTag.coverageShell}</span>
+                <span className="text-lime-400 font-extrabold font-mono">{selectedTag.coverageShell}</span>
               </div>
 
               <div className="absolute top-4 right-4 z-10 bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl text-xs space-y-0.5 text-right">
@@ -235,7 +235,7 @@ export const AiFilmTaggingStudio: React.FC = () => {
                   </div>
 
                   <div className="text-right">
-                    <span className="text-xs font-black text-emerald-400 font-mono block">+{tag.resultYardage} YDS</span>
+                    <span className="text-xs font-black text-lime-400 font-mono block">+{tag.resultYardage} YDS</span>
                     <span className="text-[9px] text-slate-500 font-mono">{tag.videoTimestamp}</span>
                   </div>
                 </div>
@@ -256,7 +256,7 @@ export const AiFilmTaggingStudio: React.FC = () => {
                 <span className="text-xs text-slate-400 font-bold block">Detected Defense Shells</span>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {selectedSession.coveragesDetected.map((cov, idx) => (
-                    <span key={idx} className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold">
+                    <span key={idx} className="px-2 py-0.5 rounded bg-lime-500/20 text-lime-300 border border-lime-500/40 text-[10px] font-mono font-bold">
                       {cov}
                     </span>
                   ))}

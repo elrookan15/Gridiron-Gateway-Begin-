@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BioScanTelemetry } from "../types";
+import { getGatewayAccessToken } from "../services/gatewayApiFetch";
 import { Activity, Zap, ShieldCheck, Heart, RefreshCw, Smartphone, Radio } from "lucide-react";
 
 const MOCK_TELEMETRY: BioScanTelemetry[] = [
@@ -33,41 +34,54 @@ export const BioScanTelemetryModule: React.FC = () => {
   const [wsConnected, setWsConnected] = useState(false);
 
   useEffect(() => {
-    // Establish WebSocket egress stream
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/api/v1/bioscan/stream/bio-1`;
     let ws: WebSocket | null = null;
+    let cancelled = false;
 
-    try {
-      ws = new WebSocket(wsUrl);
-      ws.onopen = () => setWsConnected(true);
-      ws.onclose = () => setWsConnected(false);
-      ws.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          if (payload.event === "TELEMETRY_UPDATE" && payload.data) {
-            setTelemetryList((prev) =>
-              prev.map((item) =>
-                item.id === payload.data.athleteId || item.id === "bio-1"
-                  ? {
-                      ...item,
-                      inGameMaxSprintMph: payload.data.currentSpeedMph || item.inGameMaxSprintMph,
-                      playerLoadScore: payload.data.cumulativeLoad || item.playerLoadScore,
-                      lastSyncTimestamp: "Just now (Live WS Stream)",
-                    }
-                  : item
-              )
-            );
-          }
-        } catch (e) {
-          // JSON parse fallback
+    void (async () => {
+      const token = await getGatewayAccessToken();
+      if (cancelled) return;
+      const query = token ? `?token=${encodeURIComponent(token)}` : "";
+      const wsUrl = `${protocol}//${window.location.host}/api/v1/bioscan/stream/bio-1${query}`;
+      try {
+        ws = new WebSocket(wsUrl);
+        if (cancelled) {
+          ws.close();
+          return;
         }
-      };
-    } catch (err) {
-      // WS connection fallback
-    }
+        ws.onopen = () => setWsConnected(true);
+        ws.onclose = () => setWsConnected(false);
+        ws.onmessage = (event) => {
+          try {
+            const payload = JSON.parse(event.data) as {
+              event?: string;
+              data?: { athleteId?: string; currentSpeedMph?: number; cumulativeLoad?: number };
+            };
+            if (payload.event === "TELEMETRY_UPDATE" && payload.data) {
+              setTelemetryList((prev) =>
+                prev.map((item) =>
+                  item.id === payload.data?.athleteId || item.id === "bio-1"
+                    ? {
+                        ...item,
+                        inGameMaxSprintMph: payload.data?.currentSpeedMph || item.inGameMaxSprintMph,
+                        playerLoadScore: payload.data?.cumulativeLoad || item.playerLoadScore,
+                        lastSyncTimestamp: "Just now (Live WS Stream)",
+                      }
+                    : item,
+                ),
+              );
+            }
+          } catch {
+            // Ignore malformed telemetry frames.
+          }
+        };
+      } catch {
+        setWsConnected(false);
+      }
+    })();
 
     return () => {
+      cancelled = true;
       ws?.close();
     };
   }, []);
@@ -88,7 +102,7 @@ export const BioScanTelemetryModule: React.FC = () => {
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/30 text-teal-300 text-xs font-bold uppercase tracking-wider mb-2">
               <Activity className="w-3.5 h-3.5" /> Wearable GPS & Telemetry Sync Hub
               {wsConnected && (
-                <span className="ml-2 inline-flex items-center gap-1 text-emerald-400 font-mono text-[10px]">
+                <span className="ml-2 inline-flex items-center gap-1 text-lime-400 font-mono text-[10px]">
                   <Radio className="w-3 h-3 animate-pulse" /> WS STREAM CONNECTED
                 </span>
               )}
@@ -104,7 +118,7 @@ export const BioScanTelemetryModule: React.FC = () => {
           <button
             onClick={handleSyncHardware}
             disabled={isSyncing}
-            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-400 hover:from-teal-400 hover:to-emerald-300 text-slate-950 font-black text-xs transition-all shadow-xl shadow-teal-500/20 flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-teal-500 to-lime-400 hover:from-teal-400 hover:to-lime-300 text-slate-950 font-black text-xs transition-all shadow-xl shadow-teal-500/20 flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isSyncing ? "animate-spin" : ""}`} />
             {isSyncing ? "Syncing Catapult / WHOOP API..." : "Sync Live Wearable Hardware"}
@@ -134,7 +148,7 @@ export const BioScanTelemetryModule: React.FC = () => {
 
               <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center">
                 <span className="text-[10px] text-slate-500 uppercase font-bold block">Acceleration Rate</span>
-                <span className="text-xl font-black text-emerald-400 font-mono mt-0.5 block">{item.accelerationRateMs2} m/s²</span>
+                <span className="text-xl font-black text-lime-400 font-mono mt-0.5 block">{item.accelerationRateMs2} m/s²</span>
               </div>
 
               <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center">

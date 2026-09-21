@@ -51,10 +51,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="sticky top-0 z-50 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 text-white">
       {/* Top Banner - Live Ticker / Role Bar */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-950 border-b border-emerald-500/20 px-4 py-1.5 text-xs">
+      <div className="bg-gradient-to-r from-lime-950 via-slate-900 to-lime-950 border-b border-lime-500/20 px-4 py-1.5 text-xs">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="flex items-center gap-2 overflow-hidden text-slate-300">
-            <span className="flex items-center gap-1 font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-emerald-500/30">
+            <span className="flex items-center gap-1 font-bold text-lime-400 bg-lime-950/80 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider border border-lime-500/30">
               <Flame className="w-3 h-3 text-amber-400 animate-pulse" /> Live
               Recruiting Feed
             </span>
@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>{" "}
               • <strong className="text-white">4★ WR Dakorien Moore</strong>{" "}
               pledged to{" "}
-              <span className="text-emerald-300 font-medium">Oregon Ducks</span>
+              <span className="text-lime-300 font-medium">Oregon Ducks</span>
             </span>
           </div>
 
@@ -78,7 +78,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setUserRole("Athlete")}
                 className={`px-2.5 min-h-[44px] rounded-md text-[11px] font-medium transition-all ${
                   userRole === "Athlete"
-                    ? "bg-emerald-500 text-slate-950 font-bold shadow-sm"
+                    ? "bg-lime-500 text-slate-950 font-bold shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
@@ -122,15 +122,15 @@ export const Navbar: React.FC<NavbarProps> = ({
             <GridironLogo size={44} />
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-lime-400 bg-clip-text text-transparent">
                   GRIDIRON
                 </span>
-                <span className="text-emerald-400 font-extrabold text-xl">
+                <span className="text-lime-400 font-extrabold text-xl">
                   GATEWAY
                 </span>
               </div>
               <p className="text-[10px] text-amber-400 font-semibold tracking-wider uppercase flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-pulse" />
                 Diploma • Playbook • NCAA Hub
               </p>
             </div>
@@ -143,11 +143,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("gateway_center")}
               className={`flex items-center gap-2 px-3 py-2 min-h-[44px] rounded-lg text-xs font-bold transition-all ${
                 activeTab === "gateway_center"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-lime-400" />
               Gateway Hub
             </button>
 
@@ -155,11 +155,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("top250")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "top250"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
-              <Award className="w-4 h-4 text-emerald-400" />
+              <Award className="w-4 h-4 text-lime-400" />
               Top 250
             </button>
 
@@ -191,11 +191,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("schools")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "schools"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
-              <Building2 className="w-4 h-4 text-emerald-400" />
+              <Building2 className="w-4 h-4 text-lime-400" />
               Schools
             </button>
 
@@ -226,11 +226,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("dossier")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "dossier"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
-              <FileCheck className="w-4 h-4 text-emerald-400" />
+              <FileCheck className="w-4 h-4 text-lime-400" />
               Scout Dossier
             </button>
 
@@ -250,7 +250,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("ncaa")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "ncaa"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
@@ -274,11 +274,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("coach_workspace")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "coach_workspace"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <ShieldCheck className="w-4 h-4 text-lime-400" />
               Coach Workspace
             </button>
 
@@ -298,7 +298,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("coach_views")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all relative ${
                 activeTab === "coach_views"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
@@ -334,11 +334,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("source_control")}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-bold transition-all ${
                 activeTab === "source_control"
-                  ? "bg-slate-800 text-emerald-400 border border-emerald-500/30 shadow-inner"
+                  ? "bg-slate-800 text-lime-400 border border-lime-500/30 shadow-inner"
                   : "text-slate-300 hover:text-white hover:bg-slate-900"
               }`}
             >
-              <GitBranch className="w-4 h-4 text-emerald-400" />
+              <GitBranch className="w-4 h-4 text-lime-400" />
               Source Control
             </button>
           </nav>
@@ -377,14 +377,14 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => setActiveTab("profile")}
               className="flex items-center gap-2.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-700/80 transition-all text-left"
             >
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center font-bold text-emerald-400 text-xs">
+              <div className="w-8 h-8 rounded-lg bg-lime-500/20 border border-lime-500/40 flex items-center justify-center font-bold text-lime-400 text-xs">
                 {position}
               </div>
               <div className="hidden sm:block">
                 <p className="text-xs font-bold text-white leading-none truncate max-w-[110px]">
                   {athleteName}
                 </p>
-                <p className="text-[10px] text-emerald-400 font-medium leading-tight">
+                <p className="text-[10px] text-lime-400 font-medium leading-tight">
                   Class of {gradClass} • Active
                 </p>
               </div>
@@ -411,7 +411,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab("top250")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
               activeTab === "top250"
-                ? "bg-emerald-500 text-slate-950 font-bold"
+                ? "bg-lime-500 text-slate-950 font-bold"
                 : "bg-slate-900 text-slate-300"
             }`}
           >
@@ -441,7 +441,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab("schools")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
               activeTab === "schools"
-                ? "bg-emerald-500 text-slate-950 font-bold"
+                ? "bg-lime-500 text-slate-950 font-bold"
                 : "bg-slate-900 text-slate-300"
             }`}
           >
@@ -500,7 +500,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab("ncaa")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
               activeTab === "ncaa"
-                ? "bg-emerald-500 text-slate-950 font-bold"
+                ? "bg-lime-500 text-slate-950 font-bold"
                 : "bg-slate-900 text-slate-300"
             }`}
           >
@@ -510,7 +510,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={() => setActiveTab("coach_views")}
             className={`px-3 py-1.5 rounded-md whitespace-nowrap font-medium ${
               activeTab === "coach_views"
-                ? "bg-emerald-500 text-slate-950 font-bold"
+                ? "bg-lime-500 text-slate-950 font-bold"
                 : "bg-slate-900 text-slate-300"
             }`}
           >

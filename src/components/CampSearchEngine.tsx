@@ -240,7 +240,7 @@ END:VCALENDAR`;
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search camp, host, city..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-2 text-xs text-white focus:outline-none focus:border-lime-500"
             />
           </div>
 
@@ -249,7 +249,7 @@ END:VCALENDAR`;
             <select
               value={stateFilter}
               onChange={(e) => setStateFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-500 cursor-pointer"
             >
               <option value="ALL">All States</option>
               <option value="TX">Texas (TX)</option>
@@ -268,7 +268,7 @@ END:VCALENDAR`;
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-500 cursor-pointer"
             >
               <option value="ALL">All Camp Types</option>
               <option value="Mega Camp">Mega Camps (Multi-College)</option>
@@ -283,7 +283,7 @@ END:VCALENDAR`;
             <select
               value={dateRangeFilter}
               onChange={(e) => setDateRangeFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-lime-500 cursor-pointer"
             >
               <option value="ALL">All Upcoming Dates</option>
               <option value="NEXT_30">Next 30 Days</option>
@@ -321,7 +321,7 @@ END:VCALENDAR`;
               step={25}
               value={maxCost}
               onChange={(e) => setMaxCost(Number(e.target.value))}
-              className="w-48 accent-emerald-500"
+              className="w-48 accent-lime-500"
             />
             <span className="font-bold text-amber-400">
               {maxCost === 0 ? "FREE ONLY" : `$${maxCost}`}
@@ -344,7 +344,7 @@ END:VCALENDAR`;
           filteredCamps.map((camp) => (
             <div
               key={camp.id}
-              className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-6 shadow-xl flex flex-col justify-between transition-all group"
+              className="bg-slate-900 border border-slate-800 hover:border-lime-500/50 rounded-2xl p-6 shadow-xl flex flex-col justify-between transition-all group"
             >
               <div>
                 {/* Header Row: Type Badge, Title & Bookmark */}
@@ -359,7 +359,7 @@ END:VCALENDAR`;
                       </span>
                     </div>
 
-                    <h2 className="font-extrabold text-lg text-white group-hover:text-emerald-400 transition-colors leading-snug">
+                    <h2 className="font-extrabold text-lg text-white group-hover:text-lime-400 transition-colors leading-snug">
                       {camp.name}
                     </h2>
                     <p className="text-xs text-slate-400 font-medium">Hosted by: {camp.host}</p>
@@ -380,7 +380,7 @@ END:VCALENDAR`;
                 {/* Location & Date Details */}
                 <div className="grid grid-cols-2 gap-2 bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs mb-4">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <Calendar className="w-4 h-4 text-lime-400 shrink-0" />
                     <div>
                       <span className="text-[10px] text-slate-500 block font-semibold">Date & Time</span>
                       <strong className="text-white">{camp.date}</strong>
@@ -402,7 +402,7 @@ END:VCALENDAR`;
                 <div className="flex flex-wrap gap-1.5 mb-4">
                   {camp.features.map((feat, idx) => (
                     <span key={idx} className="px-2.5 py-1 bg-slate-950 border border-slate-800 rounded-lg text-[10px] font-medium text-slate-300 flex items-center gap-1">
-                      <Check className="w-3 h-3 text-emerald-400" /> {feat}
+                      <Check className="w-3 h-3 text-lime-400" /> {feat}
                     </span>
                   ))}
                 </div>
@@ -443,7 +443,7 @@ END:VCALENDAR`;
                     href={camp.registerUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-1"
+                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-1"
                   >
                     Register <ExternalLink className="w-3.5 h-3.5" />
                   </a>
@@ -599,7 +599,7 @@ END:VCALENDAR`;
             </h3>
 
             {reviewSubmitted ? (
-              <div className="p-4 bg-emerald-950 border border-emerald-500/30 rounded-xl text-emerald-300 text-xs font-bold text-center">
+              <div className="p-4 bg-lime-950 border border-lime-500/30 rounded-xl text-lime-300 text-xs font-bold text-center">
                 ✓ Review successfully submitted! Thank you for helping fellow athletes.
               </div>
             ) : (
@@ -632,7 +632,7 @@ END:VCALENDAR`;
                     value={reviewText}
                     onChange={(e) => setReviewText(e.target.value)}
                     placeholder="Share feedback on college coach exposure, laser 40 timing accuracy, and overall organization..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-lime-500"
                   />
                 </div>
 
@@ -646,7 +646,7 @@ END:VCALENDAR`;
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs rounded-xl"
+                    className="px-5 py-2 bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs rounded-xl"
                   >
                     Post Review
                   </button>

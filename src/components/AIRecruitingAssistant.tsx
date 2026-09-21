@@ -222,7 +222,7 @@ export const AIRecruitingAssistant: React.FC<AIRecruitingAssistantProps> = ({ at
             type="button"
             disabled={!generatedDraft || isGenerating}
             onClick={() => void copyDraftForReview()}
-            className="min-h-[44px] px-6 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-sm font-bold uppercase tracking-widest rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+            className="min-h-[44px] px-6 bg-lime-500 hover:bg-lime-400 text-slate-950 text-sm font-bold uppercase tracking-widest rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             <Copy className="w-4 h-4" /> {copied ? "Copied" : "Copy for Compliance Review"}
           </button>

@@ -17,6 +17,10 @@ try {
   execSync("npx tsx src/rallySafeClearinghouseTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("3️⃣b Executing Stripe raw-body signature suite...");
+  execSync("npx tsx src/stripeRawBodyTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("4️⃣ Executing CapGM $20.5M Integer-Cents Salary Cap Test Suite (11/11 Math Audit)...");
   execSync("npx tsx src/capGmTestSuite.ts", { stdio: "inherit" });
   console.log("");

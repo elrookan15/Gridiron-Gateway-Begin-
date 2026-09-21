@@ -193,7 +193,7 @@ export const TopWeeklyHighlights: React.FC = () => {
                   <span className="font-extrabold text-white text-sm">
                     {hl.athleteName}
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold text-[10px] border border-emerald-500/30">
+                  <span className="px-2 py-0.5 rounded bg-lime-500/20 text-lime-400 font-bold text-[10px] border border-lime-500/30">
                     {hl.position}
                   </span>
                 </div>
@@ -230,7 +230,7 @@ export const TopWeeklyHighlights: React.FC = () => {
                   <span>{hl.votes} Votes</span>
                 </button>
 
-                <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 flex items-center gap-1">
+                <span className="text-[10px] text-lime-400 font-bold bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/20 flex items-center gap-1">
                   <ShieldCheck className="w-3 h-3" /> Verified Reel
                 </span>
               </div>
@@ -319,8 +319,8 @@ export const TopWeeklyHighlights: React.FC = () => {
             </div>
 
             {submissionSuccess ? (
-              <div className="p-6 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
+              <div className="p-6 bg-lime-500/10 border border-lime-500/40 rounded-2xl text-center space-y-2">
+                <CheckCircle2 className="w-10 h-10 text-lime-400 mx-auto animate-bounce" />
                 <h4 className="font-extrabold text-white text-sm">Highlight Reel Submitted!</h4>
                 <p className="text-xs text-slate-300">
                   Your clip is live on the weekly leaderboard and ready for votes!

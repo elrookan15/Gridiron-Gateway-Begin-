@@ -289,7 +289,7 @@ export const CoachesDirectory: React.FC = () => {
                       className="w-16 h-16 rounded-2xl border-2 border-slate-700 object-cover shadow-lg"
                     />
                     {coach.verifiedBadge && (
-                      <ShieldCheck className="w-5 h-5 text-emerald-400 fill-slate-950 absolute -bottom-1 -right-1" />
+                      <ShieldCheck className="w-5 h-5 text-lime-400 fill-slate-950 absolute -bottom-1 -right-1" />
                     )}
                   </div>
 
@@ -345,7 +345,7 @@ export const CoachesDirectory: React.FC = () => {
                     {coach.targetPositions.map((pos) => (
                       <span
                         key={pos}
-                        className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold"
+                        className="px-2 py-0.5 rounded bg-lime-500/10 text-lime-400 border border-lime-500/20 text-[10px] font-bold"
                       >
                         {pos}
                       </span>
@@ -374,7 +374,7 @@ export const CoachesDirectory: React.FC = () => {
 
                 <div className="flex items-center justify-between gap-2 min-w-0">
                   <span className="text-slate-400 flex items-center gap-1.5 shrink-0">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400" /> Football Office:
+                    <Phone className="w-3.5 h-3.5 text-lime-400" /> Football Office:
                   </span>
                   <span className="font-mono text-slate-200 font-bold truncate">
                     {coach.phone ?? "Contact not verified"}
@@ -452,8 +452,8 @@ export const CoachesDirectory: React.FC = () => {
             </div>
 
             {messageSentSuccess ? (
-              <div className="p-6 bg-emerald-500/10 border border-emerald-500/40 rounded-2xl text-center space-y-2">
-                <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto animate-bounce" />
+              <div className="p-6 bg-lime-500/10 border border-lime-500/40 rounded-2xl text-center space-y-2">
+                <CheckCircle2 className="w-10 h-10 text-lime-400 mx-auto animate-bounce" />
                 <h4 className="font-extrabold text-white text-sm">Direct Message Dispatched!</h4>
                 <p className="text-xs text-slate-300">
                   {messageCoachModal.email

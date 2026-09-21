@@ -101,6 +101,7 @@ export async function releaseNilEscrowPayout(
     athleteInTransferPortal,
     regulatoryPlane: "THIRD_PARTY_NIL_GO",
     payoutReleased: current.payoutReleased,
+    dealAmountCents: current.dealAmountCents,
   });
 
   if (gate.ok === false) {

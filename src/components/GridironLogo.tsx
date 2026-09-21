@@ -215,13 +215,13 @@ export const GridironLogo: React.FC<GridironLogoProps> = ({
       {showText && (
         <div className={textClassName}>
           <div className="flex items-center gap-1.5 leading-none">
-            <span className="font-black text-2xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+            <span className="font-black text-2xl tracking-tight bg-gradient-to-r from-white via-slate-100 to-lime-400 bg-clip-text text-transparent">
               GRIDIRON
             </span>
-            <span className="text-emerald-400 font-black text-2xl tracking-tight">GATEWAY</span>
+            <span className="text-lime-400 font-black text-2xl tracking-tight">GATEWAY</span>
           </div>
           <p className="text-[10px] text-amber-400 font-bold tracking-widest uppercase mt-0.5 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping inline-block" />
+            <span className="w-1.5 h-1.5 rounded-full bg-lime-400 animate-ping inline-block" />
             Academia • Playbooks • NCAA Recruiting Hub
           </p>
         </div>

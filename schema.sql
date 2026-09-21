@@ -129,15 +129,9 @@ CREATE TABLE users (
 COMMENT ON TABLE users IS 'Primary profile table linked to auth.users with self-referencing guardian linkage for minors.';
 COMMENT ON COLUMN users.guardian_id IS 'Self-referencing FK linking minor athletes to verified parent/guardian user account.';
 
--- Colleges, Universities & Prep Programs Directory (LEGACY MVP UUID model)
--- =============================================================================
--- WARNING: This second `CREATE TABLE schools` conflicts with production
--- `schools(school_id VARCHAR)` defined earlier (IF NOT EXISTS). On greenfield,
--- apply schema.production.sql only. This MVP block remains for historical
--- scholarship_offers UUID joins / dossier debt — do not deploy both blindly.
--- Live SPA directories use production schools + college_coaches exclusively.
--- =============================================================================
-CREATE TABLE schools (
+-- Archived MVP UUID directory. Production PK is schools.school_id (cfbd-{id}).
+-- scholarship_offers.school_id references schools(school_id), not this archive.
+CREATE TABLE schools_mvp_archive (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   mascot TEXT,
@@ -154,7 +148,7 @@ CREATE TABLE schools (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-COMMENT ON TABLE schools IS 'LEGACY MVP UUID directory OR production VARCHAR school_id depending on which migration landed first. Prefer schema.production.sql for new deploys.';
+COMMENT ON TABLE schools_mvp_archive IS 'Archived MVP UUID directory. Live programs use schools.school_id (cfbd-{id}).';
 
 -- Athlete Physical, Academic & NIL Profiles (1-to-1 with users)
 CREATE TABLE athlete_profiles (
@@ -204,7 +198,7 @@ COMMENT ON TABLE athlete_profiles IS 'Detailed athletic, combine, academic, and 
 CREATE TABLE scholarship_offers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   athlete_id UUID NOT NULL REFERENCES athlete_profiles(user_id) ON DELETE CASCADE,
-  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  school_id VARCHAR(100) NOT NULL REFERENCES schools(school_id) ON DELETE CASCADE, -- cfbd-{id}
   is_official BOOLEAN DEFAULT FALSE NOT NULL,
   offer_date DATE DEFAULT CURRENT_DATE NOT NULL,
   commitment_status commitment_status DEFAULT 'Uncommitted' NOT NULL,
@@ -259,19 +253,9 @@ CREATE TABLE messages (
 
 COMMENT ON TABLE messages IS 'Compliance-gated coach-athlete direct messages. Defaults to blocked_compliance for safety.';
 
--- Communication Audit Logs (Append-Only)
-CREATE TABLE communication_audit_logs (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  message_id UUID REFERENCES messages(id) ON DELETE SET NULL,
-  sender_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  receiver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  status message_status NOT NULL,
-  action_taken TEXT NOT NULL,
-  reason TEXT,
-  timestamp TIMESTAMPTZ DEFAULT NOW() NOT NULL
-);
-
-COMMENT ON TABLE communication_audit_logs IS 'Append-only regulatory audit log recording all communication attempts and compliance gating actions.';
+-- Messaging gate ledger is public.compliance_audit_logs
+-- (supabase/migrations/20260817120000_compliance_audit_logs.sql).
+-- The unused message-status audit table was removed; the gate never wrote it.
 
 -- NCAA messaging gate ledger (append-only, service_role insert):
 -- supabase/migrations/20260817120000_compliance_audit_logs.sql (`public.compliance_audit_logs`)
@@ -335,9 +319,6 @@ CREATE INDEX idx_scholarship_offers_school_id ON scholarship_offers(school_id);
 CREATE INDEX idx_athlete_media_athlete_id ON athlete_media(athlete_id);
 CREATE INDEX idx_messages_sender_id ON messages(sender_id);
 CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
-CREATE INDEX idx_audit_logs_sender_id ON communication_audit_logs(sender_id);
-CREATE INDEX idx_audit_logs_receiver_id ON communication_audit_logs(receiver_id);
-CREATE INDEX idx_audit_logs_message_id ON communication_audit_logs(message_id);
 
 -- Frequently Filtered & Searched Directory Columns
 CREATE INDEX idx_athlete_profiles_grad_class ON athlete_profiles(grad_class);
@@ -362,7 +343,6 @@ ALTER TABLE scholarship_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE athlete_media ENABLE ROW LEVEL SECURITY;
 ALTER TABLE compliance_rules ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE communication_audit_logs ENABLE ROW LEVEL SECURITY;
 
 -- ------------------------------------
 -- A. USERS POLICIES
@@ -504,43 +484,11 @@ CREATE POLICY "Senders, receivers, or compliance officers can update messages"
     )
   );
 
--- ------------------------------------
--- H. COMMUNICATION AUDIT LOGS POLICIES (APPEND-ONLY, SERVER-ROLE ONLY FOR INSERT)
--- ------------------------------------
-
--- Compliance officers can view audit logs
-CREATE POLICY "Compliance officers can view communication audit logs"
-  ON communication_audit_logs FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM users
-      WHERE users.id = auth.uid() AND users.role = 'compliance_officer'
-    )
-  );
-
--- Strictly lock out client-side INSERT/UPDATE/DELETE.
--- Only Supabase service_role (backend server) can insert audit records.
-CREATE POLICY "Lock out client-side inserts on audit logs"
-  ON communication_audit_logs FOR INSERT
-  TO authenticated, anon
-  WITH CHECK (false);
-
-CREATE POLICY "Lock out client-side updates on audit logs"
-  ON communication_audit_logs FOR UPDATE
-  TO authenticated, anon
-  USING (false);
-
-CREATE POLICY "Lock out client-side deletes on audit logs"
-  ON communication_audit_logs FOR DELETE
-  TO authenticated, anon
-  USING (false);
-
 -- -----------------------------------------------------------------------------
 -- 4. SEED DATA FOR ALL NCAA, NAIA, JUCO, AND PREP FOOTBALL TEAMS
 -- -----------------------------------------------------------------------------
 
-INSERT INTO schools (
+INSERT INTO schools_mvp_archive (
     id, name, mascot, city, state, division, conference, primary_recruiting_email, coaching_phone, top_majors, program_highlights, logo_url
 ) VALUES 
 -- =========================================================================

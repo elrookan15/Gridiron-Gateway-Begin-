@@ -217,7 +217,7 @@ export const AiGameplanGeneratorModule: React.FC = () => {
       </div>
 
       {exportedNotice && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs font-mono flex items-center gap-2">
+        <div className="p-4 bg-lime-500/10 border border-lime-500/30 rounded-xl text-lime-400 text-xs font-mono flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>Call sheet PDF generated and dispatched to coaching staff wristband printer.</span>
         </div>
@@ -295,7 +295,7 @@ export const AiGameplanGeneratorModule: React.FC = () => {
 
                 <div className="pt-3 border-t border-slate-900 flex justify-between items-center text-xs font-mono">
                   <span className="text-slate-500">Blitz Rate:</span>
-                  <span className={`font-bold ${tendency.blitzFrequencyPercent > 50 ? 'text-rose-400' : 'text-emerald-400'}`}>
+                  <span className={`font-bold ${tendency.blitzFrequencyPercent > 50 ? 'text-rose-400' : 'text-lime-400'}`}>
                     {tendency.blitzFrequencyPercent}%
                   </span>
                 </div>
@@ -313,7 +313,7 @@ export const AiGameplanGeneratorModule: React.FC = () => {
               <ListOrdered className="w-5 h-5 text-cyan-400 shrink-0" />
               QB Wristband Play Call Index
             </h2>
-            <span className="text-xs font-mono text-emerald-400 font-bold">Optimized for {activeOpponent.opponentName} Scheme</span>
+            <span className="text-xs font-mono text-lime-400 font-bold">Optimized for {activeOpponent.opponentName} Scheme</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -326,7 +326,7 @@ export const AiGameplanGeneratorModule: React.FC = () => {
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <h3 className="text-sm font-black text-white truncate">{play.codeName}</h3>
-                    <span className="text-xs font-mono font-bold text-emerald-400 shrink-0">
+                    <span className="text-xs font-mono font-bold text-lime-400 shrink-0">
                       {play.expectedSuccessRate}% Success
                     </span>
                   </div>

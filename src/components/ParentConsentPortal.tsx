@@ -103,9 +103,9 @@ export const ParentConsentPortal: React.FC<ParentConsentPortalProps> = ({
 
   if (submitStatus === "SUCCESS") {
     return (
-      <div className="bg-slate-900 border border-emerald-500/30 rounded-2xl p-8 max-w-2xl mx-auto text-center space-y-4">
-        <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+      <div className="bg-slate-900 border border-lime-500/30 rounded-2xl p-8 max-w-2xl mx-auto text-center space-y-4">
+        <div className="w-16 h-16 bg-lime-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle2 className="w-8 h-8 text-lime-500" />
         </div>
         <h2 className="text-2xl font-black text-slate-100 uppercase tracking-tight">Authorization Verified</h2>
         <p className="text-sm text-slate-400 leading-relaxed font-mono">
@@ -235,7 +235,7 @@ export const ParentConsentPortal: React.FC<ParentConsentPortalProps> = ({
                 type="text"
                 value={form.digitalSignature}
                 onChange={(event) => setForm((prev) => ({ ...prev, digitalSignature: event.target.value }))}
-                className="w-full min-h-[44px] bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-3 text-emerald-400 font-mono text-sm focus:border-emerald-500 focus:outline-none transition-colors"
+                className="w-full min-h-[44px] bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-3 text-lime-400 font-mono text-sm focus:border-lime-500 focus:outline-none transition-colors"
                 placeholder="Type your name to sign..."
                 autoComplete="off"
               />
@@ -254,7 +254,7 @@ export const ParentConsentPortal: React.FC<ParentConsentPortalProps> = ({
           disabled={!isFormValid || isSubmitting}
           className={`w-full min-h-[44px] rounded-xl text-sm font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${
             isFormValid && !isSubmitting
-              ? "bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+              ? "bg-lime-500 text-slate-950 hover:bg-lime-400"
               : "bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700"
           }`}
         >
@@ -284,7 +284,7 @@ const ConsentCheckbox = ({
   >
     <div
       className={`mt-0.5 shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-colors ${
-        checked ? "bg-emerald-500 border-emerald-500" : "bg-slate-900 border-slate-700"
+        checked ? "bg-lime-500 border-lime-500" : "bg-slate-900 border-slate-700"
       }`}
     >
       {checked && <CheckCircle2 className="w-3.5 h-3.5 text-slate-950" />}

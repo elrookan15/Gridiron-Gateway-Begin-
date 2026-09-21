@@ -284,7 +284,7 @@ export const CoachPipelineBoard: React.FC = () => {
     <div className="space-y-6">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2 text-xs animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-lime-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-lime-300 flex items-center gap-2 text-xs animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
           <span>{toastMessage}</span>
         </div>
@@ -308,7 +308,7 @@ export const CoachPipelineBoard: React.FC = () => {
             onClick={handleExportCSV}
             disabled={filteredProspects.length === 0}
             title="Download CSV spreadsheet of current pipeline recruits"
-            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 disabled:hover:bg-emerald-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-lime-600 hover:bg-lime-500 disabled:opacity-50 disabled:hover:bg-lime-600 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-lime-600/20 transition-all cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4" />
             <span>Export to CSV ({filteredProspects.length})</span>
@@ -490,7 +490,7 @@ export const CoachPipelineBoard: React.FC = () => {
             Identified: "border-slate-800 bg-slate-950/40 text-slate-400",
             Contacted: "border-blue-500/30 bg-blue-950/20 text-blue-400",
             Offered: "border-amber-500/30 bg-amber-950/20 text-amber-400",
-            Committed: "border-emerald-500/30 bg-emerald-950/20 text-emerald-400",
+            Committed: "border-lime-500/30 bg-lime-950/20 text-lime-400",
           };
 
           const isStageAllSelected =
@@ -596,7 +596,7 @@ export const CoachPipelineBoard: React.FC = () => {
                       {/* Cognitive Scheme Match Badge */}
                       <div className="mb-2.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300 text-[9px] font-bold">
                         <span>🧠 Cognition Fit:</span>
-                        <span className="text-emerald-400 font-mono">
+                        <span className="text-lime-400 font-mono">
                           {prospect.position === "QB" ? "98% Air Raid Fit" : prospect.position === "WR" ? "96% West Coast Fit" : "95% Zone Scheme Fit"}
                         </span>
                       </div>

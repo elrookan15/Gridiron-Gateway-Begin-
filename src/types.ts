@@ -527,6 +527,8 @@ export interface RallySafeReleaseSnapshot {
   athleteInTransferPortal: boolean;
   regulatoryPlane: NilRegulatoryPlane;
   payoutReleased?: boolean;
+  /** Integer cents. Releases below `NIL_GO_REPORTING_THRESHOLD_CENTS` are denied. */
+  dealAmountCents: number;
 }
 
 /** Closed market set for the 2026 NIL estimator (House v. NCAA revenue-share tiers). */

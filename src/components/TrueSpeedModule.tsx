@@ -195,7 +195,7 @@ export const TrueSpeedModule: React.FC<TrueSpeedModuleProps> = ({
   const statusBadge = () => {
     if (telemetry.verificationStatus === "AUTHENTICATED") {
       return (
-        <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-widest rounded flex items-center gap-1.5">
+        <span className="px-3 py-1 bg-lime-500/10 border border-lime-500/20 text-lime-400 text-[10px] font-bold uppercase tracking-widest rounded flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5" /> Authenticated
         </span>
       );
@@ -343,7 +343,7 @@ export const TrueSpeedModule: React.FC<TrueSpeedModuleProps> = ({
               <div className="flex items-baseline gap-1">
                 <span
                   className={`text-xl font-bold tabular-nums ${
-                    telemetry.confidenceScore > 0 ? "text-emerald-400" : "text-slate-700"
+                    telemetry.confidenceScore > 0 ? "text-lime-400" : "text-slate-700"
                   }`}
                 >
                   {telemetry.confidenceScore > 0 ? `${(telemetry.confidenceScore * 100).toFixed(0)}%` : "--"}

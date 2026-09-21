@@ -197,7 +197,7 @@ export const AthleteProfileModal: React.FC<AthleteProfileModalProps> = ({
           {loading ? (
             <div className="space-y-6" aria-busy="true" aria-live="polite">
               <div className="flex items-center justify-center gap-2 text-slate-400 text-sm py-6">
-                <Loader2 className="w-5 h-5 animate-spin text-emerald-400 shrink-0" />
+                <Loader2 className="w-5 h-5 animate-spin text-lime-400 shrink-0" />
                 Syncing verified profile…
               </div>
               <div className="animate-pulse space-y-4">
@@ -293,7 +293,7 @@ export const AthleteProfileModal: React.FC<AthleteProfileModalProps> = ({
                         </div>
                         <div className="flex items-center gap-2 shrink-0 flex-wrap">
                           {offer.is_official && (
-                            <span className="px-2 py-1.5 min-h-[40px] inline-flex items-center text-[10px] font-bold tracking-widest text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 rounded uppercase">
+                            <span className="px-2 py-1.5 min-h-[40px] inline-flex items-center text-[10px] font-bold tracking-widest text-lime-400 bg-lime-400/10 border border-lime-400/20 rounded uppercase">
                               Official
                             </span>
                           )}

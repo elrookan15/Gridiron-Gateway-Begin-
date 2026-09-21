@@ -94,7 +94,7 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
     <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
       <div className="flex-1 p-6 space-y-8 bg-slate-950">
         <div className="flex items-center gap-3 border-b border-slate-800 pb-4">
-          <Calculator className="w-5 h-5 shrink-0 text-emerald-500" />
+          <Calculator className="w-5 h-5 shrink-0 text-lime-500" />
           <h2 className="text-xl font-bold text-slate-100 uppercase tracking-tight truncate">
             NIL Valuation Engine
           </h2>
@@ -116,7 +116,7 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
                   const next = event.target.value;
                   if (isNilMarketDivision(next)) setDivision(next);
                 }}
-                className="w-full min-h-[44px] bg-slate-900 border border-slate-800 rounded-lg px-3 text-slate-200 font-mono text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors appearance-none"
+                className="w-full min-h-[44px] bg-slate-900 border border-slate-800 rounded-lg px-3 text-slate-200 font-mono text-sm focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-colors appearance-none"
               >
                 {DIVISION_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -140,7 +140,7 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
                   const next = event.target.value;
                   if (isNilPositionGroup(next)) setPosition(next);
                 }}
-                className="w-full min-h-[44px] bg-slate-900 border border-slate-800 rounded-lg px-3 text-slate-200 font-mono text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-colors appearance-none"
+                className="w-full min-h-[44px] bg-slate-900 border border-slate-800 rounded-lg px-3 text-slate-200 font-mono text-sm focus:border-lime-500 focus:ring-1 focus:ring-lime-500 transition-colors appearance-none"
               >
                 {POSITION_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -183,7 +183,7 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
                 >
                   <Users className="w-3.5 h-3.5 shrink-0" /> Total Followers
                 </label>
-                <span className="font-mono text-emerald-400 font-bold">
+                <span className="font-mono text-lime-400 font-bold">
                   {followers.toLocaleString()}
                 </span>
               </div>
@@ -206,7 +206,7 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
                 >
                   <TrendingUp className="w-3.5 h-3.5 shrink-0" /> Engagement Rate
                 </label>
-                <span className="font-mono text-emerald-400 font-bold">
+                <span className="font-mono text-lime-400 font-bold">
                   {engagementRate.toFixed(1)}%
                 </span>
               </div>
@@ -224,14 +224,14 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
         </div>
       </div>
 
-      <div className="md:w-72 bg-gradient-to-b from-emerald-950/20 to-slate-900 border-t md:border-t-0 md:border-l border-slate-800 p-6 flex flex-col justify-center relative overflow-hidden">
-        <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 blur-3xl rounded-full pointer-events-none" />
+      <div className="md:w-72 bg-gradient-to-b from-lime-950/20 to-slate-900 border-t md:border-t-0 md:border-l border-slate-800 p-6 flex flex-col justify-center relative overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-48 h-48 bg-lime-500/10 blur-3xl rounded-full pointer-events-none" />
         <div className="relative z-10 space-y-6">
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">
               Estimated Annual Value
             </p>
-            <div className="flex items-start text-emerald-400">
+            <div className="flex items-start text-lime-400">
               <DollarSign className="w-8 h-8 mt-1 shrink-0" />
               <span className="text-5xl font-black tracking-tighter truncate">
                 {formatUsdFromCents(valuation.totalCents).replace("$", "")}
@@ -254,8 +254,8 @@ export const NILCalculator: React.FC<NILCalculatorProps> = ({ onEstimateChange }
             </div>
           </div>
 
-          <div className="mt-8 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-            <p className="text-[10px] text-emerald-400/80 uppercase font-bold tracking-widest leading-relaxed text-center">
+          <div className="mt-8 p-3 bg-lime-500/10 border border-lime-500/20 rounded-lg">
+            <p className="text-[10px] text-lime-400/80 uppercase font-bold tracking-widest leading-relaxed text-center">
               Based on 2026 collegiate market data & active revenue-sharing baselines. Estimator
               only — not an escrow authorization.
             </p>

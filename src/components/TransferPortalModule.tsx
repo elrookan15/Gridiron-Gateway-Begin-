@@ -21,7 +21,7 @@ function getStatusBadge(status: PortalStatus) {
     );
   }
   return (
-    <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[10px] font-bold tracking-widest uppercase shrink-0">
+    <span className="px-2 py-1 bg-lime-500/10 text-lime-400 border border-lime-500/20 rounded text-[10px] font-bold tracking-widest uppercase shrink-0">
       Transferred
     </span>
   );

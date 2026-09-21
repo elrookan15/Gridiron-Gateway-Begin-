@@ -1,4 +1,5 @@
 import type { ComplianceEvaluation, ComplianceGateDispatchRequest } from "../types";
+import { gatewayApiFetch } from "./gatewayApiFetch";
 
 const LEDGER_FAILURE: ComplianceEvaluation = {
   isCleared: false,
@@ -15,7 +16,7 @@ export async function dispatchComplianceGate(
   request: ComplianceGateDispatchRequest,
 ): Promise<ComplianceEvaluation> {
   try {
-    const response = await fetch("/api/v1/compliance/messaging-clearance", {
+    const response = await gatewayApiFetch("/api/v1/compliance/messaging-clearance", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(request),

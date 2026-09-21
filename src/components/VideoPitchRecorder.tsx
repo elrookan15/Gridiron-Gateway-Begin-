@@ -237,13 +237,13 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+            <span className="px-2.5 py-0.5 rounded-full bg-lime-500/10 text-lime-400 border border-lime-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
               <Zap className="w-3 h-3" /> Coach Pitch Engine
             </span>
             <span className="text-xs text-slate-400">• 30-Second Limit</span>
           </div>
           <h2 className="text-xl font-extrabold text-white mt-1 flex items-center gap-2">
-            <Video className="w-5 h-5 text-emerald-400" /> 30-Second Athlete Introduction
+            <Video className="w-5 h-5 text-lime-400" /> 30-Second Athlete Introduction
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
             Record a short, high-impact video introducing who you are, where you're from, your strengths & weaknesses, and why a college coach should recruit you.
@@ -251,8 +251,8 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
         </div>
 
         {saveSuccess && (
-          <div className="px-3 py-1.5 bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-pulse">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" /> Pitch Saved to Profile!
+          <div className="px-3 py-1.5 bg-lime-500/20 border border-lime-500/50 text-lime-300 rounded-xl text-xs font-bold flex items-center gap-1.5 animate-pulse">
+            <CheckCircle2 className="w-4 h-4 text-lime-400" /> Pitch Saved to Profile!
           </div>
         )}
       </div>
@@ -270,8 +270,8 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                     <span className="w-2 h-2 rounded-full bg-white"></span> REC
                   </span>
                 ) : cameraActive ? (
-                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span> Live Camera
+                  <span className="px-2.5 py-1 rounded-full bg-lime-500/20 text-lime-400 border border-lime-500/40 text-[10px] font-bold flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-lime-400"></span> Live Camera
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 text-[10px] font-bold">
@@ -324,14 +324,14 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                   className="w-full h-full object-cover transform -scale-x-100"
                 />
               ) : cameraActive && simulatedRecording ? (
-                <div className="w-full h-full bg-gradient-to-tr from-slate-950 via-slate-900 to-emerald-950/80 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-emerald-500 to-cyan-400 p-1 shadow-2xl mb-3 animate-pulse">
-                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-3xl font-black text-emerald-400">
+                <div className="w-full h-full bg-gradient-to-tr from-slate-950 via-slate-900 to-lime-950/80 flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-lime-500 to-cyan-400 p-1 shadow-2xl mb-3 animate-pulse">
+                    <div className="w-full h-full rounded-full bg-slate-950 flex items-center justify-center text-3xl font-black text-lime-400">
                       {profile.primaryPosition}
                     </div>
                   </div>
                   <h4 className="text-white font-extrabold text-base">{profile.fullName}</h4>
-                  <p className="text-xs text-emerald-400 font-medium">
+                  <p className="text-xs text-lime-400 font-medium">
                     {profile.highSchool} • Class of {profile.gradClass}
                   </p>
                   <p className="text-[10px] text-slate-400 max-w-xs mt-2 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-800">
@@ -353,7 +353,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                     onClick={startCamera}
                     className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-all flex items-center gap-1.5"
                   >
-                    <Video className="w-3.5 h-3.5 text-emerald-400" /> Test Camera & Mic
+                    <Video className="w-3.5 h-3.5 text-lime-400" /> Test Camera & Mic
                   </button>
                 </div>
               )}
@@ -361,8 +361,8 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
 
             {/* FLOATING TELEPROMPTER OVERLAY ON VIDEO */}
             {showPrompter && isRecording && (
-              <div className="relative z-20 bg-slate-950/85 backdrop-blur-md p-3 rounded-xl border border-emerald-500/40 text-xs space-y-1 my-auto animate-fade-in shadow-xl max-w-md mx-auto">
-                <div className="flex items-center justify-between text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+              <div className="relative z-20 bg-slate-950/85 backdrop-blur-md p-3 rounded-xl border border-lime-500/40 text-xs space-y-1 my-auto animate-fade-in shadow-xl max-w-md mx-auto">
+                <div className="flex items-center justify-between text-[10px] font-bold text-lime-400 uppercase tracking-wider">
                   <span>Current Speech Focus</span>
                   <span>{pitchPrompts[activePromptTab].timeAllocation}</span>
                 </div>
@@ -382,7 +382,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                   onClick={() => setMicActive(!micActive)}
                   className={`p-2 rounded-xl text-xs font-semibold border transition-all ${
                     micActive
-                      ? "bg-slate-900/90 text-emerald-400 border-slate-800"
+                      ? "bg-slate-900/90 text-lime-400 border-slate-800"
                       : "bg-rose-950/80 text-rose-400 border-rose-800"
                   }`}
                   title={micActive ? "Mute Microphone" : "Unmute Microphone"}
@@ -410,7 +410,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                     </button>
                     <button
                       onClick={handleSavePitch}
-                      className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5"
+                      className="px-4 py-2 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-500/20 flex items-center gap-1.5"
                     >
                       <CheckCircle2 className="w-4 h-4" /> Save Intro Pitch
                     </button>
@@ -418,7 +418,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                 ) : (
                   <button
                     onClick={handleStartRecording}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-lime-500 to-teal-400 hover:from-lime-400 hover:to-teal-300 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-500/20 flex items-center gap-2"
                   >
                     <Video className="w-4 h-4 fill-slate-950" /> Start 30s Recording
                   </button>
@@ -433,7 +433,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
               <span className="font-extrabold text-white flex items-center gap-1.5">
                 <Sparkles className="w-4 h-4 text-purple-400" /> AI Coach Pitch Analysis
               </span>
-              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+              <span className="text-[10px] text-lime-400 font-bold bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/30">
                 Score: 98/100 (Elite)
               </span>
             </div>
@@ -445,7 +445,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
               </div>
               <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                 <span className="text-slate-400 text-[10px]">Eye Contact</span>
-                <p className="font-extrabold text-emerald-400">95% Direct</p>
+                <p className="font-extrabold text-lime-400">95% Direct</p>
               </div>
               <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                 <span className="text-slate-400 text-[10px]">Recruiting Keywords</span>
@@ -476,7 +476,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                 onClick={() => setActivePromptTab(idx)}
                 className={`py-1.5 px-2 rounded-lg text-[10px] font-bold transition-all text-center ${
                   activePromptTab === idx
-                    ? "bg-emerald-500 text-slate-950 shadow-md"
+                    ? "bg-lime-500 text-slate-950 shadow-md"
                     : "text-slate-400 hover:text-white hover:bg-slate-900"
                 }`}
               >
@@ -488,7 +488,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
           {/* Tab Guidance & Text Editor */}
           <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-emerald-400">
+              <h4 className="text-xs font-bold text-lime-400">
                 {pitchPrompts[activePromptTab].title}
               </h4>
               <span className="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">
@@ -510,7 +510,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                   value={whoIAm}
                   onChange={(e) => setWhoIAm(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-lime-500 transition-colors"
                   placeholder="Who you are..."
                 />
               )}
@@ -519,7 +519,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                   value={whereFrom}
                   onChange={(e) => setWhereFrom(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-lime-500 transition-colors"
                   placeholder="Where you are from..."
                 />
               )}
@@ -529,14 +529,14 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                     value={strengths}
                     onChange={(e) => setStrengths(e.target.value)}
                     rows={2}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-lime-500 transition-colors"
                     placeholder="On-field strengths..."
                   />
                   <textarea
                     value={weaknesses}
                     onChange={(e) => setWeaknesses(e.target.value)}
                     rows={2}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-lime-500 transition-colors"
                     placeholder="Areas you are developing..."
                   />
                 </div>
@@ -546,7 +546,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
                   value={whyRecruitMe}
                   onChange={(e) => setWhyRecruitMe(e.target.value)}
                   rows={3}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-lime-500 transition-colors"
                   placeholder="Why a college coach should recruit you..."
                 />
               )}
@@ -557,7 +557,7 @@ export const VideoPitchRecorder: React.FC<VideoPitchRecorderProps> = ({
           <div className="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-xs">
             <h4 className="font-extrabold text-white text-xs flex items-center justify-between">
               <span>Full Script Overview</span>
-              <span className="text-[10px] text-emerald-400">~68 Words (Perfect for 30s)</span>
+              <span className="text-[10px] text-lime-400">~68 Words (Perfect for 30s)</span>
             </h4>
             <div className="space-y-1 text-[11px] text-slate-300 leading-relaxed max-h-36 overflow-y-auto pr-1">
               <p><strong className="text-white">1. Intro:</strong> {whoIAm}</p>

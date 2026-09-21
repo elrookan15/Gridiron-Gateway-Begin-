@@ -1,5 +1,6 @@
 // src/components/SchoolsCsvImporter.tsx
 import React, { useState } from "react";
+import { gatewayApiFetch } from "../services/gatewayApiFetch";
 
 type ImportStatus = "IDLE" | "PROCESSING" | "SUCCESS" | "ERROR";
 
@@ -37,7 +38,7 @@ export const SchoolsCsvImporter: React.FC = () => {
       );
 
       setLog("Uploading to /api/v1/admin/import-schools-csv...");
-      const response = await fetch("/api/v1/admin/import-schools-csv", {
+      const response = await gatewayApiFetch("/api/v1/admin/import-schools-csv", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ csvText }),
@@ -112,7 +113,7 @@ export const SchoolsCsvImporter: React.FC = () => {
         <button
           type="submit"
           disabled={!file || status === "PROCESSING"}
-          className="w-full bg-emerald-500 disabled:bg-slate-700 disabled:opacity-50 hover:bg-emerald-400 text-slate-950 font-bold font-jakarta uppercase tracking-wide py-3.5 rounded-xl min-h-[44px] transition-colors shadow-lg shadow-emerald-500/20 cursor-pointer"
+          className="w-full bg-lime-500 disabled:bg-slate-700 disabled:opacity-50 hover:bg-lime-400 text-slate-950 font-bold font-jakarta uppercase tracking-wide py-3.5 rounded-xl min-h-[44px] transition-colors shadow-lg shadow-lime-500/20 cursor-pointer"
         >
           {status === "PROCESSING" ? "Processing Upload..." : "Import to Database"}
         </button>
@@ -124,7 +125,7 @@ export const SchoolsCsvImporter: React.FC = () => {
             status === "ERROR"
               ? "text-rose-300"
               : status === "SUCCESS"
-                ? "text-emerald-300"
+                ? "text-lime-300"
                 : "text-slate-300"
           }`}
         >
