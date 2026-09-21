@@ -118,10 +118,10 @@ export const NcaaEligibilityTracker: React.FC = () => {
         {/* Qualifier Badge */}
         <div className={`p-4 rounded-2xl border flex items-center gap-3 ${
           isDiQualifier
-            ? "bg-emerald-950/80 border-emerald-500/40 text-emerald-300"
+            ? "bg-lime-950/80 border-lime-500/40 text-lime-300"
             : "bg-amber-950/80 border-amber-500/40 text-amber-300"
         }`}>
-          {isDiQualifier ? <CheckCircle2 className="w-8 h-8 text-emerald-400 shrink-0" /> : <AlertTriangle className="w-8 h-8 text-amber-400 shrink-0" />}
+          {isDiQualifier ? <CheckCircle2 className="w-8 h-8 text-lime-400 shrink-0" /> : <AlertTriangle className="w-8 h-8 text-amber-400 shrink-0" />}
           <div>
             <p className="text-[10px] uppercase font-extrabold tracking-wider opacity-80">NCAA Qualifier Status</p>
             <p className="text-sm font-black text-white">
@@ -136,7 +136,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
         <div className="bg-slate-900 border border-slate-800 p-5 rounded-2xl shadow-xl">
           <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">Calculated Core GPA</p>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-black text-emerald-400">{coreGpa.toFixed(2)}</span>
+            <span className="text-3xl font-black text-lime-400">{coreGpa.toFixed(2)}</span>
             <span className="text-xs text-slate-500 font-semibold">/ 4.00 Scale</span>
           </div>
           <p className="text-[11px] text-slate-400 mt-2">
@@ -151,7 +151,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
             <span className="text-xs text-slate-500 font-semibold">/ 16 Core Courses</span>
           </div>
           <div className="w-full h-2 bg-slate-950 rounded-full mt-3 overflow-hidden">
-            <div className="h-full bg-emerald-400" style={{ width: `${progressPercent}%` }}></div>
+            <div className="h-full bg-lime-400" style={{ width: `${progressPercent}%` }}></div>
           </div>
         </div>
 
@@ -194,7 +194,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
                 key={idx}
                 className={`p-3 rounded-xl border text-center transition-all ${
                   isMet
-                    ? "bg-emerald-950/60 border-emerald-500/40 text-emerald-300"
+                    ? "bg-lime-950/60 border-lime-500/40 text-lime-300"
                     : "bg-slate-950 border-slate-800 text-slate-400"
                 }`}
               >
@@ -254,7 +254,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
             </select>
             <button
               type="submit"
-              className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1"
+              className="bg-lime-500 hover:bg-lime-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1"
             >
               <Plus className="w-4 h-4" /> Add Course
             </button>
@@ -281,7 +281,7 @@ export const NcaaEligibilityTracker: React.FC = () => {
                   <td className="p-3">
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                       course.grade === "A"
-                        ? "bg-emerald-500/20 text-emerald-300"
+                        ? "bg-lime-500/20 text-lime-300"
                         : course.grade === "B"
                         ? "bg-blue-500/20 text-blue-300"
                         : "bg-amber-500/20 text-amber-300"

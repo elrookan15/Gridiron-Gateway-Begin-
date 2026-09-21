@@ -24,6 +24,7 @@ function runRallySafeClearinghouseTestSuite() {
     stripeMilestoneVerified: true,
     athleteInTransferPortal: false,
     regulatoryPlane: "THIRD_PARTY_NIL_GO",
+    dealAmountCents: 60_000,
   };
 
   assert(canReleaseNilEscrow(cleared).ok === true, "CLEARED + HMAC + NIL Go → release allowed");
@@ -52,6 +53,12 @@ function runRallySafeClearinghouseTestSuite() {
   assert(
     canReleaseNilEscrow({ ...cleared, regulatoryPlane: "INSTITUTIONAL_CAPS" }).ok === false,
     "CapGM / CAPS plane cannot release via RallySafe NIL Go",
+  );
+
+  const belowFloor = canReleaseNilEscrow({ ...cleared, dealAmountCents: 59_999 });
+  assert(
+    belowFloor.ok === false && belowFloor.code === "BELOW_REPORTING_FLOOR",
+    "Sub-$600 NIL Go deals cannot be released",
   );
 
   console.log("==================================================");

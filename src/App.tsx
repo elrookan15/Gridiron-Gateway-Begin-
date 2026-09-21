@@ -57,8 +57,8 @@ export function App() {
   return (
     <div className={`min-h-screen font-sans antialiased transition-colors duration-300 ${
       theme === "light"
-        ? "light-theme bg-slate-50 text-slate-900 selection:bg-emerald-500 selection:text-slate-950"
-        : "bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-slate-950"
+        ? "light-theme bg-slate-50 text-slate-900 selection:bg-lime-500 selection:text-slate-950"
+        : "bg-slate-950 text-slate-100 selection:bg-lime-500 selection:text-slate-950"
     }`}>
       {/* Top Navbar */}
       <Navbar
@@ -207,13 +207,13 @@ export function App() {
             </button>
             <button
               onClick={() => setActiveTab("tech_docs")}
-              className="hover:text-emerald-400 underline font-semibold"
+              className="hover:text-lime-400 underline font-semibold"
             >
               System Architecture & Schema
             </button>
             <button
               onClick={() => setShowOnboarding(true)}
-              className="hover:text-emerald-400 underline font-semibold"
+              className="hover:text-lime-400 underline font-semibold"
             >
               25-30 Question Profile Builder
             </button>

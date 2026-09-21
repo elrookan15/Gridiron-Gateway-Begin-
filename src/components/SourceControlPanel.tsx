@@ -269,13 +269,13 @@ export const SourceControlPanel: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 text-white">
       {/* Header Banner */}
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl">
-        <div className="absolute -right-12 -top-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -right-12 -top-12 w-64 h-64 bg-lime-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute right-32 -bottom-12 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 font-bold">
+              <span className="bg-lime-500/10 text-lime-400 border border-lime-500/30 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 font-bold">
                 <GitBranch className="w-3.5 h-3.5" /> Source Control Panel
               </span>
               <span className="bg-purple-500/10 text-purple-400 border border-purple-500/30 px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider flex items-center gap-1.5 font-bold">
@@ -285,7 +285,7 @@ export const SourceControlPanel: React.FC = () => {
                 <ShieldCheck className="w-3.5 h-3.5" /> 4-Gate Quality Verified
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-emerald-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-100 to-lime-400 bg-clip-text text-transparent">
               Automated Git & Statutory Gatekeeper Workspace
             </h1>
             <p className="text-slate-400 text-sm max-w-3xl">
@@ -297,7 +297,7 @@ export const SourceControlPanel: React.FC = () => {
             <button
               onClick={runPreCommitSuite}
               disabled={isRunningPreCommit}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 shrink-0 disabled:opacity-50"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-gradient-to-r from-lime-500 to-teal-600 hover:from-lime-400 hover:to-teal-500 text-slate-950 font-bold text-sm shadow-lg shadow-lime-500/20 transition-all flex items-center gap-2 shrink-0 disabled:opacity-50"
             >
               {isRunningPreCommit ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
@@ -359,7 +359,7 @@ export const SourceControlPanel: React.FC = () => {
             </div>
             <div className="flex items-center justify-between text-slate-400 text-[11px]">
               <span>Status:</span>
-              <span className="text-emerald-400 font-bold truncate max-w-[160px]">{remoteStatus}</span>
+              <span className="text-lime-400 font-bold truncate max-w-[160px]">{remoteStatus}</span>
             </div>
           </div>
         </div>
@@ -368,12 +368,12 @@ export const SourceControlPanel: React.FC = () => {
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 shadow-xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              <div className="p-2 rounded-xl bg-lime-500/10 text-lime-400 border border-lime-500/20">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <h3 className="font-bold text-slate-200 text-xs uppercase tracking-wider">NCAA Recruiting</h3>
             </div>
-            <span className="text-[10px] font-mono uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-bold">
+            <span className="text-[10px] font-mono uppercase bg-lime-500/10 text-lime-400 border border-lime-500/30 px-2 py-0.5 rounded font-bold">
               10/10 PASS
             </span>
           </div>
@@ -381,15 +381,15 @@ export const SourceControlPanel: React.FC = () => {
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-slate-300">
               <span>Fail-Closed Engine:</span>
-              <span className="text-emerald-400 font-mono font-bold">ACTIVE</span>
+              <span className="text-lime-400 font-mono font-bold">ACTIVE</span>
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span>Group A (Bylaws):</span>
-              <span className="text-emerald-400 font-mono font-bold">5/5 PASS</span>
+              <span className="text-lime-400 font-mono font-bold">5/5 PASS</span>
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span>Group B (Server):</span>
-              <span className="text-emerald-400 font-mono font-bold">5/5 PASS</span>
+              <span className="text-lime-400 font-mono font-bold">5/5 PASS</span>
             </div>
           </div>
         </div>
@@ -411,15 +411,15 @@ export const SourceControlPanel: React.FC = () => {
           <div className="space-y-1.5 text-xs">
             <div className="flex items-center justify-between text-slate-300">
               <span>Stripe HMAC:</span>
-              <span className="text-emerald-400 font-mono font-bold">VERIFIED</span>
+              <span className="text-lime-400 font-mono font-bold">VERIFIED</span>
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span>Clearinghouse Gate:</span>
-              <span className="text-emerald-400 font-mono font-bold">CLEARED</span>
+              <span className="text-lime-400 font-mono font-bold">CLEARED</span>
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span>Portal Locks:</span>
-              <span className="text-emerald-400 font-mono font-bold">0 BLOCKS</span>
+              <span className="text-lime-400 font-mono font-bold">0 BLOCKS</span>
             </div>
           </div>
         </div>
@@ -445,11 +445,11 @@ export const SourceControlPanel: React.FC = () => {
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span>SP+ Wins Model:</span>
-              <span className="text-emerald-400 font-mono font-bold">CALIBRATED</span>
+              <span className="text-lime-400 font-mono font-bold">CALIBRATED</span>
             </div>
             <div className="flex items-center justify-between text-slate-300">
               <span>Float Risk Audit:</span>
-              <span className="text-emerald-400 font-mono font-bold">0 DRIFT</span>
+              <span className="text-lime-400 font-mono font-bold">0 DRIFT</span>
             </div>
           </div>
         </div>
@@ -507,7 +507,7 @@ export const SourceControlPanel: React.FC = () => {
       {testSuiteOutput && (
         <div className="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl font-mono text-xs">
           <div className="bg-slate-900 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-emerald-400 font-bold">
+            <div className="flex items-center gap-2 text-lime-400 font-bold">
               <Terminal className="w-4 h-4" />
               Pre-Commit Verification Suite Output (`scripts/runAllPreCommitChecks.ts`)
             </div>
@@ -518,7 +518,7 @@ export const SourceControlPanel: React.FC = () => {
               Clear Log
             </button>
           </div>
-          <pre className="p-4 text-emerald-300/90 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
+          <pre className="p-4 text-lime-300/90 whitespace-pre-wrap leading-relaxed max-h-72 overflow-y-auto">
             {testSuiteOutput}
           </pre>
         </div>
@@ -532,10 +532,10 @@ export const SourceControlPanel: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-emerald-400" />
+                <FileCheck className="w-5 h-5 text-lime-400" />
                 <h2 className="font-bold text-white text-sm">Staged Working Tree Inspector</h2>
               </div>
-              <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 rounded font-bold">
+              <span className="text-xs font-mono text-lime-400 bg-lime-500/10 border border-lime-500/30 px-2.5 py-0.5 rounded font-bold">
                 {stagedFiles.length} Files Staged
               </span>
             </div>
@@ -555,7 +555,7 @@ export const SourceControlPanel: React.FC = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-3 shrink-0 text-[11px]">
-                    <span className="text-emerald-400 font-bold">+{file.linesAdded}</span>
+                    <span className="text-lime-400 font-bold">+{file.linesAdded}</span>
                     <span className="text-rose-400 font-bold">-{file.linesRemoved}</span>
                   </div>
                 </div>
@@ -689,8 +689,8 @@ export const SourceControlPanel: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between text-slate-400 text-[11px]">
                   <span>Compliance Verification:</span>
-                  <span className="text-emerald-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Pre-Flight Cleared
+                  <span className="text-lime-400 font-bold flex items-center gap-1">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-lime-400" /> Pre-Flight Cleared
                   </span>
                 </div>
               </div>
@@ -740,7 +740,7 @@ export const SourceControlPanel: React.FC = () => {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-4 shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center gap-2">
-                <Activity className="w-5 h-5 text-emerald-400" />
+                <Activity className="w-5 h-5 text-lime-400" />
                 <h2 className="font-bold text-white text-sm">Web3 & Statutory Sentinel Checklist</h2>
               </div>
             </div>
@@ -748,19 +748,19 @@ export const SourceControlPanel: React.FC = () => {
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                 <span className="text-slate-300 font-medium">Anchor Signer Rules (`#[account(mut, signer)]`):</span>
-                <span className="text-emerald-400 font-mono font-bold">VERIFIED</span>
+                <span className="text-lime-400 font-mono font-bold">VERIFIED</span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                 <span className="text-slate-300 font-medium">Solana Checked Arithmetic (`checked_add`):</span>
-                <span className="text-emerald-400 font-mono font-bold">ENFORCED</span>
+                <span className="text-lime-400 font-mono font-bold">ENFORCED</span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                 <span className="text-slate-300 font-medium">CapGM $20.5M Integer Cents:</span>
-                <span className="text-emerald-400 font-mono font-bold">0 FLOAT DRIFT</span>
+                <span className="text-lime-400 font-mono font-bold">0 FLOAT DRIFT</span>
               </div>
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-950 border border-slate-800">
                 <span className="text-slate-300 font-medium">COPPA / Minor Parent Consent Gate:</span>
-                <span className="text-emerald-400 font-mono font-bold">FAIL-CLOSED</span>
+                <span className="text-lime-400 font-mono font-bold">FAIL-CLOSED</span>
               </div>
             </div>
           </div>
@@ -771,10 +771,10 @@ export const SourceControlPanel: React.FC = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-5 shadow-xl">
         <div className="flex items-center justify-between border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <Code className="w-5 h-5 text-emerald-400" />
+            <Code className="w-5 h-5 text-lime-400" />
             <h2 className="font-bold text-white text-base">Verified Commit History & Statutory Log Trail</h2>
           </div>
-          <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-1 rounded-md font-mono font-bold">
+          <span className="text-xs text-lime-400 bg-lime-500/10 border border-lime-500/30 px-2.5 py-1 rounded-md font-mono font-bold">
             {commits.length} Verified Commits
           </span>
         </div>
@@ -800,7 +800,7 @@ export const SourceControlPanel: React.FC = () => {
               </div>
 
               <div className="shrink-0 flex items-center gap-2">
-                <span className="text-xs font-mono font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 rounded-full flex items-center gap-1.5">
+                <span className="text-xs font-mono font-semibold text-lime-400 bg-lime-500/10 border border-lime-500/30 px-3 py-1 rounded-full flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5" /> Statutory Verified
                 </span>
               </div>

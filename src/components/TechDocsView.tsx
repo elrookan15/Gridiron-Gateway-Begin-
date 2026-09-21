@@ -10,7 +10,7 @@ export const TechDocsView: React.FC = () => {
       {/* Title & Document Switcher Header */}
       <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/30 text-lime-400 text-xs font-bold uppercase tracking-wider mb-2">
             <Code2 className="w-3.5 h-3.5" /> Gridiron Gateway Technical & Legal Documentation
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -27,7 +27,7 @@ export const TechDocsView: React.FC = () => {
             onClick={() => setActiveTab("logo_brand")}
             className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               activeTab === "logo_brand"
-                ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20"
+                ? "bg-lime-500 text-slate-950 shadow-lg shadow-lime-500/20"
                 : "text-slate-400 hover:text-white"
             }`}
           >
@@ -131,7 +131,7 @@ export const TechDocsView: React.FC = () => {
                     <td className="p-3 text-slate-300">
                       Could resemble informal, undocumented NIL compensation promises warned by CSC in Jan 2026 if linked to monetary value.
                     </td>
-                    <td className="p-3 text-emerald-400 font-medium">
+                    <td className="p-3 text-lime-400 font-medium">
                       Keep endorsements purely qualitative & reputational. Require verified-account coach status.
                     </td>
                   </tr>
@@ -194,23 +194,23 @@ export const TechDocsView: React.FC = () => {
 
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
               <h3 className="font-bold text-white text-base flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-emerald-400" /> Platform Compliance Checklist (Section 12)
+                <UserCheck className="w-5 h-5 text-lime-400" /> Platform Compliance Checklist (Section 12)
               </h3>
               <div className="space-y-2 text-xs">
                 <div className="flex items-start gap-2 text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-lime-400 shrink-0 mt-0.5" />
                   <span>Treat NIL as a live target — re-check regulatory assumptions quarterly.</span>
                 </div>
                 <div className="flex items-start gap-2 text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-lime-400 shrink-0 mt-0.5" />
                   <span>Obtain legal counsel sign-off on athlete-agent statute exposure prior to releasing AI outreach tools.</span>
                 </div>
                 <div className="flex items-start gap-2 text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-lime-400 shrink-0 mt-0.5" />
                   <span>Incorporate state-level and athletic association rules into profile onboarding flows.</span>
                 </div>
                 <div className="flex items-start gap-2 text-slate-300">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <CheckCircle2 className="w-4 h-4 text-lime-400 shrink-0 mt-0.5" />
                   <span>Maintain public rankings and endorsements as purely reputational signals.</span>
                 </div>
               </div>
@@ -237,7 +237,7 @@ export const TechDocsView: React.FC = () => {
             </div>
 
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl space-y-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <div className="w-10 h-10 rounded-xl bg-lime-500/10 border border-lime-500/30 flex items-center justify-center text-lime-400">
                 <Server className="w-5 h-5" />
               </div>
               <h2 className="font-extrabold text-base text-white">Backend & AI Layer</h2>
@@ -317,7 +317,7 @@ offers {
 
               {/* camps & rankings */}
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
-                <span className="text-emerald-400 font-bold uppercase block">Table: `camps` & `rankings`</span>
+                <span className="text-lime-400 font-bold uppercase block">Table: `camps` & `rankings`</span>
                 <pre className="text-slate-300 font-mono text-[11px] overflow-x-auto leading-relaxed p-2 bg-slate-900 rounded">
 {`camps {
   id: uuid (PK), name: varchar, host_school_id: uuid,
@@ -368,7 +368,7 @@ recruiting_periods {
               <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs">
                 <div className="flex items-center justify-between text-slate-400">
                   <span>Rule Engine Check:</span>
-                  <span className="text-emerald-400 font-bold">Passed</span>
+                  <span className="text-lime-400 font-bold">Passed</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-400">
                   <span>Audit Log Trail:</span>
@@ -376,7 +376,7 @@ recruiting_periods {
                 </div>
                 <div className="flex items-center justify-between text-slate-400">
                   <span>Contact Period Badge:</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">Contact Period Open</span>
+                  <span className="px-2 py-0.5 rounded bg-lime-500/20 text-lime-400 font-bold">Contact Period Open</span>
                 </div>
               </div>
             </div>

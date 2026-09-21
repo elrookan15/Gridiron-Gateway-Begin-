@@ -47,7 +47,7 @@ It is **not** a Next.js App Router product. It is a **Vite + React 19 SPA** with
 | FinTech / telemetry | Express (`server.ts`) + WebSockets | RallySafe REST, BioScan stream, laser webhooks, compliance send |
 | AI | Gemini (`@google/genai`) + Edge Function `gemini-assistant` | Recruiting letters, school generation |
 | Computer vision | MediaPipe PoseLandmarker | TrueSpeed velocity authenticity |
-| Web3 (adjacent) | Anchor program `programs/roundblock` | Exploding dynasty trade escrow (Solana) |
+| Web3 | Extracted | RoundBlock Anchor source lives on `Cursor/jonathan-roundblock-scratch-d2dd`, not in this product tree |
 
 **Product thesis:** recruitment and performance evaluation are being reshaped by verified scouting data, automated NCAA gating, and real-time NIL valuation. Adjacent class-leading signals include S2 Cognition–style sports IQ, Catapult-class GPS wearables, and AI-doctored highlight reels (countered by TrueSpeed). AI **triages and verifies**; it never auto-approves compliance or NIL payouts.
 
@@ -57,11 +57,12 @@ It is **not** a Next.js App Router product. It is a **Vite + React 19 SPA** with
 |---|---|---|
 | Backdrop | `#09090b` / `bg-slate-950` | App chrome |
 | Surfaces | `bg-slate-900` + `border-slate-800` | Cards |
-| Emerald | `#10b981` | Action, verified, positive cap/NIL |
-| Cyan | `#06b6d4` | Physical speed, BioScan, TrueSpeed, laser |
-| Amber | `#f59e0b` | Stars, camps, Top 250 |
-| Purple | `#a855f7` | Academics, Cognition, film tags |
-| Rose | `#f43f5e` | Compliance locks, portal blocks, legal |
+| Lime | `text-lime-400` / `bg-lime-500` | Action, verified, positive cap/NIL |
+| Red | `text-red-500` / `bg-red-600` | Portal alerts, missing compliance, urgent deadlines |
+| Gold | `text-yellow-400` / `bg-yellow-500` | Stars, camps, Top 250 |
+| Sky | `text-sky-300` / `bg-sky-400` | Physical speed, BioScan, TrueSpeed, laser |
+| Maroon | `text-rose-800` / `bg-rose-900` | Academics, NCAA eligibility, Core GPA |
+| Orange | `text-orange-300` / `bg-orange-400` | AI assistant, DM templates, Kanban highlights |
 
 Touch targets are specified at **≥ 44px** (`min-h-[44px]`). Money is **integer cents only**. Missing coach emails render **Contact not verified** — never a hallucinated `@university.edu`.
 
@@ -108,7 +109,7 @@ npm start            # serves dist/ + bundled Express
 ### Two navigation shells
 
 1. **Top Navbar** ([`src/App.tsx`](../src/App.tsx) + [`Navbar.tsx`](../src/components/Navbar.tsx)) — primary SPA tabs.
-2. **Gateway Command Center** — Navbar item **Gateway Center** → [`GridironGatewayDashboard.tsx`](../src/components/GridironGatewayDashboard.tsx). This is the front-office module rack (CapGM, Film, RallySafe, Laser, Parent Portal, RoundBlock, etc.).
+2. **Gateway Command Center** — Navbar item **Gateway Center** → [`GridironGatewayDashboard.tsx`](../src/components/GridironGatewayDashboard.tsx). This is the front-office module rack (CapGM, Film, RallySafe, Laser, Parent Portal, etc.).
 
 ### Navbar tabs (from `App.tsx`)
 
@@ -149,7 +150,6 @@ Theme toggle (dark/light) persists to `localStorage` key `gg_theme`.
 | CSV Import | `SchoolsCsvImporter` |
 | Cognition IQ | `CognitiveSchemeMatcher` |
 | Gameplan AI | `AiGameplanGeneratorModule` |
-| RoundBlock Trade | `RoundBlockTradeEscrowModule` |
 | Tech Hub | `TrueSpeedModule` + `BioScanTelemetryModule` + `RallySafeEscrowModule` |
 
 ---
@@ -313,7 +313,7 @@ Authoritative REST: `POST /api/messages/send` and `POST /api/v1/compliance/messa
 
 ### 4.10 NCAA compliance dashboard
 
-**Status:** Hybrid — in-memory engine ledger + optional `communication_audit_logs`  
+**Status:** Hybrid — in-memory engine ledger + `compliance_audit_logs`  
 **Types:** `ComplianceAuditLog`, `ClearanceStatus`, `NcaaRecruitingPeriod`  
 **Files:** [`ComplianceDashboard.tsx`](../src/components/ComplianceDashboard.tsx), [`src/complianceEngine.ts`](../src/complianceEngine.ts)
 
@@ -585,17 +585,11 @@ Tests: `npm run test:laser`.
 
 ---
 
-### 4.27 RoundBlock exploding trade escrow (Web3)
+### 4.27 RoundBlock exploding trade escrow (extracted)
 
-**Status:** UI demo + Anchor program  
-**Types:** `ExplodingTradeEscrow`, `TokenizedAssetAssetPointer`, `TradeEscrowStatus`  
-**Files:** [`RoundBlockTradeEscrowModule.tsx`](../src/components/RoundBlockTradeEscrowModule.tsx), [`programs/roundblock/src/lib.rs`](../programs/roundblock/src/lib.rs), IDL [`src/idl/roundblock.json`](../src/idl/roundblock.json)
+**Status:** Removed from the compliance product. Anchor source is preserved on branch `Cursor/jonathan-roundblock-scratch-d2dd`.
 
-**What it is:** Dynasty-league exploding offers: player-card NFTs + future picks, optional USDC collateral in a PDA vault, expiry, accept / reclaim.
-
-**How to use (UI):** Gateway Center → **RoundBlock Trade**. Inspect mock proposals (`PENDING` / `ACCEPTED` / `EXPIRED` / `RECLAIMED`), collateral cents, expiry countdown.
-
-**On-chain:** `propose_trade`, accept-before-expiry, reclaim-after-expiry. Amounts use checked integer math; signer + PDA `has_one` constraints are mandatory. This is **not** NCAA NIL escrow (that is RallySafe/Stripe).
+The Gateway Center no longer ships a RoundBlock tab. The previous SPA simulated trades with `setTimeout` and copy that said a transaction was signed on-chain. RallySafe remains the only NIL escrow surface.
 
 ---
 
@@ -715,7 +709,7 @@ Gridiron-Gateway/
 | Verified athletic | `TrueSpeedModule`, `BioScanTelemetryModule`, `CombineLaserApiModule`, `CognitiveSchemeMatcher` |
 | Film / AI | `AIFilmStudio`, `AiFilmTaggingStudio`, `AutonomousScoutingAgent`, `AiGameplanGeneratorModule`, `AIRecruitingAssistant` |
 | Legal | `ParentConsentPortal`, `ComplianceDashboard`, `NcaaEligibilityTracker` |
-| Adjacent | `RoundBlockTradeEscrowModule`, `SchoolsCsvImporter`, `SourceControlPanel`, `TechDocsView` |
+| Adjacent | `SchoolsCsvImporter`, `SourceControlPanel`, `TechDocsView` |
 
 ### 5.4 `src/lib` engines (pure logic)
 
@@ -795,7 +789,7 @@ Helpers in the same file: `toDatabaseCoach`, `toDatabaseSchool`, `classification
 
 - `users` ↔ `auth.users`, `guardian_id` self-FK
 - `athlete_profiles`, `athlete_media`, `scholarship_offers`
-- `messages`, `communication_audit_logs` (client INSERT/UPDATE/DELETE **denied**)
+- `messages` (client INSERT/UPDATE/DELETE of the gate ledger is denied on `compliance_audit_logs`)
 - `compliance_rules`
 - `program_directory` / `coaching_staff` (ingest targets)
 
@@ -948,7 +942,7 @@ Node 18+ (CI uses 20). React 19, Vite 6, Tailwind 4, Express 4, `ws` 8, `@supaba
 | Combine laser | Yes | Webhook engine + seed UI |
 | Gameplan AI | Yes | Mock dossiers |
 | CSV import | Yes | Express memory |
-| RoundBlock | Yes | Mock UI + Anchor source |
+| RoundBlock | Removed from SPA | Anchor source on scratch branch |
 | GCS COPPA URLs | Helper | Terraform + tests |
 | Auth | Yes | Supabase Auth |
 

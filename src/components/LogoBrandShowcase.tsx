@@ -38,7 +38,7 @@ export const LogoBrandShowcase: React.FC = () => {
             onClick={handleCopySvg}
             className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-xl text-xs font-bold border border-slate-700 transition-all flex items-center gap-2"
           >
-            {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
+            {copied ? <Check className="w-4 h-4 text-lime-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
             {copied ? "SVG Copied!" : "Copy Logo SVG"}
           </button>
         </div>
@@ -47,11 +47,11 @@ export const LogoBrandShowcase: React.FC = () => {
       {/* Hero Logo Display Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
         {/* Logo Card Stage */}
-        <div className="lg:col-span-5 bg-gradient-to-b from-slate-950 via-slate-900 to-emerald-950/60 rounded-3xl border border-emerald-500/30 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl group">
+        <div className="lg:col-span-5 bg-gradient-to-b from-slate-950 via-slate-900 to-lime-950/60 rounded-3xl border border-lime-500/30 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-2xl group">
           {/* Background Ambient Stadium Lights */}
           <div className="absolute top-4 left-4 w-12 h-12 bg-amber-400/20 rounded-full blur-xl pointer-events-none" />
           <div className="absolute top-4 right-4 w-12 h-12 bg-cyan-400/20 rounded-full blur-xl pointer-events-none" />
-          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-emerald-900/40 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 inset-x-0 h-32 bg-gradient-to-t from-lime-900/40 to-transparent pointer-events-none" />
 
           <div className="relative z-10 py-6 transform transition-transform duration-500 group-hover:scale-105">
             <GridironLogo size={180} />
@@ -68,7 +68,7 @@ export const LogoBrandShowcase: React.FC = () => {
         {/* Breakdown of Logo Elements */}
         <div className="lg:col-span-7 space-y-4">
           <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-emerald-400" /> Symbolic Component Breakdown
+            <Layers className="w-4 h-4 text-lime-400" /> Symbolic Component Breakdown
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -88,9 +88,9 @@ export const LogoBrandShowcase: React.FC = () => {
             </div>
 
             {/* Element 2: Playcall Sheet */}
-            <div className="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl hover:border-emerald-500/40 transition-colors">
+            <div className="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl hover:border-lime-500/40 transition-colors">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 shrink-0">
+                <div className="p-2.5 rounded-xl bg-lime-500/10 border border-lime-500/30 text-lime-400 shrink-0">
                   <ClipboardList className="w-5 h-5" />
                 </div>
                 <div>

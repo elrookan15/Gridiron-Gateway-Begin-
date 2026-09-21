@@ -153,7 +153,7 @@ export const AuthManager: React.FC = () => {
           aria-busy="true"
           aria-live="polite"
         >
-          <Loader2 className="w-5 h-5 animate-spin text-emerald-400 shrink-0" />
+          <Loader2 className="w-5 h-5 animate-spin text-lime-400 shrink-0" />
           Checking session…
         </div>
       )}
@@ -172,14 +172,14 @@ export const AuthManager: React.FC = () => {
         <div className="space-y-4 min-h-[120px]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 border border-slate-800 rounded-xl p-4">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0">
-                <UserRound className="w-5 h-5 text-emerald-400" />
+              <div className="w-10 h-10 rounded-xl bg-lime-500/15 border border-lime-500/30 flex items-center justify-center shrink-0">
+                <UserRound className="w-5 h-5 text-lime-400" />
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   Logged in as
                 </p>
-                <p className="text-sm font-bold text-emerald-300 truncate">
+                <p className="text-sm font-bold text-lime-300 truncate">
                   {user.email ?? "Unknown email"}
                 </p>
                 {session?.expires_at != null && (
@@ -268,7 +268,7 @@ export const AuthManager: React.FC = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full min-h-[44px] px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full min-h-[44px] px-4 py-1.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 text-xs font-black inline-flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin shrink-0" />

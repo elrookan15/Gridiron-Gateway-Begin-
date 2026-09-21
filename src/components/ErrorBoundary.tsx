@@ -48,7 +48,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 this.setState({ hasError: false, error: null });
                 window.location.reload();
               }}
-              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+              className="w-full py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg shadow-lime-500/20"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Reload Gateway Application</span>

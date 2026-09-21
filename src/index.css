@@ -124,14 +124,14 @@ body.light-theme,
 }
 
 /* Gradients adaptation for top banners and header bars */
-.light-theme .from-emerald-950 {
-  --tw-gradient-from: #ecfdf5 !important; /* emerald-50 */
+.light-theme .from-lime-950 {
+  --tw-gradient-from: #f7fee7 !important; /* lime-50 */
 }
 .light-theme .via-slate-900 {
   --tw-gradient-via: #f1f5f9 !important; /* slate-100 */
 }
-.light-theme .to-emerald-950 {
-  --tw-gradient-to: #ecfdf5 !important;
+.light-theme .to-lime-950 {
+  --tw-gradient-to: #f7fee7 !important;
 }
 
 /* Accent badges contrast enhancement in light mode */
@@ -145,9 +145,6 @@ body.light-theme,
 .light-theme .text-amber-300,
 .light-theme .text-amber-400 {
   color: #d97706 !important; /* amber-600 */
-}
-.light-theme .text-emerald-400 {
-  color: #059669 !important; /* emerald-600 */
 }
 .light-theme .text-rose-400,
 .light-theme .text-rose-500 {

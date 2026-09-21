@@ -156,7 +156,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 text-slate-100 space-y-8 antialiased print:p-0 print:m-0 print:max-w-full print:bg-white print:text-slate-900">
       {/* Toast Notification */}
       {copyNotice && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2.5 text-xs animate-bounce print:hidden">
+        <div className="fixed bottom-6 right-6 z-50 bg-lime-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-lime-300 flex items-center gap-2.5 text-xs animate-bounce print:hidden">
           <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
           <span>{copyNotice}</span>
         </div>
@@ -165,13 +165,13 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
       {/* TOP ACTION BAR (Hidden in Print) */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 rounded-3xl p-4 sm:px-6 print:hidden shadow-xl">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-lime-500/10 border border-lime-500/30 flex items-center justify-center text-lime-400 shrink-0">
             <FileCheck className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
               Verified Recruiting Dossier
-              <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 text-[10px] border border-emerald-500/40 font-bold">
+              <span className="px-2 py-0.5 rounded-md bg-lime-500/20 text-lime-400 text-[10px] border border-lime-500/40 font-bold">
                 NCAA Verified
               </span>
             </h2>
@@ -184,7 +184,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             onClick={handleCopyScoutPackage}
-            className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-2xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-500/20 flex items-center justify-center gap-2"
           >
             <Copy className="w-4 h-4" />
             <span>Copy Scout Package</span>
@@ -201,15 +201,15 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
       </div>
 
       {/* ATHLETE HERO HEADER CARD */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden print:border-b-2 print:border-black print:rounded-none print:shadow-none print:bg-none print:p-0">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none print:hidden"></div>
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-lime-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden print:border-b-2 print:border-black print:rounded-none print:shadow-none print:bg-none print:p-0">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl pointer-events-none print:hidden"></div>
 
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6">
           {/* Avatar / Photo Placeholder */}
           <div className="relative shrink-0">
-            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl border-2 border-emerald-500/50 bg-slate-950 flex flex-col items-center justify-center overflow-hidden shadow-2xl relative print:border-black print:bg-slate-100">
+            <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-3xl border-2 border-lime-500/50 bg-slate-950 flex flex-col items-center justify-center overflow-hidden shadow-2xl relative print:border-black print:bg-slate-100">
               <div className="w-full h-full bg-gradient-to-tr from-slate-950 to-slate-900 flex flex-col items-center justify-center text-slate-400 print:from-slate-200 print:to-slate-100 print:text-slate-800">
-                <span className="text-3xl sm:text-4xl font-black text-emerald-400 print:text-black">
+                <span className="text-3xl sm:text-4xl font-black text-lime-400 print:text-black">
                   {profile.primaryPosition}
                 </span>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 print:text-slate-700">
@@ -242,7 +242,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
               <span
                 className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider border ${
                   profile.commitmentStatus === "Committed"
-                    ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/40 print:bg-slate-200 print:text-black"
+                    ? "bg-lime-500/20 text-lime-400 border-lime-500/40 print:bg-slate-200 print:text-black"
                     : "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 print:bg-slate-100 print:text-black"
                 }`}
               >
@@ -258,11 +258,11 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
               </h1>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-slate-300 text-xs sm:text-sm font-medium mt-1 print:text-slate-800">
                 <span className="flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 print:text-black" />
+                  <MapPin className="w-3.5 h-3.5 text-lime-400 shrink-0 print:text-black" />
                   {profile.highSchool} ({profile.cityState})
                 </span>
                 <span>•</span>
-                <span className="text-emerald-400 font-bold print:text-black">
+                <span className="text-lime-400 font-bold print:text-black">
                   NCAA ID: {profile.ncaaEligibilityId}
                 </span>
               </div>
@@ -317,10 +317,10 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5 print:border-slate-300 print:bg-white print:text-black print:shadow-none print:rounded-none">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800 print:border-slate-300">
             <h3 className="font-black text-white text-base uppercase tracking-wider flex items-center gap-2 print:text-black">
-              <Activity className="w-5 h-5 text-emerald-400 print:text-black" />
+              <Activity className="w-5 h-5 text-lime-400 print:text-black" />
               Verified Physical & Combine Metrics
             </h3>
-            <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider print:bg-slate-100 print:text-black">
+            <span className="px-2.5 py-0.5 rounded-md bg-lime-500/10 text-lime-400 border border-lime-500/30 text-[10px] font-black uppercase tracking-wider print:bg-slate-100 print:text-black">
               Laser Measured
             </span>
           </div>
@@ -345,14 +345,14 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
                 <span
                   className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
                     profile.fortyTimingType === "Laser"
-                      ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 print:bg-slate-200 print:text-black"
+                      ? "bg-lime-500/20 text-lime-400 border border-lime-500/40 print:bg-slate-200 print:text-black"
                       : "bg-amber-500/20 text-amber-400 border border-amber-500/40 print:bg-slate-200 print:text-black"
                   }`}
                 >
                   {profile.fortyTimingType}
                 </span>
               </div>
-              <p className="text-lg font-black text-emerald-400 print:text-black">
+              <p className="text-lg font-black text-lime-400 print:text-black">
                 {profile.fortyTime}s
               </p>
             </div>
@@ -435,7 +435,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
             </span>
             <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-1.5 text-xs text-slate-300 print:bg-slate-50 print:border-slate-200 print:text-black">
               <p className="font-semibold text-white print:text-black">{profile.seasonStats}</p>
-              <p className="text-emerald-400 font-bold print:text-black">{profile.honors}</p>
+              <p className="text-lime-400 font-bold print:text-black">{profile.honors}</p>
             </div>
           </div>
         </div>
@@ -458,7 +458,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block print:text-slate-600">
                 Unweighted GPA
               </span>
-              <p className="text-xl font-black text-emerald-400 print:text-black">
+              <p className="text-xl font-black text-lime-400 print:text-black">
                 {profile.gpa} / 4.0
               </p>
             </div>
@@ -507,7 +507,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
           {/* Parent & Contact Verification */}
           <div className="space-y-2 pt-2 border-t border-slate-800/80 print:border-slate-300">
             <span className="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center gap-1.5 print:text-slate-700">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400 print:text-black" /> Parent / Guardian & Recruiting Contacts
+              <ShieldCheck className="w-3.5 h-3.5 text-lime-400 print:text-black" /> Parent / Guardian & Recruiting Contacts
             </span>
             <div className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 space-y-2 text-xs text-slate-300 print:bg-slate-50 print:border-slate-200 print:text-black">
               <div className="flex justify-between">
@@ -556,7 +556,7 @@ export const AthleteDossier: React.FC<AthleteDossierProps> = ({
                 className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2 relative overflow-hidden print:bg-slate-50 print:border-slate-300"
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="px-2.5 py-0.5 rounded bg-slate-900 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider print:bg-slate-200 print:text-black">
+                  <span className="px-2.5 py-0.5 rounded bg-slate-900 text-lime-400 border border-lime-500/30 text-[10px] font-black uppercase tracking-wider print:bg-slate-200 print:text-black">
                     {offer.division} • {offer.conference}
                   </span>
                   <span className="text-[10px] font-bold text-slate-400 print:text-slate-600">

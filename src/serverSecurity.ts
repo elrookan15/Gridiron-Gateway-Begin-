@@ -1,5 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
+import { verifyStripeSignature } from "./stripe-webhook-verification";
+import { canRunAdminIngest, verifySupabaseAccessToken } from "./lib/supabaseUserAuth";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 
@@ -17,42 +19,103 @@ export function sanitizeErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-/** Require Bearer API token when API_ACCESS_TOKEN is configured (always required in production). */
-export function requireApiAuth(req: Request, res: Response, next: NextFunction): void {
-  const configured = process.env.API_ACCESS_TOKEN?.trim();
+export type GatewayAuthVia = "api_token" | "supabase_jwt" | "dev_open";
 
-  if (!configured) {
-    if (IS_PROD) {
-      res.status(503).json({
-        error: "AUTH_NOT_CONFIGURED",
-        message: "API_ACCESS_TOKEN must be set in production.",
-      });
-      return;
+export interface GatewayAuthContext {
+  via: GatewayAuthVia;
+  /** Supabase auth user id when `via` is `supabase_jwt`. */
+  userId: string | null;
+  /** Raw bearer token when the caller presented one. */
+  accessToken: string | null;
+}
+
+export type GatewayAuthedRequest = Request & { gatewayAuth?: GatewayAuthContext };
+
+/**
+ * Browser and operator share one gate:
+ * - `API_ACCESS_TOKEN` (server-to-server) OR
+ * - a Supabase user access token (`auth.getUser`).
+ * The SPA must send the user JWT. The operator token is never embedded in the Vite bundle.
+ * Development with neither secret configured stays open and stamps `dev_open`.
+ */
+export function requireApiAuth(req: Request, res: Response, next: NextFunction): void {
+  void authorizeRequest(req, res, next).catch((err: unknown) => {
+    console.error("[Security] auth middleware failed:", err);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "AUTH_FAILED", message: "Authorization check failed." });
     }
-    // Dev convenience: open APIs with a loud warning once per process
-    if (!(globalThis as { __ggAuthWarn?: boolean }).__ggAuthWarn) {
-      console.warn(
-        "[Security] API_ACCESS_TOKEN unset — API routes are open in development. Set a token before deploy."
-      );
-      (globalThis as { __ggAuthWarn?: boolean }).__ggAuthWarn = true;
-    }
+  });
+}
+
+async function authorizeRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
+  const configured = process.env.API_ACCESS_TOKEN?.trim();
+  const header = req.headers.authorization;
+  const token = header?.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+
+  if (configured && token && safeEqual(token, configured)) {
+    (req as GatewayAuthedRequest).gatewayAuth = {
+      via: "api_token",
+      userId: null,
+      accessToken: token,
+    };
     next();
     return;
   }
 
-  const header = req.headers.authorization;
-  if (!header?.startsWith("Bearer ")) {
-    res.status(401).json({ error: "UNAUTHORIZED", message: "Missing Bearer token." });
+  if (token) {
+    const user = await verifySupabaseAccessToken(token);
+    if (user) {
+      if (req.path.startsWith("/v1/admin/") && !canRunAdminIngest(user)) {
+        res.status(403).json({
+          error: "FORBIDDEN",
+          message: "Admin ingest requires a compliance officer or head coach session.",
+        });
+        return;
+      }
+      (req as GatewayAuthedRequest).gatewayAuth = {
+        via: "supabase_jwt",
+        userId: user.id,
+        accessToken: token,
+      };
+      next();
+      return;
+    }
+  }
+
+  if (!configured && !IS_PROD) {
+    if (!(globalThis as { __ggAuthWarn?: boolean }).__ggAuthWarn) {
+      console.warn(
+        "[Security] API_ACCESS_TOKEN unset — API routes are open in development. Set a token before deploy.",
+      );
+      (globalThis as { __ggAuthWarn?: boolean }).__ggAuthWarn = true;
+    }
+    (req as GatewayAuthedRequest).gatewayAuth = {
+      via: "dev_open",
+      userId: null,
+      accessToken: token || null,
+    };
+    next();
     return;
   }
 
-  const token = header.slice("Bearer ".length).trim();
-  if (!safeEqual(token, configured)) {
-    res.status(401).json({ error: "UNAUTHORIZED", message: "Invalid API token." });
+  if (!configured && IS_PROD) {
+    res.status(503).json({
+      error: "AUTH_NOT_CONFIGURED",
+      message: "API_ACCESS_TOKEN must be set in production.",
+    });
     return;
   }
 
-  next();
+  res.status(401).json({ error: "UNAUTHORIZED", message: "Missing or invalid Bearer token." });
+}
+
+/** True when the upgrade token is the operator secret or a live Supabase user JWT. */
+export async function isGatewayBearerAllowed(token: string): Promise<boolean> {
+  const configured = process.env.API_ACCESS_TOKEN?.trim();
+  if (configured && token && safeEqual(token, configured)) return true;
+  if (!token) return false;
+  const user = await verifySupabaseAccessToken(token);
+  return user !== null;
 }
 
 /** Shared-secret header auth for ingress webhooks (Catapult / device vendors). */
@@ -84,9 +147,10 @@ export function requireWebhookSecret(headerName: string, envVar: string) {
 }
 
 /**
- * Mock Stripe signature verification.
- * Production must use stripe.webhooks.constructEvent with the raw body.
- * Here we require Stripe-Signature presence + matching STRIPE_WEBHOOK_SECRET prefix check.
+ * Stripe signature check over the raw request body.
+ * Mount `express.raw({ type: "application/json" })` on the webhook route and
+ * keep that route out of `express.json()`. HMAC of `JSON.stringify(req.body)`
+ * is not a valid Stripe signature and is not used here.
  */
 export function verifyStripeWebhook(req: Request, res: Response, next: NextFunction): void {
   const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
@@ -114,14 +178,15 @@ export function verifyStripeWebhook(req: Request, res: Response, next: NextFunct
     return;
   }
 
-  // Lightweight HMAC over stable JSON body using the configured secret (demo stand-in).
-  const payload = typeof req.body === "string" ? req.body : JSON.stringify(req.body ?? {});
-  const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
-  const provided = signature.includes("v1=")
-    ? signature.split("v1=")[1]?.split(",")[0]?.trim() || ""
-    : signature;
+  if (!Buffer.isBuffer(req.body)) {
+    res.status(400).json({
+      error: "STRIPE_RAW_BODY_REQUIRED",
+      message: "Stripe webhook body must be the raw buffer. Parsed JSON cannot be re-signed.",
+    });
+    return;
+  }
 
-  if (!provided || !safeEqual(provided, expected)) {
+  if (!verifyStripeSignature(req.body, signature, secret)) {
     res.status(401).json({
       error: "STRIPE_SIGNATURE_INVALID",
       message: "Webhook signature verification failed.",

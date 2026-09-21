@@ -223,7 +223,7 @@ export const LeaderboardTop250: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search recruit, state, position..."
-              className="w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500"
+              className="w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-lime-500"
             />
           </div>
 
@@ -236,7 +236,7 @@ export const LeaderboardTop250: React.FC = () => {
                 onClick={() => setSelectedClass(yr)}
                 className={`min-h-[40px] px-3 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${
                   selectedClass === yr
-                    ? "bg-emerald-500 text-slate-950 shadow-sm"
+                    ? "bg-lime-500 text-slate-950 shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
@@ -306,7 +306,7 @@ export const LeaderboardTop250: React.FC = () => {
                 onClick={() => setSelectedPos(pos)}
                 className={`min-h-[40px] px-2.5 py-1.5 rounded-lg font-bold shrink-0 transition-all ${
                   selectedPos === pos
-                    ? "bg-emerald-500 text-slate-950"
+                    ? "bg-lime-500 text-slate-950"
                     : "bg-slate-950 text-slate-400 hover:text-white border border-slate-800"
                 }`}
               >
@@ -335,7 +335,7 @@ export const LeaderboardTop250: React.FC = () => {
       {/* LOAD / ERROR */}
       {loadState === "loading" && (
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 flex flex-col items-center justify-center gap-3 text-slate-300">
-          <Loader2 className="w-8 h-8 text-emerald-400 animate-spin shrink-0" />
+          <Loader2 className="w-8 h-8 text-lime-400 animate-spin shrink-0" />
           <p className="text-sm font-bold">Syncing live Top 250 from Supabase…</p>
           <p className="text-xs text-slate-500">Pulling athlete_profiles + CFBD schools directory</p>
         </div>
@@ -360,7 +360,7 @@ export const LeaderboardTop250: React.FC = () => {
 
       {/* TEAM CLASS RANKINGS */}
       {showClassCalculator && loadState === "success" && (
-        <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950 border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4">
+        <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-lime-950 border border-amber-500/40 rounded-2xl p-4 sm:p-6 shadow-2xl space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h3 className="text-lg font-bold text-white flex items-center gap-2 min-w-0">
               <Trophy className="w-5 h-5 text-amber-400 shrink-0" /> Team Recruiting Class Calculator
@@ -397,7 +397,7 @@ export const LeaderboardTop250: React.FC = () => {
             </div>
             <div>
               <p className="text-[10px] text-slate-400 font-bold uppercase">Avg Verified Composite</p>
-              <p className="text-2xl font-black text-emerald-400 mt-0.5 font-mono">
+              <p className="text-2xl font-black text-lime-400 mt-0.5 font-mono">
                 {avgComposite > 0 ? avgComposite.toFixed(4) : "—"}
               </p>
             </div>
@@ -449,12 +449,12 @@ export const LeaderboardTop250: React.FC = () => {
                       openAthleteModal(rec.id);
                     }
                   }}
-                  className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 sm:p-5 transition-all shadow-xl hover:shadow-2xl hover:shadow-emerald-500/10 flex flex-col justify-between group cursor-pointer text-left"
+                  className="bg-slate-900 border border-slate-800 hover:border-lime-500/50 rounded-2xl p-4 sm:p-5 transition-all shadow-xl hover:shadow-2xl hover:shadow-lime-500/10 flex flex-col justify-between group cursor-pointer text-left"
                 >
                   <div className="min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-4">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-black text-xs text-emerald-400 shrink-0">
+                        <div className="w-8 h-8 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center font-black text-xs text-lime-400 shrink-0">
                           #{rec.rank}
                         </div>
                         <img
@@ -463,7 +463,7 @@ export const LeaderboardTop250: React.FC = () => {
                           className="w-12 h-12 rounded-xl object-cover border border-slate-700 shrink-0 bg-slate-950"
                         />
                         <div className="min-w-0">
-                          <h2 className="font-extrabold text-base text-white group-hover:text-emerald-400 transition-colors truncate">
+                          <h2 className="font-extrabold text-base text-white group-hover:text-lime-400 transition-colors truncate">
                             {rec.fullName}
                           </h2>
                           <p className="text-xs text-slate-400 mt-0.5 truncate">
@@ -511,7 +511,7 @@ export const LeaderboardTop250: React.FC = () => {
                         <span
                           className={`font-bold px-2 py-0.5 rounded text-[11px] truncate max-w-[60%] ${
                             rec.commitmentStatus === "Committed"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              ? "bg-lime-500/20 text-lime-300 border border-lime-500/30"
                               : "bg-slate-800 text-slate-300"
                           }`}
                         >
@@ -580,7 +580,7 @@ export const LeaderboardTop250: React.FC = () => {
                         e.stopPropagation();
                         openAthleteModal(rec.id);
                       }}
-                      className="flex items-center gap-1 min-h-[44px] px-2 text-emerald-400 hover:text-emerald-300 font-bold transition-colors shrink-0"
+                      className="flex items-center gap-1 min-h-[44px] px-2 text-lime-400 hover:text-lime-300 font-bold transition-colors shrink-0"
                     >
                       View Profile <ChevronRight className="w-4 h-4 shrink-0" />
                     </button>

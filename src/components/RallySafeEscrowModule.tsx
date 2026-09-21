@@ -40,6 +40,7 @@ function snapshotForTransaction(
     athleteInTransferPortal,
     regulatoryPlane: "THIRD_PARTY_NIL_GO",
     payoutReleased: tx.payoutReleased,
+    dealAmountCents: tx.dealAmountCents,
   };
 }
 
@@ -118,7 +119,7 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({
   if (loading) {
     return (
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 min-h-[200px] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+        <Loader2 className="w-6 h-6 text-lime-500 animate-spin" />
       </div>
     );
   }
@@ -176,14 +177,14 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({
                     <span className="text-sm font-extrabold text-slate-200 truncate">
                       {tx.sponsorName}
                     </span>
-                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-widest rounded bg-slate-800 text-emerald-400 font-mono shrink-0">
+                    <span className="px-2 py-0.5 text-[10px] font-bold tracking-widest rounded bg-slate-800 text-lime-400 font-mono shrink-0">
                       {formatDealCents(tx.dealAmountCents)}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-1.5 text-xs font-mono">
                     {tx.clearinghouseStatus === "CLEARED" ? (
-                      <span className="text-emerald-500 flex items-center gap-1">
+                      <span className="text-lime-500 flex items-center gap-1">
                         <ShieldCheck className="w-3.5 h-3.5 shrink-0" /> CLEARED
                       </span>
                     ) : isNotCleared ? (
@@ -206,7 +207,7 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({
                 </div>
                 <div className="shrink-0 flex items-center">
                   {tx.payoutReleased ? (
-                    <div className="min-h-[44px] px-4 flex items-center justify-center rounded-lg border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-bold gap-2">
+                    <div className="min-h-[44px] px-4 flex items-center justify-center rounded-lg border border-lime-500/20 bg-lime-500/10 text-lime-400 text-xs font-bold gap-2">
                       <Unlock className="w-4 h-4 shrink-0" /> Funds Released
                     </div>
                   ) : (
@@ -216,7 +217,7 @@ export const RallySafeEscrowModule: React.FC<EscrowModuleProps> = ({
                       disabled={!canRelease || processingId === tx.id}
                       className={`min-h-[44px] px-4 rounded-lg text-xs font-bold inline-flex items-center justify-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
                         canRelease
-                          ? "bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                          ? "bg-lime-500 text-slate-950 hover:bg-lime-400"
                           : "bg-slate-800 text-slate-400 border border-slate-700"
                       }`}
                     >

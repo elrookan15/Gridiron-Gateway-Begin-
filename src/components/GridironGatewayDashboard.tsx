@@ -49,7 +49,6 @@ import {
   ShieldCheck,
   Database,
   FileSpreadsheet,
-  Coins,
   Loader2,
   AlertTriangle,
 } from "lucide-react";
@@ -68,8 +67,6 @@ import { CombineLaserApiModule } from "./CombineLaserApiModule";
 import { ParentConsentPortal } from "./ParentConsentPortal";
 import { SchoolsCsvImporter } from "./SchoolsCsvImporter";
 import { AiGameplanGeneratorModule } from "./AiGameplanGeneratorModule";
-import { RoundBlockTradeEscrowModule } from "./RoundBlockTradeEscrowModule";
-
 // ============================================================================
 // TYPES & DATA MODELS
 // ============================================================================
@@ -212,8 +209,8 @@ const LatestCommitsTickerBar: React.FC = () => {
         {/* Left Ticker Badge */}
         <div className="flex items-center gap-2 shrink-0 bg-slate-950 px-3 py-1 rounded-xl border border-amber-500/40 text-amber-300 font-extrabold text-[11px] uppercase tracking-wider shadow-md">
           <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-lime-500"></span>
           </span>
           <Flame className="w-3.5 h-3.5 text-amber-400" />
           <span>Latest Commits</span>
@@ -234,7 +231,7 @@ const LatestCommitsTickerBar: React.FC = () => {
                   onClick={() => setCurrentIndex(idx)}
                   className={`inline-flex items-center gap-2 px-3 py-1 rounded-xl border text-xs font-semibold transition-all shrink-0 ${
                     isActive
-                      ? "bg-slate-950 border-emerald-500/60 shadow-lg shadow-emerald-500/10 scale-105"
+                      ? "bg-slate-950 border-lime-500/60 shadow-lg shadow-lime-500/10 scale-105"
                       : "bg-slate-950/60 border-slate-800 text-slate-300 hover:border-slate-700"
                   }`}
                 >
@@ -255,7 +252,7 @@ const LatestCommitsTickerBar: React.FC = () => {
                   </span>
 
                   {/* Commitment Arrow */}
-                  <span className="text-emerald-400 font-black">➜</span>
+                  <span className="text-lime-400 font-black">➜</span>
 
                   {/* School Committed */}
                   <span className="font-black text-lime-400 flex items-center gap-1">
@@ -289,7 +286,7 @@ const LatestCommitsTickerBar: React.FC = () => {
             className="p-1 rounded-lg hover:bg-slate-800 hover:text-white transition-all min-h-[32px] min-w-[32px] flex items-center justify-center"
             title={isPaused ? "Play Ticker" : "Pause Ticker"}
           >
-            {isPaused ? <Play className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" /> : <Pause className="w-3.5 h-3.5 text-amber-400" />}
+            {isPaused ? <Play className="w-3.5 h-3.5 text-lime-400 fill-lime-400" /> : <Pause className="w-3.5 h-3.5 text-amber-400" />}
           </button>
           <button
             onClick={handleNext}
@@ -466,7 +463,6 @@ export const GridironGatewayDashboard: React.FC = () => {
     | "cap_gm"
     | "cognition"
     | "gameplan"
-    | "roundblock"
     | "nextgen_tech"
     | "film_studio"
     | "autonomous_scout"
@@ -640,7 +636,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
     switch (tier) {
       case "FBS_P4":
         return (
-          <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
+          <span className="px-2.5 py-0.5 rounded-full bg-lime-500/20 border border-lime-500/40 text-lime-400 text-[10px] font-black uppercase tracking-wider">
             FBS Power 4
           </span>
         );
@@ -680,7 +676,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950 pb-16">
+    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-lime-500 selection:text-slate-950 pb-16">
       {/* MULTI-TENANT ROLE SWITCHER BAR */}
       <MultiTenantRoleSelector
         activeUser={activeUser}
@@ -700,7 +696,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
       )}
       {/* Toast Notification */}
       {copyToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2 text-xs animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-lime-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-lime-300 flex items-center gap-2 text-xs animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
           <span>{copyToast}</span>
         </div>
@@ -732,17 +728,17 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
       <header className="no-print sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-400 to-cyan-500 p-0.5 flex items-center justify-center shadow-lg shadow-emerald-500/10">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-lime-400 to-cyan-500 p-0.5 flex items-center justify-center shadow-lg shadow-lime-500/10">
               <div className="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
-                <Shield className="w-5 h-5 text-emerald-400" />
+                <Shield className="w-5 h-5 text-lime-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-black text-white text-base tracking-wider uppercase">
-                  Gridiron<span className="text-emerald-400">Gateway</span>
+                  Gridiron<span className="text-lime-400">Gateway</span>
                 </span>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[9px] font-black uppercase">
+                <span className="px-2 py-0.5 rounded bg-lime-500/10 border border-lime-500/30 text-lime-400 text-[9px] font-black uppercase">
                   Client MVP
                 </span>
               </div>
@@ -758,7 +754,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("directory")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "directory"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -770,7 +766,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("dossier")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "dossier"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -782,7 +778,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("nil_calculator")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "nil_calculator"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -795,11 +791,11 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                 onClick={() => setActiveTab("cap_gm")}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                   activeTab === "cap_gm"
-                    ? "bg-emerald-500 text-slate-950 shadow-md"
+                    ? "bg-lime-500 text-slate-950 shadow-md"
                     : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                 }`}
               >
-                <DollarSign className="w-4 h-4 text-emerald-300" />
+                <DollarSign className="w-4 h-4 text-lime-300" />
                 <span className="hidden md:inline">CapGM $20.5M</span>
               </button>
             )}
@@ -808,7 +804,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("film_studio")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "film_studio"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -820,11 +816,11 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("autonomous_scout")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "autonomous_scout"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
-              <Bot className="w-4 h-4 text-emerald-300" />
+              <Bot className="w-4 h-4 text-lime-300" />
               <span className="hidden md:inline">Auto Scouting</span>
             </button>
 
@@ -832,7 +828,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("combine_laser")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "combine_laser"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -844,7 +840,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("parent_portal")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "parent_portal"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -856,7 +852,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("csv_importer")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "csv_importer"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -868,7 +864,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("cognition")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "cognition"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -880,7 +876,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               onClick={() => setActiveTab("gameplan")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "gameplan"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -889,22 +885,10 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             </button>
 
             <button
-              onClick={() => setActiveTab("roundblock")}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-                activeTab === "roundblock"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
-                  : "text-slate-400 hover:text-white hover:bg-slate-800/50"
-              }`}
-            >
-              <Coins className="w-4 h-4 text-emerald-400" />
-              <span className="hidden md:inline">RoundBlock Trade</span>
-            </button>
-
-            <button
               onClick={() => setActiveTab("nextgen_tech")}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
                 activeTab === "nextgen_tech"
-                  ? "bg-emerald-500 text-slate-950 shadow-md"
+                  ? "bg-lime-500 text-slate-950 shadow-md"
                   : "text-slate-400 hover:text-white hover:bg-slate-800/50"
               }`}
             >
@@ -958,7 +942,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             )}
             {/* Header Banner */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-4 relative overflow-hidden shadow-2xl">
-              <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-lime-500/5 rounded-full blur-3xl pointer-events-none" />
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
@@ -988,7 +972,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                     placeholder="Search by school, mascot, or conference..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 transition-all"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-lime-500/60 transition-all"
                   />
                   {searchQuery && (
                     <button
@@ -1005,7 +989,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                   <select
                     value={selectedState}
                     onChange={(e) => setSelectedState(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-emerald-500/60 appearance-none cursor-pointer"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-lime-500/60 appearance-none cursor-pointer"
                   >
                     <option value="All">All States</option>
                     {directoryStates.map((st) => (
@@ -1022,7 +1006,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                   <select
                     value={selectedDivision}
                     onChange={(e) => setSelectedDivision(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-emerald-500/60 appearance-none cursor-pointer"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-4 py-2.5 text-xs font-semibold text-white focus:outline-none focus:border-lime-500/60 appearance-none cursor-pointer"
                   >
                     <option value="All">All Divisions</option>
                     <option value="FBS_P4">FBS Power 4</option>
@@ -1050,7 +1034,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                 </div>
                 <button
                   onClick={handleResetDirectoryFilters}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-2 mx-auto transition-all shadow-lg shadow-emerald-500/20"
+                  className="px-5 py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs flex items-center gap-2 mx-auto transition-all shadow-lg shadow-lime-500/20"
                 >
                   <RefreshCw className="w-4 h-4" />
                   <span>Reset All Filters</span>
@@ -1061,7 +1045,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                 {filteredSchools.map((school) => (
                   <div
                     key={school.id}
-                    className="bg-slate-900 border border-slate-800 hover:border-emerald-500/40 rounded-3xl p-5 space-y-4 transition-all hover:shadow-2xl hover:shadow-emerald-500/5 group flex flex-col justify-between"
+                    className="bg-slate-900 border border-slate-800 hover:border-lime-500/40 rounded-3xl p-5 space-y-4 transition-all hover:shadow-2xl hover:shadow-lime-500/5 group flex flex-col justify-between"
                   >
                     <div className="space-y-3">
                       {/* Top Header */}
@@ -1070,10 +1054,10 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                           <img
                             src={school.logoUrl}
                             alt={school.name}
-                            className="w-12 h-12 rounded-2xl object-cover bg-slate-950 p-1 border border-slate-800 shrink-0 group-hover:border-emerald-500/50"
+                            className="w-12 h-12 rounded-2xl object-cover bg-slate-950 p-1 border border-slate-800 shrink-0 group-hover:border-lime-500/50"
                           />
                           <div>
-                            <h3 className="font-black text-white text-base group-hover:text-emerald-300 transition-colors leading-tight">
+                            <h3 className="font-black text-white text-base group-hover:text-lime-300 transition-colors leading-tight">
                               {school.name}
                             </h3>
                             <p className="text-xs text-slate-400 font-semibold">
@@ -1108,7 +1092,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                         <ul className="space-y-1 text-xs text-slate-300">
                           {school.programHighlights.map((hl, i) => (
                             <li key={i} className="flex items-center gap-1.5">
-                              <Sparkles className="w-3 h-3 text-emerald-400 shrink-0" />
+                              <Sparkles className="w-3 h-3 text-lime-400 shrink-0" />
                               <span className="line-clamp-1">{hl}</span>
                             </li>
                           ))}
@@ -1122,7 +1106,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                         {school.primaryRecruitingEmail ? (
                           <a
                             href={`mailto:${school.primaryRecruitingEmail}`}
-                            className="flex items-center gap-1.5 text-emerald-400 hover:underline font-bold min-w-0"
+                            className="flex items-center gap-1.5 text-lime-400 hover:underline font-bold min-w-0"
                           >
                             <Mail className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate max-w-[180px]">{school.primaryRecruitingEmail}</span>
@@ -1154,7 +1138,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             {/* ACTION BAR FOR PRINT & COPY */}
             <div className="no-print bg-slate-900 border border-slate-800 rounded-3xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl">
               <div className="flex items-center gap-2">
-                <UserCheck className="w-5 h-5 text-emerald-400" />
+                <UserCheck className="w-5 h-5 text-lime-400" />
                 <span className="text-xs font-black text-white uppercase tracking-wider">
                   Verified Scout Dossier # {MOCK_ATHLETE_DOSSIER.id}
                 </span>
@@ -1163,7 +1147,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   onClick={handleCopyScoutPackage}
-                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/40 text-emerald-400 font-black text-xs flex items-center justify-center gap-2 transition-all hover:bg-emerald-500/10"
+                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-slate-950 border border-slate-800 hover:border-lime-500/40 text-lime-400 font-black text-xs flex items-center justify-center gap-2 transition-all hover:bg-lime-500/10"
                 >
                   <Copy className="w-4 h-4" />
                   <span>Copy Scout Package</span>
@@ -1171,7 +1155,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
 
                 <button
                   onClick={handlePrintDossier}
-                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-500/20"
+                  className="flex-1 sm:flex-initial px-4 py-2 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs flex items-center justify-center gap-2 transition-all shadow-lg shadow-lime-500/20"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Print Dossier</span>
@@ -1185,7 +1169,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-3 py-1 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-black">
+                    <span className="px-3 py-1 rounded-xl bg-lime-500/20 border border-lime-500/40 text-lime-400 text-xs font-black">
                       {MOCK_ATHLETE_DOSSIER.position} / {MOCK_ATHLETE_DOSSIER.secondaryPosition}
                     </span>
                     <span className="px-3 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs font-black">
@@ -1202,7 +1186,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                       {MOCK_ATHLETE_DOSSIER.fullName}
                     </h1>
                     <p className="text-sm text-slate-400 font-semibold flex items-center gap-2 mt-1">
-                      <MapPin className="w-4 h-4 text-emerald-400" />
+                      <MapPin className="w-4 h-4 text-lime-400" />
                       {MOCK_ATHLETE_DOSSIER.highSchool} • {MOCK_ATHLETE_DOSSIER.city}, {MOCK_ATHLETE_DOSSIER.state}
                     </p>
                   </div>
@@ -1213,8 +1197,8 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                   <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider block">
                     Commitment Status
                   </span>
-                  <div className="flex items-center justify-end gap-2 text-emerald-400 font-black text-base">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <div className="flex items-center justify-end gap-2 text-lime-400 font-black text-base">
+                    <CheckCircle2 className="w-5 h-5 text-lime-400" />
                     <span>Committed to {MOCK_ATHLETE_DOSSIER.committedSchool}</span>
                   </div>
                   <span className="text-[11px] text-slate-400 font-medium block">
@@ -1228,7 +1212,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                 {/* Physical & Biometric Measurements */}
                 <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-4">
                   <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-slate-800/80 pb-2">
-                    <Activity className="w-4 h-4 text-emerald-400" />
+                    <Activity className="w-4 h-4 text-lime-400" />
                     Physical & Biometric Specs
                   </h3>
 
@@ -1249,7 +1233,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
 
                     <div className="bg-slate-900 p-3 rounded-xl border border-slate-800 space-y-0.5 col-span-2">
                       <span className="text-[10px] font-extrabold text-slate-500 uppercase">Season Highlights</span>
-                      <p className="text-xs font-bold text-emerald-400">{MOCK_ATHLETE_DOSSIER.seasonStats}</p>
+                      <p className="text-xs font-bold text-lime-400">{MOCK_ATHLETE_DOSSIER.seasonStats}</p>
                     </div>
                   </div>
                 </div>
@@ -1306,7 +1290,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                     </div>
                     <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                       <span className="text-[10px] font-extrabold text-slate-500 block">Core NCAA GPA</span>
-                      <span className="text-base font-black text-emerald-400">{MOCK_ATHLETE_DOSSIER.coreGpa}</span>
+                      <span className="text-base font-black text-lime-400">{MOCK_ATHLETE_DOSSIER.coreGpa}</span>
                     </div>
                     <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                       <span className="text-[10px] font-extrabold text-slate-500 block">SAT Score</span>
@@ -1334,7 +1318,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
               {/* VERBAL OFFERS TIMELINE */}
               <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-4">
                 <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider flex items-center gap-2 border-b border-slate-800/80 pb-2">
-                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  <TrendingUp className="w-4 h-4 text-lime-400" />
                   Scholarship Offer Timeline
                 </h3>
 
@@ -1353,7 +1337,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
                         <span
                           className={`text-[9px] font-black px-2 py-0.5 rounded ${
                             offer.status === "Committed"
-                              ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                              ? "bg-lime-500/20 text-lime-300 border border-lime-500/40"
                               : "bg-slate-800 text-slate-300"
                           }`}
                         >
@@ -1386,7 +1370,7 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
             {/* Header Banner */}
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 space-y-2 relative overflow-hidden shadow-2xl">
               <div className="flex items-center gap-2">
-                <Calculator className="w-6 h-6 text-emerald-400" />
+                <Calculator className="w-6 h-6 text-lime-400" />
                 <h1 className="text-2xl font-black text-white uppercase tracking-tight">
                   NIL Valuation Estimator
                 </h1>
@@ -1470,15 +1454,6 @@ GRIDIRON VERIFIED RECORD # ${MOCK_ATHLETE_DOSSIER.id}
         {activeTab === "gameplan" && (
           <div className="animate-fadeIn">
             <AiGameplanGeneratorModule />
-          </div>
-        )}
-
-        {/* ==================================================================== */}
-        {/* TAB 8.2: ROUNDBLOCK PROTOCOL SOLANA TRADE ESCROW MODULE               */}
-        {/* ==================================================================== */}
-        {activeTab === "roundblock" && (
-          <div className="animate-fadeIn">
-            <RoundBlockTradeEscrowModule />
           </div>
         )}
 

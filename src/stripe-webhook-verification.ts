@@ -64,8 +64,25 @@ export class MockComplianceService {
 
 export const mockComplianceService = new MockComplianceService();
 
-// Mock Stripe Webhook Constructor Signature Verifier
-export function verifyStripeSignature(rawBody: Buffer | string, signatureHeader: string, webhookSecret: string): boolean {
+const STRIPE_SIGNATURE_TOLERANCE_SEC = 300;
+
+function timingSafeHexEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
+/**
+ * Stripe webhook signature: HMAC-SHA256 of `${timestamp}.${rawBody}` compared
+ * to the `v1` field. The signed bytes must be the raw request body.
+ */
+export function verifyStripeSignature(
+  rawBody: Buffer | string,
+  signatureHeader: string,
+  webhookSecret: string,
+  toleranceSec = STRIPE_SIGNATURE_TOLERANCE_SEC,
+): boolean {
   if (!signatureHeader || !webhookSecret) return false;
   try {
     const parts = signatureHeader.split(",");
@@ -74,14 +91,21 @@ export function verifyStripeSignature(rawBody: Buffer | string, signatureHeader:
 
     if (!timestampPart || !v1Part) return false;
 
-    const timestamp = timestampPart.split("=")[1];
-    const expectedSignature = v1Part.split("=")[1];
+    const timestamp = timestampPart.slice("t=".length);
+    const expectedSignature = v1Part.slice("v1=".length);
+    if (!timestamp || !expectedSignature) return false;
 
-    const payload = `${timestamp}.${rawBody.toString()}`;
-    const hmac = crypto.createHmac("sha256", webhookSecret).update(payload).digest("hex");
+    const timestampSec = Number(timestamp);
+    if (!Number.isFinite(timestampSec)) return false;
+    const ageSec = Math.abs(Math.floor(Date.now() / 1000) - timestampSec);
+    if (ageSec > toleranceSec) return false;
 
-    return hmac === expectedSignature;
-  } catch (err) {
+    const bodyText = Buffer.isBuffer(rawBody) ? rawBody.toString("utf8") : rawBody;
+    const payload = `${timestamp}.${bodyText}`;
+    const hmac = crypto.createHmac("sha256", webhookSecret).update(payload, "utf8").digest("hex");
+
+    return timingSafeHexEqual(hmac, expectedSignature);
+  } catch {
     return false;
   }
 }
@@ -91,8 +115,11 @@ export async function handleStripeWebhook(req: Request, res: Response): Promise<
   const signature = req.headers["stripe-signature"] as string;
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "whsec_mock_gridiron_gateway_secret_2026";
 
-  // Raw Buffer Signature Verification
-  const rawBody = req.body instanceof Buffer ? req.body : Buffer.from(JSON.stringify(req.body));
+  if (!Buffer.isBuffer(req.body)) {
+    res.status(400).send("Webhook Error: raw body buffer is required for signature verification");
+    return;
+  }
+  const rawBody = req.body;
   const isValidSignature = verifyStripeSignature(rawBody, signature, webhookSecret);
 
   if (!isValidSignature && process.env.NODE_ENV === "production") {
@@ -102,11 +129,7 @@ export async function handleStripeWebhook(req: Request, res: Response): Promise<
 
   let event: any;
   try {
-    const bodyString = Buffer.isBuffer(req.body)
-      ? req.body.toString("utf8")
-      : typeof req.body === "string"
-      ? req.body
-      : JSON.stringify(req.body);
+    const bodyString = rawBody.toString("utf8");
     event = JSON.parse(bodyString);
   } catch (err) {
     res.status(400).send("Webhook Error: Invalid JSON Payload");

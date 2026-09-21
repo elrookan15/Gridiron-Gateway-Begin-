@@ -19,9 +19,10 @@ import {
   isContactMethod,
   requireApiAuth,
   requireWebhookSecret,
-  safeEqual,
   sanitizeErrorMessage,
   verifyStripeWebhook,
+  isGatewayBearerAllowed,
+  type GatewayAuthedRequest,
 } from "./src/serverSecurity";
 import { syncCfbdTeams } from "./src/cfbdIngestionPipeline";
 import {
@@ -37,7 +38,10 @@ import type {
   NilEscrowCampaign,
   NilRegulatoryPlane,
 } from "./src/types";
-import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
+import {
+  canReleaseNilEscrow,
+  NIL_GO_REPORTING_THRESHOLD_CENTS,
+} from "./src/lib/rallySafeReleaseGate";
 import {
   isDirectoryPostgresConfigured,
   persistCoachesToPostgres,
@@ -59,7 +63,11 @@ import {
   isComplianceAuditPostgresConfigured,
   persistComplianceAuditToPostgres,
 } from "./src/lib/complianceAuditPersist";
-import type { ComplianceGateDispatchRequest } from "./src/types";
+import type { ComplianceGateDispatchRequest, GuardianRelationship } from "./src/types";
+import {
+  insertParentalConsentForSession,
+  listParentalConsentsForSession,
+} from "./src/lib/parentalConsentServerWrite";
 
 dotenv.config();
 
@@ -77,7 +85,15 @@ setComplianceAuditPersister(async (input) => {
   return { ok: true, id: `DEV-${Date.now()}` };
 });
 
-app.use(express.json({ limit: "2mb" }));
+const STRIPE_WEBHOOK_PATH = "/api/v1/rallysafe/webhooks/stripe";
+
+app.use((req, res, next) => {
+  const pathOnly = req.originalUrl.split("?")[0];
+  if (pathOnly === STRIPE_WEBHOOK_PATH) {
+    return next();
+  }
+  return express.json({ limit: "2mb" })(req, res, next);
+});
 
 // ---------------------------------------------------------------------------
 // Typed domain stores (in-memory until Supabase schema.sql is wired)
@@ -693,21 +709,16 @@ interface LaserCombineRecord {
   timestamp: string;
 }
 
-interface ParentConsentDbRecord {
-  id: string;
-  athleteId: string;
-  athleteName: string;
-  parentName: string;
-  parentEmail: string;
-  consentScope: string[];
-  nilEscrowDisclosureAcknowledged: boolean;
-  minorSafetyStatus: "COPPA_FERPA_VERIFIED";
-  coppaComplianceStatus: "COPPA / FERPA Verified";
-  timestamp: string;
+const LASER_COMBINE_DB: LaserCombineRecord[] = [];
+
+function isGuardianRelationship(value: unknown): value is GuardianRelationship {
+  return value === "MOTHER" || value === "FATHER" || value === "LEGAL_GUARDIAN";
 }
 
-const LASER_COMBINE_DB: LaserCombineRecord[] = [];
-const PARENT_CONSENT_DB: ParentConsentDbRecord[] = [];
+function bearerToken(req: express.Request): string {
+  const header = req.headers.authorization;
+  return header?.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+}
 
 app.post(
   "/api/v1/combines/webhooks/laser",
@@ -795,85 +806,80 @@ app.get("/api/v1/combines/laser-entries", async (_req, res) => {
   });
 });
 
-app.post("/api/v1/compliance/parent-consent", mutateRateLimit, (req, res) => {
+app.post("/api/v1/compliance/parent-consent", mutateRateLimit, async (req, res) => {
+  const auth = (req as GatewayAuthedRequest).gatewayAuth;
+  if (auth?.via === "api_token") {
+    return res.status(403).json({
+      error: "CONSENT_REQUIRES_ATHLETE_SESSION",
+      message: "Parent consent must be signed by the athlete session, not the operator API token.",
+    });
+  }
+
+  const token = bearerToken(req);
+  const body = req.body ?? {};
+  const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : "";
+  const parentName =
+    (typeof body.parentName === "string" && body.parentName.trim()) ||
+    (typeof body.guardianName === "string" && body.guardianName.trim()) ||
+    "";
+  const parentEmail =
+    (typeof body.parentEmail === "string" && body.parentEmail.trim()) ||
+    (typeof body.guardianEmail === "string" && body.guardianEmail.trim()) ||
+    "";
+  const relationship = body.relationship;
+  const digitalSignature =
+    typeof body.digitalSignature === "string" ? body.digitalSignature.trim() : parentName;
+  const flagsAcknowledged =
+    body.coppaConsent === true &&
+    body.messagingConsent === true &&
+    body.biometricConsent === true;
+
+  if (!isGuardianRelationship(relationship) || !flagsAcknowledged) {
+    return res.status(400).json({
+      error: "MISSING_CONSENT_DATA",
+      message: "relationship plus coppaConsent, messagingConsent, and biometricConsent are required.",
+    });
+  }
+
   try {
-    const body = req.body ?? {};
-    const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : "";
-    const athleteName =
-      typeof body.athleteName === "string" && body.athleteName.trim()
-        ? body.athleteName.trim()
-        : athleteId || "Student-Athlete";
-    const parentName =
-      (typeof body.parentName === "string" && body.parentName.trim()) ||
-      (typeof body.guardianName === "string" && body.guardianName.trim()) ||
-      "";
-    const parentEmail =
-      (typeof body.parentEmail === "string" && body.parentEmail.trim()) ||
-      (typeof body.guardianEmail === "string" && body.guardianEmail.trim()) ||
-      "";
-    const consentScope = body.consentScope;
-    const nilEscrowDisclosureAcknowledged =
-      body.nilEscrowDisclosureAcknowledged === true || body.milestoneDisclosuresAgreed === true;
-
-    if (!athleteId) {
-      return res.status(400).json({
-        error: "MISSING_CONSENT_DATA",
-        message: "athleteId is required.",
-      });
-    }
-    if (!parentEmail.includes("@")) {
-      return res.status(400).json({
-        error: "MISSING_CONSENT_DATA",
-        message: "Valid parentEmail / guardianEmail is required.",
-      });
-    }
-    if (!parentName) {
-      return res.status(400).json({
-        error: "MISSING_CONSENT_DATA",
-        message: "parentName / guardianName is required.",
-      });
-    }
-    if (!nilEscrowDisclosureAcknowledged) {
-      return res.status(400).json({
-        error: "NIL_DISCLOSURE_REQUIRED",
-        message: "RallySafe NIL escrow disclosure must be acknowledged.",
-      });
-    }
-
-    const record: ParentConsentDbRecord = {
-      id: `consent_${Date.now()}`,
+    const record = await insertParentalConsentForSession(token, {
       athleteId,
-      athleteName,
       parentName,
-      parentEmail: parentEmail.toLowerCase(),
-      consentScope: Array.isArray(consentScope)
-        ? consentScope.filter((s: unknown) => typeof s === "string")
-        : ["Messaging Consent", "NIL Escrow Authorization"],
-      nilEscrowDisclosureAcknowledged: true,
-      minorSafetyStatus: "COPPA_FERPA_VERIFIED",
-      coppaComplianceStatus: "COPPA / FERPA Verified",
-      timestamp: new Date().toISOString(),
-    };
-
-    PARENT_CONSENT_DB.unshift(record);
+      parentEmail,
+      relationship,
+      coppaConsent: true,
+      messagingConsent: true,
+      biometricConsent: true,
+      digitalSignature,
+    });
 
     return res.status(200).json({
       status: "CONSENT_RECORDED",
-      id: record.id,
-      consentId: record.id,
-      coppaComplianceStatus: record.coppaComplianceStatus,
-      minorSafetyStatus: record.minorSafetyStatus,
-      safetyStatus: "CONSENT_GRANTED",
+      id: record.consentId,
+      consentId: record.consentId,
+      safetyStatus: record.safetyStatus,
       athleteId: record.athleteId,
-      athleteName: record.athleteName,
-      parentName: record.parentName,
-      parentEmail: record.parentEmail,
-      guardianName: record.parentName,
-      guardianEmail: record.parentEmail,
-      consentScope: record.consentScope,
-      timestamp: record.timestamp,
+      parentName: record.guardianName,
+      parentEmail: record.guardianEmail,
+      guardianName: record.guardianName,
+      guardianEmail: record.guardianEmail,
+      relationship: record.relationship,
+      timestamp: record.signatureTimestamp,
     });
   } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message.includes("Authentication required")) {
+      return res.status(401).json({ error: "UNAUTHORIZED", message });
+    }
+    if (message.includes("FAIL_CLOSED")) {
+      return res.status(403).json({ error: "CONSENT_ATHLETE_MISMATCH", message });
+    }
+    if (message.includes("incomplete") || message.includes("athleteId is required")) {
+      return res.status(400).json({ error: "MISSING_CONSENT_DATA", message });
+    }
+    if (message.includes("Database connection missing")) {
+      return res.status(503).json({ error: "CONSENT_STORE_UNAVAILABLE", message });
+    }
     console.error("Parent consent error:", err);
     return res.status(500).json({
       error: sanitizeErrorMessage(err, "Failed to record parent consent."),
@@ -881,8 +887,29 @@ app.post("/api/v1/compliance/parent-consent", mutateRateLimit, (req, res) => {
   }
 });
 
-app.get("/api/v1/compliance/parent-consent", (_req, res) => {
-  res.json({ total: PARENT_CONSENT_DB.length, consents: PARENT_CONSENT_DB });
+app.get("/api/v1/compliance/parent-consent", async (req, res) => {
+  const auth = (req as GatewayAuthedRequest).gatewayAuth;
+  if (auth?.via === "api_token") {
+    return res.status(403).json({
+      error: "CONSENT_REQUIRES_ATHLETE_SESSION",
+      message: "Consent reads require the athlete session.",
+    });
+  }
+  try {
+    const consents = await listParentalConsentsForSession(bearerToken(req));
+    return res.json({ total: consents.length, consents });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "";
+    if (message.includes("Authentication required")) {
+      return res.status(401).json({ error: "UNAUTHORIZED", message });
+    }
+    if (message.includes("Database connection missing")) {
+      return res.status(503).json({ error: "CONSENT_STORE_UNAVAILABLE", message });
+    }
+    return res.status(500).json({
+      error: sanitizeErrorMessage(err, "Failed to read parent consent."),
+    });
+  }
 });
 
 app.post("/api/compliance/run-tests", mutateRateLimit, (_req, res) => {
@@ -1126,13 +1153,12 @@ app.post("/api/v1/rallysafe/campaigns", mutateRateLimit, async (req, res) => {
     !sponsorId ||
     !athleteId ||
     !Number.isInteger(amountUsd) ||
-    amountUsd <= 0 ||
+    amountUsd < NIL_GO_REPORTING_THRESHOLD_CENTS ||
     amountUsd > 100_000_000
   ) {
     return res.status(400).json({
       error: "INVALID_CAMPAIGN_PAYLOAD",
-      message:
-        "Missing required fields or amountUsd is not a positive integer in cents (max $1,000,000.00).",
+      message: `amountUsd must be an integer in cents between the NIL Go reporting floor ($${NIL_GO_REPORTING_THRESHOLD_CENTS / 100}) and $1,000,000.00.`,
     });
   }
 
@@ -1235,6 +1261,7 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, asy
     stripeMilestoneVerified: campaign.stripeMilestoneVerified,
     athleteInTransferPortal: campaign.athleteInTransferPortal,
     regulatoryPlane: campaign.regulatoryPlane,
+    dealAmountCents: campaign.amountUsdCents,
   });
 
   if (gate.ok === false) {
@@ -1291,8 +1318,22 @@ app.post("/api/v1/rallysafe/campaigns/:campaignId/release", mutateRateLimit, asy
   });
 });
 
-app.post("/api/v1/rallysafe/webhooks/stripe", verifyStripeWebhook, async (req, res) => {
-  const { id, type, data } = req.body ?? {};
+app.post(
+  STRIPE_WEBHOOK_PATH,
+  express.raw({ type: "application/json" }),
+  verifyStripeWebhook,
+  async (req, res) => {
+  let parsed: { id?: unknown; type?: unknown; data?: { object?: { id?: string; metadata?: { campaignId?: string } } } };
+  try {
+    const raw = Buffer.isBuffer(req.body) ? req.body.toString("utf8") : "";
+    parsed = JSON.parse(raw) as typeof parsed;
+  } catch {
+    return res.status(400).json({
+      error: "INVALID_WEBHOOK_PAYLOAD",
+      message: "Webhook body is not JSON.",
+    });
+  }
+  const { id, type, data } = parsed;
 
   if (typeof id !== "string" || typeof type !== "string" || !id || !type) {
     return res.status(400).json({
@@ -1459,6 +1500,7 @@ async function startServer() {
   const wss = new WebSocketServer({ noServer: true });
 
   server.on("upgrade", (request, socket, head) => {
+    void (async () => {
     const url = request.url || "";
     if (!url.startsWith("/api/v1/bioscan/stream")) {
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
@@ -1468,28 +1510,30 @@ async function startServer() {
 
     // Optional token on WS: ?token= or Sec-WebSocket-Protocol
     const configured = process.env.API_ACCESS_TOKEN?.trim();
-    if (configured) {
-      const requestUrl = new URL(url, "http://localhost");
-      const token =
-        requestUrl.searchParams.get("token") ||
-        String(request.headers["sec-websocket-protocol"] || "")
-          .split(",")
-          .map((s) => s.trim())
-          .find(Boolean) ||
-        "";
-      if (!token || !safeEqual(token, configured)) {
-        socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+    const requestUrl = new URL(url, "http://localhost");
+    const token =
+      requestUrl.searchParams.get("token") ||
+      String(request.headers["sec-websocket-protocol"] || "")
+        .split(",")
+        .map((s) => s.trim())
+        .find(Boolean) ||
+      "";
+    if (configured || IS_PROD) {
+      const allowed = token ? await isGatewayBearerAllowed(token) : false;
+      if (!allowed) {
+        const status = !configured && IS_PROD ? "503 Service Unavailable" : "401 Unauthorized";
+        socket.write(`HTTP/1.1 ${status}\r\n\r\n`);
         socket.destroy();
         return;
       }
-    } else if (IS_PROD) {
-      socket.write("HTTP/1.1 503 Service Unavailable\r\n\r\n");
-      socket.destroy();
-      return;
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       wss.emit("connection", ws, request);
+    });
+    })().catch((err: unknown) => {
+      console.error("[BioScan WebSocket] upgrade auth failed:", err);
+      socket.destroy();
     });
   });
 

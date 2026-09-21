@@ -58,8 +58,8 @@ const STAGE_META: Record<
   },
   Committed: {
     subtitle: "Verbal / NLI",
-    accent: "border-t-emerald-500",
-    headerBg: "bg-emerald-500/10 text-emerald-300",
+    accent: "border-t-lime-500",
+    headerBg: "bg-lime-500/10 text-lime-300",
     icon: <GraduationCap className="w-4 h-4 shrink-0" />,
   },
 };
@@ -176,9 +176,9 @@ export const RecruitingPipeline: React.FC<{ schoolId?: string }> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-lime-950/40 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-lime-500/10 border border-lime-500/30 text-lime-400 text-xs font-bold uppercase tracking-wider mb-2">
             <ShieldCheck className="w-3.5 h-3.5 shrink-0" /> Coach Recruiting Pipeline
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
@@ -327,7 +327,7 @@ const PipelineCard: React.FC<PipelineCardProps> = ({
   onMoveLeft,
   onMoveRight,
 }) => (
-  <article className="bg-slate-950 border border-slate-800 hover:border-emerald-500/40 rounded-xl p-3.5 shadow-md transition-colors space-y-3">
+  <article className="bg-slate-950 border border-slate-800 hover:border-lime-500/40 rounded-xl p-3.5 shadow-md transition-colors space-y-3">
     <div className="flex items-start justify-between gap-2 min-w-0">
       <div className="min-w-0">
         <h3 className="text-sm font-extrabold text-white truncate">{offer.athleteName}</h3>
@@ -346,7 +346,7 @@ const PipelineCard: React.FC<PipelineCardProps> = ({
 
     <div className="flex flex-wrap gap-1.5">
       {offer.isOfficial && (
-        <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+        <span className="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-lime-400 bg-lime-500/10 border border-lime-500/20">
           Official
         </span>
       )}
@@ -370,7 +370,7 @@ const PipelineCard: React.FC<PipelineCardProps> = ({
         type="button"
         onClick={onMoveRight}
         disabled={!canMoveRight || isMoving}
-        className="min-h-[44px] flex-1 px-2 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-[11px] font-bold inline-flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
+        className="min-h-[44px] flex-1 px-2 py-1.5 rounded-xl bg-lime-500/15 hover:bg-lime-500/25 border border-lime-500/30 text-lime-300 text-[11px] font-bold inline-flex items-center justify-center gap-1 disabled:opacity-40 disabled:cursor-not-allowed"
         aria-label={`Advance ${offer.athleteName} to next stage`}
       >
         {isMoving ? (

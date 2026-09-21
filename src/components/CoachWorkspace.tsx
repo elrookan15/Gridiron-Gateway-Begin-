@@ -468,7 +468,7 @@ export const CoachWorkspace: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 text-slate-100 space-y-6 antialiased">
       {/* Toast Notification */}
       {copyNotice && (
-        <div className="fixed bottom-6 right-6 z-50 bg-emerald-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-emerald-300 flex items-center gap-2.5 text-xs animate-bounce">
+        <div className="fixed bottom-6 right-6 z-50 bg-lime-400 text-slate-950 font-black px-4 py-3 rounded-2xl shadow-2xl border border-lime-300 flex items-center gap-2.5 text-xs animate-bounce">
           <CheckCircle2 className="w-4 h-4 text-slate-950 shrink-0" />
           <span>{copyNotice}</span>
         </div>
@@ -478,7 +478,7 @@ export const CoachWorkspace: React.FC = () => {
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-5">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500/20 to-cyan-500/10 border border-lime-500/40 flex items-center justify-center text-lime-400 shrink-0 shadow-inner">
               <Shield className="w-6 h-6" />
             </div>
             <div>
@@ -486,7 +486,7 @@ export const CoachWorkspace: React.FC = () => {
                 <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight uppercase">
                   Coaching Staff Pipeline Workspace
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-[10px] font-black tracking-wider uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-lime-500/20 border border-lime-500/40 text-lime-400 text-[10px] font-black tracking-wider uppercase">
                   Live Scouting
                 </span>
               </div>
@@ -530,7 +530,7 @@ export const CoachWorkspace: React.FC = () => {
             <span className="text-[10px] font-extrabold uppercase text-slate-500 tracking-wider">
               Offered Targets
             </span>
-            <p className="text-xl font-black text-emerald-400">{offeredCount}</p>
+            <p className="text-xl font-black text-lime-400">{offeredCount}</p>
           </div>
 
           <div className="bg-slate-950/80 p-3 rounded-2xl border border-slate-800 space-y-0.5">
@@ -555,7 +555,7 @@ export const CoachWorkspace: React.FC = () => {
         <div className="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-5 shadow-xl">
           <div className="flex items-center justify-between pb-3 border-b border-slate-800">
             <h2 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-              <Filter className="w-4 h-4 text-emerald-400" />
+              <Filter className="w-4 h-4 text-lime-400" />
               Scouting Filters
             </h2>
             <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-400">
@@ -575,7 +575,7 @@ export const CoachWorkspace: React.FC = () => {
                 placeholder="Name, HS, City..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/60 transition-all"
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs font-semibold text-white placeholder-slate-500 focus:outline-none focus:border-lime-500/60 transition-all"
               />
               {searchQuery && (
                 <button
@@ -628,7 +628,7 @@ export const CoachWorkspace: React.FC = () => {
             <select
               value={selectedState}
               onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-emerald-500/60"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-lime-500/60"
             >
               {stateList.map((st) => (
                 <option key={st} value={st}>
@@ -646,7 +646,7 @@ export const CoachWorkspace: React.FC = () => {
             <select
               value={selectedPosition}
               onChange={(e) => setSelectedPosition(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-emerald-500/60"
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:border-lime-500/60"
             >
               {positionList.map((pos) => (
                 <option key={pos} value={pos}>
@@ -677,7 +677,7 @@ export const CoachWorkspace: React.FC = () => {
                     onClick={() => setSelectedDivision(div.value as DivisionTier)}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold border transition-all ${
                       isSel
-                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                        ? "bg-lime-500/20 border-lime-500/50 text-lime-400"
                         : "bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200"
                     }`}
                   >
@@ -726,7 +726,7 @@ export const CoachWorkspace: React.FC = () => {
                 Click athlete row to open scratchpad notes or switch pipeline statuses directly.
               </p>
             </div>
-            <span className="px-3 py-1 rounded-full bg-slate-950 border border-slate-800 text-emerald-400 text-xs font-black">
+            <span className="px-3 py-1 rounded-full bg-slate-950 border border-slate-800 text-lime-400 text-xs font-black">
               Showing {filteredTargets.length} Recruits
             </span>
           </div>
@@ -760,17 +760,17 @@ export const CoachWorkspace: React.FC = () => {
                       <tr
                         key={target.id}
                         className={`group transition-all hover:bg-slate-850 ${
-                          isSelectedNotes ? "bg-slate-800/80 border-l-4 border-l-emerald-400" : ""
+                          isSelectedNotes ? "bg-slate-800/80 border-l-4 border-l-lime-400" : ""
                         }`}
                       >
                         {/* Athlete Name & Pos */}
                         <td className="py-3 px-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-emerald-400 font-black text-xs shrink-0 group-hover:border-emerald-500/50">
+                            <div className="w-9 h-9 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-lime-400 font-black text-xs shrink-0 group-hover:border-lime-500/50">
                               {target.position}
                             </div>
                             <div>
-                              <p className="font-extrabold text-white text-sm leading-snug group-hover:text-emerald-300">
+                              <p className="font-extrabold text-white text-sm leading-snug group-hover:text-lime-300">
                                 {target.fullName}
                               </p>
                               <span className="text-[10px] text-slate-400 font-medium">
@@ -798,7 +798,7 @@ export const CoachWorkspace: React.FC = () => {
                         {/* Combine Metrics */}
                         <td className="py-3 px-3">
                           <div className="space-y-0.5">
-                            <p className="font-extrabold text-emerald-400">
+                            <p className="font-extrabold text-lime-400">
                               40y: {target.fortyTime}s{" "}
                               <span className="text-[9px] text-slate-400 font-normal">({target.fortyTimingType})</span>
                             </p>
@@ -823,7 +823,7 @@ export const CoachWorkspace: React.FC = () => {
                               target.pipelineStatus === "High Priority"
                                 ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
                                 : target.pipelineStatus === "Offered"
-                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                                ? "bg-lime-500/20 text-lime-300 border-lime-500/40"
                                 : target.pipelineStatus === "Watching"
                                 ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
                                 : "bg-slate-800 text-slate-400 border-slate-700"
@@ -843,8 +843,8 @@ export const CoachWorkspace: React.FC = () => {
                               onClick={() => setActiveAthleteForNotes(target)}
                               className={`p-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1 ${
                                 isSelectedNotes
-                                  ? "bg-emerald-500 text-slate-950 border-emerald-400 font-black"
-                                  : "bg-slate-950 border-slate-800 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40"
+                                  ? "bg-lime-500 text-slate-950 border-lime-400 font-black"
+                                  : "bg-slate-950 border-slate-800 text-lime-400 hover:bg-lime-500/10 hover:border-lime-500/40"
                               }`}
                               title="Open Scouting Notes Scratchpad"
                             >
@@ -882,7 +882,7 @@ export const CoachWorkspace: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-emerald-400 font-black text-xs">
+                      <div className="w-9 h-9 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-lime-400 font-black text-xs">
                         {target.position}
                       </div>
                       <div>
@@ -914,7 +914,7 @@ export const CoachWorkspace: React.FC = () => {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                           <span className="text-[10px] font-bold text-slate-500 uppercase block">40-Yard Dash</span>
-                          <span className="font-extrabold text-emerald-400">{target.fortyTime}s ({target.fortyTimingType})</span>
+                          <span className="font-extrabold text-lime-400">{target.fortyTime}s ({target.fortyTimingType})</span>
                         </div>
                         <div className="bg-slate-900 p-2.5 rounded-xl border border-slate-800">
                           <span className="text-[10px] font-bold text-slate-500 uppercase block">Academics</span>
@@ -936,7 +936,7 @@ export const CoachWorkspace: React.FC = () => {
 
                         <button
                           onClick={() => setActiveAthleteForNotes(target)}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md"
+                          className="px-3 py-1.5 rounded-xl bg-lime-500 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md"
                         >
                           <FileText className="w-3.5 h-3.5" />
                           <span>Open Notes</span>
@@ -958,7 +958,7 @@ export const CoachWorkspace: React.FC = () => {
             {/* Drawer Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-lime-500/10 border border-lime-500/30 flex items-center justify-center text-lime-400 shrink-0">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -981,7 +981,7 @@ export const CoachWorkspace: React.FC = () => {
             <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-2 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-xs font-black">
+                  <span className="px-2 py-0.5 rounded bg-lime-500/20 text-lime-400 text-xs font-black">
                     {activeAthleteForNotes.position}
                   </span>
                   <h4 className="font-black text-white text-base">{activeAthleteForNotes.fullName}</h4>
@@ -995,7 +995,7 @@ export const CoachWorkspace: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
                 <span>{activeAthleteForNotes.highSchool} ({activeAthleteForNotes.state})</span>
                 <span>•</span>
-                <span className="text-emerald-400 font-bold">40y: {activeAthleteForNotes.fortyTime}s</span>
+                <span className="text-lime-400 font-bold">40y: {activeAthleteForNotes.fortyTime}s</span>
                 <span>•</span>
                 <span className="text-cyan-300 font-bold">GPA: {activeAthleteForNotes.gpa}</span>
               </div>
@@ -1018,9 +1018,9 @@ export const CoachWorkspace: React.FC = () => {
                   <button
                     key={tag}
                     onClick={() => handleApplyNoteTemplate(tag)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-emerald-500/40 text-slate-300 hover:text-emerald-400 text-[11px] font-bold transition-all flex items-center gap-1"
+                    className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-lime-500/40 text-slate-300 hover:text-lime-400 text-[11px] font-bold transition-all flex items-center gap-1"
                   >
-                    <Plus className="w-3 h-3 text-emerald-400" />
+                    <Plus className="w-3 h-3 text-lime-400" />
                     <span>{tag}</span>
                   </button>
                 ))}
@@ -1032,7 +1032,7 @@ export const CoachWorkspace: React.FC = () => {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-300 uppercase tracking-wider">Evaluation Scratchpad</span>
                 {savedTimeNotice && (
-                  <span className="text-[10px] font-extrabold text-emerald-400 flex items-center gap-1">
+                  <span className="text-[10px] font-extrabold text-lime-400 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" />
                     {savedTimeNotice}
                   </span>
@@ -1043,7 +1043,7 @@ export const CoachWorkspace: React.FC = () => {
                 value={notesContent}
                 onChange={(e) => handleSaveNotes(e.target.value)}
                 placeholder="Type film evaluation notes, physical impressions, or recruiting follow-up actions..."
-                className="w-full flex-1 bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500/60 leading-relaxed resize-none"
+                className="w-full flex-1 bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs font-mono text-slate-200 placeholder-slate-600 focus:outline-none focus:border-lime-500/60 leading-relaxed resize-none"
               />
             </div>
 
@@ -1063,7 +1063,7 @@ export const CoachWorkspace: React.FC = () => {
 
               <button
                 onClick={() => setActiveAthleteForNotes(null)}
-                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all"
+                className="px-5 py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs shadow-lg shadow-lime-500/20 flex items-center gap-1.5 transition-all"
               >
                 <Check className="w-4 h-4" />
                 <span>Done & Close</span>

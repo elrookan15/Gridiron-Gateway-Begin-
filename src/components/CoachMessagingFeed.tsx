@@ -69,16 +69,16 @@ export const CoachMessagingFeed: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 text-white space-y-8">
       {/* NCAA RECRUITING PERIOD COMPLIANCE BANNER */}
-      <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-slate-900 border border-emerald-500/40 p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-lime-950 via-slate-900 to-slate-900 border border-lime-500/40 p-5 rounded-2xl shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0">
-            <Calendar className="w-5 h-5 text-emerald-400" />
+          <div className="w-10 h-10 rounded-xl bg-lime-500/20 border border-lime-500/40 flex items-center justify-center shrink-0">
+            <Calendar className="w-5 h-5 text-lime-400" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <span
                 className={`px-2.5 py-0.5 font-black text-[10px] rounded uppercase tracking-wider ${
-                  messagingLocked ? "bg-rose-500 text-slate-950" : "bg-emerald-500 text-slate-950"
+                  messagingLocked ? "bg-rose-500 text-slate-950" : "bg-lime-500 text-slate-950"
                 }`}
               >
                 CURRENT NCAA PERIOD: {activePeriod} PERIOD
@@ -97,7 +97,7 @@ export const CoachMessagingFeed: React.FC = () => {
           <button
             onClick={() => setActiveTab("views")}
             className={`px-3 py-1.5 rounded-lg transition-all ${
-              activeTab === "views" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
+              activeTab === "views" ? "bg-lime-500 text-slate-950" : "text-slate-400 hover:text-white"
             }`}
           >
             Coach Views Analytics ({MOCK_COACH_VIEWS.length})
@@ -105,7 +105,7 @@ export const CoachMessagingFeed: React.FC = () => {
           <button
             onClick={() => setActiveTab("messages")}
             className={`px-3 py-1.5 rounded-lg transition-all ${
-              activeTab === "messages" ? "bg-emerald-500 text-slate-950" : "text-slate-400 hover:text-white"
+              activeTab === "messages" ? "bg-lime-500 text-slate-950" : "text-slate-400 hover:text-white"
             }`}
           >
             Direct Messages
@@ -145,8 +145,8 @@ export const CoachMessagingFeed: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-extrabold text-sm text-white">{cv.coachName}</h3>
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold flex items-center gap-1 border border-emerald-500/30">
-                        <ShieldCheck className="w-3 h-3 text-emerald-400" /> Verified Staff
+                      <span className="px-2 py-0.5 rounded-full bg-lime-500/20 text-lime-300 text-[10px] font-bold flex items-center gap-1 border border-lime-500/30">
+                        <ShieldCheck className="w-3 h-3 text-lime-400" /> Verified Staff
                       </span>
                     </div>
 
@@ -175,7 +175,7 @@ export const CoachMessagingFeed: React.FC = () => {
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-rose-400" /> Coach Direct Messaging (NCAA Compliant)
             </h2>
-            <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
+            <span className="text-xs text-lime-400 font-bold flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4" /> Active Chat with Ohio State Staff
             </span>
           </div>
@@ -187,7 +187,7 @@ export const CoachMessagingFeed: React.FC = () => {
                 className={`max-w-md p-3.5 rounded-2xl text-xs ${
                   m.isCoach
                     ? "bg-slate-900 border border-slate-800 text-slate-200"
-                    : "bg-emerald-600 text-slate-950 font-medium ml-auto"
+                    : "bg-lime-600 text-slate-950 font-medium ml-auto"
                 }`}
               >
                 <p className={`font-bold text-[10px] mb-1 ${m.isCoach ? "text-amber-400" : "text-slate-950/80"}`}>
@@ -214,12 +214,12 @@ export const CoachMessagingFeed: React.FC = () => {
                 onChange={(e) => setInputMessage(e.target.value)}
                 placeholder={messagingLocked ? "Messaging locked during NCAA DEAD period" : "Type your reply to Coach..."}
                 disabled={messagingLocked || isSending}
-                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-4 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 min-h-[44px] disabled:opacity-50"
+                className="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-4 py-1.5 text-xs text-white focus:outline-none focus:border-lime-500 min-h-[44px] disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={messagingLocked || isSending}
-                className="shrink-0 min-h-[44px] px-5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none"
+                className="shrink-0 min-h-[44px] px-5 py-1.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:pointer-events-none"
               >
                 Send <Send className="w-3.5 h-3.5 shrink-0" />
               </button>

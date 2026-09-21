@@ -442,46 +442,12 @@ export async function fetchLeaderboardRecruits(
   });
 }
 
-/** Nested PostgREST shapes for `getAthleteProfileFull` (MVP schema.sql). */
-interface NestedUserName {
-  first_name: string;
-  last_name: string;
-}
-
-interface NestedAthleteMediaRow {
-  twitter_handle: string | null;
-  instagram_handle: string | null;
-  hudl_url: string | null;
-  youtube_film_url: string | null;
-}
-
-interface NestedSchoolRow {
-  id: string;
-  name: string;
-  primary_color?: string | null;
-  abbreviation?: string | null;
-  logo_url?: string | null;
-}
-
-interface NestedScholarshipOfferRow {
-  id: string;
-  is_official: boolean;
-  offer_date: string;
-  commitment_status: string;
-  schools: NestedSchoolRow | NestedSchoolRow[] | null;
-}
-
 interface AthleteFullProfileRow {
-  user_id: string;
-  height_inches: number | null;
-  weight_lbs: number | null;
-  forty_yard_dash: number | null;
-  vertical_jump_inches: number | null;
-  position_tier: string | null;
+  athlete_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  primary_position: string | null;
   star_rating: number | null;
-  users: NestedUserName | NestedUserName[] | null;
-  athlete_media: NestedAthleteMediaRow | NestedAthleteMediaRow[] | null;
-  scholarship_offers: NestedScholarshipOfferRow[] | null;
 }
 
 function unwrapOne<T>(value: T | T[] | null | undefined): T | null {
@@ -489,35 +455,9 @@ function unwrapOne<T>(value: T | T[] | null | undefined): T | null {
   return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
-function mapOfferSchool(
-  school: NestedSchoolRow | NestedSchoolRow[] | null,
-): AthleteFullProfile["offers"][number]["school"] {
-  const row = unwrapOne(school);
-  if (!row) return null;
-  return {
-    id: row.id,
-    name: row.name,
-    primary_color: row.primary_color ?? null,
-    abbreviation: row.abbreviation ?? null,
-  };
-}
-
-function mapAthleteMedia(
-  media: NestedAthleteMediaRow | NestedAthleteMediaRow[] | null,
-): AthleteFullProfile["media"] {
-  const row = unwrapOne(media);
-  if (!row) return null;
-  return {
-    twitter_handle: row.twitter_handle,
-    instagram_handle: row.instagram_handle,
-    hudl_link: row.hudl_url,
-    youtube_link: row.youtube_film_url,
-  };
-}
-
 /**
- * Join athlete_profiles → users (name) → athlete_media → scholarship_offers → schools.
- * PK filter uses `user_id` per schema.sql MVP athlete_profiles.
+ * Production dossier read. `athlete_profiles` PK is `athlete_id` (VARCHAR),
+ * not the MVP `user_id` column.
  */
 export async function getAthleteProfileFull(
   athleteId: string,
@@ -534,33 +474,12 @@ export async function getAthleteProfileFull(
 
   const supabase = getSupabaseClient();
 
-  // Column names match schema.sql MVP:
-  // - athlete_profiles.user_id (PK)
-  // - athlete_media.hudl_url / youtube_film_url (mapped → hudl_link / youtube_link)
-  // - schools.id / name (+ optional primary_color / abbreviation if migrated)
   const { data, error } = await supabase
     .from("athlete_profiles")
     .select(
-      `
-      user_id,
-      height_inches,
-      weight_lbs,
-      forty_yard_dash,
-      vertical_jump_inches,
-      position_tier,
-      star_rating,
-      users!inner(first_name, last_name),
-      athlete_media(twitter_handle, instagram_handle, hudl_url, youtube_film_url),
-      scholarship_offers(
-        id,
-        is_official,
-        offer_date,
-        commitment_status,
-        schools(id, name)
-      )
-    `,
+      "athlete_id, first_name, last_name, primary_position, star_rating",
     )
-    .eq("user_id", athleteId)
+    .eq("athlete_id", athleteId)
     .maybeSingle();
 
   if (error) {
@@ -573,42 +492,29 @@ export async function getAthleteProfileFull(
   }
 
   const row = data as unknown as AthleteFullProfileRow;
-  const user = unwrapOne(row.users);
-
-  const offers: AthleteFullProfile["offers"] = (row.scholarship_offers ?? [])
-    .map((offer) => ({
-      id: offer.id,
-      is_official: Boolean(offer.is_official),
-      offer_date: offer.offer_date,
-      commitment_status: offer.commitment_status,
-      school: mapOfferSchool(offer.schools),
-    }))
-    .sort(
-      (a, b) => new Date(b.offer_date).getTime() - new Date(a.offer_date).getTime(),
-    );
 
   return {
-    id: row.user_id,
-    first_name: user?.first_name || "Unknown",
-    last_name: user?.last_name || "Athlete",
-    height_inches: row.height_inches,
-    weight_lbs: row.weight_lbs,
-    forty_yard_dash: row.forty_yard_dash,
-    vertical_jump_inches: row.vertical_jump_inches,
-    position_tier: row.position_tier,
+    id: row.athlete_id,
+    first_name: row.first_name?.trim() || "Unknown",
+    last_name: row.last_name?.trim() || "Athlete",
+    height_inches: null,
+    weight_lbs: null,
+    forty_yard_dash: null,
+    vertical_jump_inches: null,
+    position_tier: row.primary_position,
     star_rating: row.star_rating,
-    media: mapAthleteMedia(row.athlete_media),
-    offers,
+    media: null,
+    offers: [],
   };
 }
 
 /** Nested shapes for `getPipelineOffers` (scholarship_offers → athlete_profiles → users). */
 interface PipelineAthleteEmbed {
-  user_id: string;
+  athlete_id: string;
+  first_name: string | null;
+  last_name: string | null;
   primary_position: string | null;
-  position_tier: string | null;
   star_rating: number | null;
-  users: NestedUserName | NestedUserName[] | null;
 }
 
 interface PipelineOfferRow {
@@ -672,11 +578,11 @@ export async function getPipelineOffers(schoolId: string): Promise<PipelineOffer
       commitment_status,
       notes,
       athlete_profiles!inner(
-        user_id,
+        athlete_id,
+        first_name,
+        last_name,
         primary_position,
-        position_tier,
-        star_rating,
-        users!inner(first_name, last_name)
+        star_rating
       )
     `,
     )
@@ -691,13 +597,9 @@ export async function getPipelineOffers(schoolId: string): Promise<PipelineOffer
 
   return rows.map((row) => {
     const athlete = unwrapOne(row.athlete_profiles);
-    const user = unwrapOne(athlete?.users ?? null);
-    const first = user?.first_name?.trim() || "Unknown";
-    const last = user?.last_name?.trim() || "Athlete";
-    const position =
-      athlete?.primary_position?.trim() ||
-      athlete?.position_tier?.trim() ||
-      "ATH";
+    const first = athlete?.first_name?.trim() || "Unknown";
+    const last = athlete?.last_name?.trim() || "Athlete";
+    const position = athlete?.primary_position?.trim() || "ATH";
     const starRating = Math.min(Math.max(athlete?.star_rating ?? 0, 0), 5);
 
     return {

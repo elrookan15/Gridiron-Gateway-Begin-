@@ -326,8 +326,8 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
       )}
 
       {/* HEADER HERO BANNER */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-lime-950/80 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -370,7 +370,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
                 Coverage
               </span>
-              <p className="text-xl sm:text-2xl font-black text-emerald-400">6 Levels</p>
+              <p className="text-xl sm:text-2xl font-black text-lime-400">6 Levels</p>
             </div>
             <div className="col-span-2 sm:col-span-1 bg-slate-950/80 p-3.5 rounded-2xl border border-slate-800 text-center space-y-0.5 min-w-[110px]">
               <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
@@ -393,7 +393,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search school name, mascot, city, state, or conference (e.g. Texas, Longhorns, SEC, Austin)..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-colors shadow-inner"
+              className="w-full bg-slate-950 border border-slate-800 rounded-2xl pl-10 pr-10 py-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-lime-500 transition-colors shadow-inner"
             />
             {searchQuery && (
               <button
@@ -408,12 +408,12 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
           {/* Mobile Filter Button */}
           <button
             onClick={() => setIsMobileFilterOpen(!isMobileFilterOpen)}
-            className="w-full sm:w-auto md:hidden px-4 py-3 bg-slate-950 border border-slate-800 hover:border-emerald-500/50 rounded-2xl text-xs font-bold text-slate-200 flex items-center justify-center gap-2 transition-all"
+            className="w-full sm:w-auto md:hidden px-4 py-3 bg-slate-950 border border-slate-800 hover:border-lime-500/50 rounded-2xl text-xs font-bold text-slate-200 flex items-center justify-center gap-2 transition-all"
           >
-            <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
+            <SlidersHorizontal className="w-4 h-4 text-lime-400" />
             <span>Filters</span>
             {activeFilterCount > 0 && (
-              <span className="w-5 h-5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-lime-500 text-slate-950 text-[10px] font-black flex items-center justify-center">
                 {activeFilterCount}
               </span>
             )}
@@ -426,7 +426,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
               <select
                 value={selectedConference}
                 onChange={(e) => setSelectedConference(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-3 py-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-medium"
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-3 py-3 text-xs text-slate-200 focus:outline-none focus:border-lime-500 font-medium"
               >
                 <option value="All">All Conferences</option>
                 {conferences.map((conf) => (
@@ -442,7 +442,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
               <select
                 value={selectedState}
                 onChange={(e) => setSelectedState(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-3 py-3 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-medium"
+                className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-3 py-3 text-xs text-slate-200 focus:outline-none focus:border-lime-500 font-medium"
               >
                 <option value="All">All States</option>
                 {statesList.map((st) => (
@@ -458,7 +458,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
         {/* Division Quick Filter Pills (Desktop & Tablet) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
           <span className="text-slate-400 font-bold text-[11px] mr-1 flex items-center gap-1 shrink-0">
-            <Filter className="w-3.5 h-3.5 text-emerald-400" /> Level:
+            <Filter className="w-3.5 h-3.5 text-lime-400" /> Level:
           </span>
           {divisions.map((div) => {
             const isSelected = selectedDivision === div.value;
@@ -468,7 +468,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                 onClick={() => setSelectedDivision(div.value)}
                 className={`px-3.5 py-1.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all border shrink-0 flex items-center gap-1.5 ${
                   isSelected
-                    ? "bg-emerald-500 text-slate-950 border-emerald-400 shadow-md shadow-emerald-500/20 font-black"
+                    ? "bg-lime-500 text-slate-950 border-lime-400 shadow-md shadow-lime-500/20 font-black"
                     : "bg-slate-950 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white"
                 }`}
               >
@@ -488,7 +488,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
             {activeFilterCount > 0 && (
               <button
                 onClick={clearFilters}
-                className="text-emerald-400 hover:text-emerald-300 font-bold text-[11px] inline-flex items-center gap-1 underline underline-offset-2 ml-2"
+                className="text-lime-400 hover:text-lime-300 font-bold text-[11px] inline-flex items-center gap-1 underline underline-offset-2 ml-2"
               >
                 <RotateCcw className="w-3 h-3" /> Reset Filters
               </button>
@@ -503,7 +503,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
             {selectedCompareIds.length > 0 && (
               <button
                 onClick={() => setIsCompareModalOpen(true)}
-                className="text-emerald-400 font-bold hover:underline"
+                className="text-lime-400 font-bold hover:underline"
               >
                 View Comparison ({selectedCompareIds.length})
               </button>
@@ -516,7 +516,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
           <div className="md:hidden bg-slate-950 border border-slate-800 rounded-2xl p-4 space-y-4 animate-fadeIn">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                <Filter className="w-4 h-4 text-emerald-400" /> Filter Options
+                <Filter className="w-4 h-4 text-lime-400" /> Filter Options
               </h3>
               <button
                 onClick={() => setIsMobileFilterOpen(false)}
@@ -572,7 +572,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                 </button>
                 <button
                   onClick={() => setIsMobileFilterOpen(false)}
-                  className="flex-1 py-2 bg-emerald-500 text-slate-950 font-black rounded-xl text-xs"
+                  className="flex-1 py-2 bg-lime-500 text-slate-950 font-black rounded-xl text-xs"
                 >
                   Apply
                 </button>
@@ -594,7 +594,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
           </p>
           <button
             onClick={clearFilters}
-            className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-500/20 inline-flex items-center gap-2"
+            className="px-5 py-2.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-500/20 inline-flex items-center gap-2"
           >
             <Compass className="w-4 h-4" /> Reset All Filters
           </button>
@@ -616,7 +616,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                 key={school.id}
                 className={`bg-slate-900 border ${
                   isCompared
-                    ? "border-emerald-500/80 ring-1 ring-emerald-500/50 shadow-emerald-500/10"
+                    ? "border-lime-500/80 ring-1 ring-lime-500/50 shadow-lime-500/10"
                     : "border-slate-800 hover:border-slate-700"
                 } rounded-3xl p-5 shadow-xl space-y-4 transition-all flex flex-col justify-between group relative`}
               >
@@ -624,7 +624,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                   {/* Top Badges & Target Bookmark */}
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full bg-slate-950 text-emerald-400 border border-emerald-500/30 text-[10px] font-extrabold uppercase tracking-wide">
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-950 text-lime-400 border border-lime-500/30 text-[10px] font-extrabold uppercase tracking-wide">
                         {school.divisionLabel}
                       </span>
                       <span className="px-2.5 py-0.5 rounded-full bg-slate-950 text-cyan-400 border border-cyan-500/30 text-[10px] font-extrabold">
@@ -636,7 +636,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       onClick={() => toggleSaveSchool(school.id, school.name)}
                       className={`p-1.5 rounded-xl transition-all ${
                         isSaved
-                          ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/40"
+                          ? "bg-lime-500/20 text-lime-400 border border-lime-500/40"
                           : "bg-slate-950 text-slate-500 hover:text-slate-200 border border-slate-800"
                       }`}
                       title={isSaved ? "Saved in targets" : "Save as target school"}
@@ -659,7 +659,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                     </div>
 
                     <div>
-                      <h3 className="font-extrabold text-white text-base leading-snug group-hover:text-emerald-400 transition-colors">
+                      <h3 className="font-extrabold text-white text-base leading-snug group-hover:text-lime-400 transition-colors">
                         {school.name}
                       </h3>
                       <p className="text-xs text-slate-400 font-medium flex items-center gap-1 mt-0.5">
@@ -675,10 +675,10 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       {school.recruitingEmail ? (
                         <a
                           href={`mailto:${school.recruitingEmail}`}
-                          className="text-slate-300 hover:text-emerald-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
+                          className="text-slate-300 hover:text-lime-400 font-medium truncate flex items-center gap-1.5 transition-colors text-[11px]"
                           title={school.recruitingEmail}
                         >
-                          <Mail className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                          <Mail className="w-3.5 h-3.5 text-lime-400 shrink-0" />
                           <span className="truncate">{school.recruitingEmail}</span>
                         </a>
                       ) : (
@@ -695,7 +695,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                         title="Copy email"
                       >
                         {copiedText === "Email" ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
+                          <Check className="w-3 h-3 text-lime-400" />
                         ) : (
                           <Copy className="w-3 h-3" />
                         )}
@@ -706,7 +706,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       {school.recruitingPhone ? (
                         <a
                           href={`tel:${school.recruitingPhone}`}
-                          className="text-slate-300 hover:text-emerald-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
+                          className="text-slate-300 hover:text-lime-400 font-medium flex items-center gap-1.5 transition-colors text-[11px]"
                         >
                           <Phone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                           <span>{school.recruitingPhone}</span>
@@ -725,7 +725,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                         title="Copy phone"
                       >
                         {copiedText === "Phone" ? (
-                          <Check className="w-3 h-3 text-emerald-400" />
+                          <Check className="w-3 h-3 text-lime-400" />
                         ) : (
                           <Copy className="w-3 h-3" />
                         )}
@@ -741,7 +741,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                     <ul className="space-y-1 text-xs text-slate-300 bg-slate-950 p-3 rounded-2xl border border-slate-800/80">
                       {highlightsList.map((bullet, idx) => (
                         <li key={idx} className="flex items-start gap-1.5 text-[11px] leading-relaxed">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0 mt-0.5" />
+                          <CheckCircle2 className="w-3 h-3 text-lime-400 shrink-0 mt-0.5" />
                           <span>{bullet}</span>
                         </li>
                       ))}
@@ -763,7 +763,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <span className="text-slate-400 flex items-center gap-1">
                         <Users className="w-3.5 h-3.5 text-amber-400" /> Roster Openings:
                       </span>
-                      <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <span className="text-lime-400 font-bold bg-lime-500/10 px-2 py-0.5 rounded border border-lime-500/20">
                         {school.totalActiveRecruits} Open Spots
                       </span>
                     </div>
@@ -781,7 +781,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       type="checkbox"
                       checked={isCompared}
                       onChange={() => handleCompareCheck(school.id)}
-                      className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-emerald-500 focus:ring-emerald-500 focus:ring-offset-slate-900 cursor-pointer"
+                      className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-lime-500 focus:ring-lime-500 focus:ring-offset-slate-900 cursor-pointer"
                     />
                   </label>
 
@@ -795,7 +795,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                         }}
                         className="flex-1 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs font-bold transition-all flex items-center justify-center gap-1"
                       >
-                        <Plus className="w-3.5 h-3.5 text-emerald-400" /> Target
+                        <Plus className="w-3.5 h-3.5 text-lime-400" /> Target
                       </button>
                     )}
 
@@ -805,7 +805,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                           onAddOfferSchool(school.name, school.division, school.conference);
                           triggerNotice(`Added official offer from ${school.name}!`);
                         }}
-                        className="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-emerald-500/20"
+                        className="flex-1 py-2 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all flex items-center justify-center gap-1 shadow-md shadow-lime-500/20"
                       >
                         <Award className="w-3.5 h-3.5" /> Claim Offer
                       </button>
@@ -820,9 +820,9 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
 
       {/* FLOATING COMPARISON BAR (Shows when 1+ programs checked) */}
       {selectedCompareIds.length > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md border-2 border-emerald-500/80 rounded-2xl p-3 sm:px-6 sm:py-3.5 shadow-2xl flex items-center gap-4 text-xs max-w-lg w-[92%] sm:w-auto justify-between animate-slide-up">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md border-2 border-lime-500/80 rounded-2xl p-3 sm:px-6 sm:py-3.5 shadow-2xl flex items-center gap-4 text-xs max-w-lg w-[92%] sm:w-auto justify-between animate-slide-up">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-lime-500/20 border border-lime-500/40 flex items-center justify-center text-lime-400 shrink-0">
               <ArrowRightLeft className="w-4 h-4" />
             </div>
             <div>
@@ -844,7 +844,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
             </button>
             <button
               onClick={() => setIsCompareModalOpen(true)}
-              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-500/20 flex items-center gap-1.5"
             >
               <span>Compare Now</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -860,8 +860,8 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
             {/* Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-800">
               <div>
-                <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 w-fit mb-1">
-                  <ArrowRightLeft className="w-3.5 h-3.5 text-emerald-400" /> Side-by-Side Scouting Audit
+                <span className="px-3 py-1 rounded-full bg-lime-500/10 text-lime-400 border border-lime-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1 w-fit mb-1">
+                  <ArrowRightLeft className="w-3.5 h-3.5 text-lime-400" /> Side-by-Side Scouting Audit
                 </span>
                 <h2 className="text-xl sm:text-2xl font-black text-white">
                   Program Comparison Matrix
@@ -908,7 +908,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                       <td className="py-3 px-4 text-slate-400 font-bold">Division / Conference</td>
                       {comparedSchools.map((school) => (
                         <td key={school.id} className="py-3 px-4 text-center">
-                          <span className="px-2 py-0.5 rounded bg-slate-950 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold block mb-1">
+                          <span className="px-2 py-0.5 rounded bg-slate-950 text-lime-400 border border-lime-500/30 text-[10px] font-bold block mb-1">
                             {school.divisionLabel}
                           </span>
                           <span className="text-slate-300 font-medium text-[11px]">
@@ -936,7 +936,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                           {school.recruitingEmail ? (
                             <a
                               href={`mailto:${school.recruitingEmail}`}
-                              className="text-emerald-400 font-medium hover:underline text-[11px] break-all"
+                              className="text-lime-400 font-medium hover:underline text-[11px] break-all"
                             >
                               {school.recruitingEmail}
                             </a>
@@ -1012,7 +1012,7 @@ export const SchoolsDirectory: React.FC<SchoolsDirectoryProps> = ({
                                   onAddOfferSchool(school.name, school.division, school.conference);
                                   triggerNotice(`Added offer from ${school.name}!`);
                                 }}
-                                className="w-full py-1.5 bg-emerald-500 text-slate-950 font-black rounded-xl text-[11px] hover:bg-emerald-400"
+                                className="w-full py-1.5 bg-lime-500 text-slate-950 font-black rounded-xl text-[11px] hover:bg-lime-400"
                               >
                                 Claim Offer
                               </button>

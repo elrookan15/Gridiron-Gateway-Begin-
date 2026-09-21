@@ -146,7 +146,7 @@ export const CombineLaserApiModule: React.FC = () => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <Metric label="Laser 40-Dash" value={`${entry.laser40YardDash}s`} accent="text-cyan-300" />
-              <Metric label="20-Yd Shuttle" value={`${entry.laser20YardShuttle}s`} accent="text-emerald-400" />
+              <Metric label="20-Yd Shuttle" value={`${entry.laser20YardShuttle}s`} accent="text-lime-400" />
               <Metric label="3-Cone Drill" value={`${entry.laser3ConeDrill}s`} accent="text-amber-400" />
               <Metric label="Vertical" value={`${entry.verticalJumpInches}"`} accent="text-purple-300" />
               <Metric label="Broad Jump" value={`${entry.broadJumpInches}"`} accent="text-cyan-200" />

@@ -53,10 +53,10 @@ CREATE TYPE public.clearinghouse_status_enum AS ENUM (
 -- 2. Generate the Transactions Table
 CREATE TABLE public.nil_transactions (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    athlete_id UUID NOT NULL REFERENCES public.athlete_profiles(id) ON DELETE CASCADE,
+    athlete_id TEXT NOT NULL REFERENCES public.athlete_profiles(athlete_id) ON DELETE CASCADE,
     sponsor_name TEXT NOT NULL,
     -- Financials strictly stored in integer-cents to prevent IEEE 754 precision loss
-    deal_amount_cents INTEGER NOT NULL CHECK (deal_amount_cents >= 0),
+    deal_amount_cents INTEGER NOT NULL CHECK (deal_amount_cents >= 60000),
     clearinghouse_status public.clearinghouse_status_enum DEFAULT 'PENDING' NOT NULL,
     payout_released BOOLEAN DEFAULT FALSE NOT NULL,
     vbp_notes TEXT, -- Audit trail for Valid Business Purpose (VBP) / Range of Compensation (RoC)
@@ -93,11 +93,7 @@ CREATE POLICY "Athletes can view own nil transactions"
     ON public.nil_transactions
     FOR SELECT
     USING (
-        auth.uid() = (
-            SELECT user_id
-            FROM public.athlete_profiles
-            WHERE id = nil_transactions.athlete_id
-        )
+        athlete_id = auth.uid()::text
     );
 
 -- 7. RLS Policy: Only authenticated compliance officers or secure edge functions can manipulate escrow state

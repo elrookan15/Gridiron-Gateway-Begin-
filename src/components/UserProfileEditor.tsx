@@ -58,7 +58,7 @@ function FieldInput(
   return (
     <input
       {...rest}
-      className={`w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500 ${className ?? ""}`}
+      className={`w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-lime-500 ${className ?? ""}`}
     />
   );
 }
@@ -70,7 +70,7 @@ function FieldSelect(
   return (
     <select
       {...rest}
-      className={`w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-emerald-500 ${className ?? ""}`}
+      className={`w-full min-h-[44px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-1.5 text-sm text-white focus:outline-none focus:border-lime-500 ${className ?? ""}`}
     >
       {children}
     </select>
@@ -165,7 +165,7 @@ export const UserProfileEditor: React.FC<UserProfileEditorProps> = ({
               onClick={() => setActiveSection(section.id)}
               className={`min-h-[40px] px-3 py-1.5 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shrink-0 transition-colors ${
                 activeSection === section.id
-                  ? "bg-emerald-500 text-slate-950"
+                  ? "bg-lime-500 text-slate-950"
                   : "bg-slate-900 text-slate-400 border border-slate-800 hover:text-white"
               }`}
             >
@@ -510,7 +510,7 @@ export const UserProfileEditor: React.FC<UserProfileEditorProps> = ({
             </button>
             <button
               type="submit"
-              className="min-h-[44px] px-4 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black inline-flex items-center justify-center gap-2"
+              className="min-h-[44px] px-4 py-1.5 rounded-xl bg-lime-500 hover:bg-lime-400 text-slate-950 text-xs font-black inline-flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4 shrink-0" />
               Save Profile
@@ -527,7 +527,7 @@ const SectionShell: React.FC<{ title: string; children: React.ReactNode }> = ({
   children,
 }) => (
   <section className="space-y-4">
-    <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">{title}</h3>
+    <h3 className="text-xs font-bold text-lime-400 uppercase tracking-wider">{title}</h3>
     {children}
   </section>
 );

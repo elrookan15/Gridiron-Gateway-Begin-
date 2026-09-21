@@ -12,43 +12,35 @@ import { COMPLIANCE_AUDIT_LEDGER, getCurrentNcaaPeriod } from "../complianceEngi
 import { isSupabaseConfigured, supabase } from "../lib/supabaseClient";
 import type { ClearanceStatus, ComplianceAuditLog, NcaaRecruitingPeriod } from "../types";
 
-interface CommunicationAuditRow {
+interface ComplianceAuditRow {
   id: string;
-  sender_id: string;
-  receiver_id: string;
-  status: "approved" | "blocked_compliance" | "pending_guardian";
-  action_taken: string;
-  reason: string | null;
-  timestamp: string;
+  school_id: string;
+  coach_id: string;
+  athlete_id: string;
+  action_type: ComplianceAuditLog["actionType"];
+  clearance_status: ClearanceStatus;
+  notes: string;
+  flagged_keywords: string[] | null;
+  created_at: string;
 }
 
-function mapMessageStatus(row: CommunicationAuditRow): ClearanceStatus {
-  if (row.status === "approved") return "CLEARED";
-  if (row.status === "pending_guardian") return "BLOCKED_MINOR_CONSENT";
-  const reason = (row.reason ?? row.action_taken).toLowerCase();
-  if (reason.includes("inducement") || reason.includes("signing bonus")) {
-    return "BLOCKED_INDUCEMENT";
-  }
-  return "BLOCKED_CALENDAR";
-}
-
-function mapCommunicationAuditRow(row: CommunicationAuditRow): ComplianceAuditLog {
+function mapComplianceAuditRow(row: ComplianceAuditRow): ComplianceAuditLog {
   return {
     id: row.id,
-    schoolId: "unspecified",
-    coachId: row.sender_id,
-    athleteId: row.receiver_id,
-    actionType: "DIRECT_MESSAGE",
-    clearanceStatus: mapMessageStatus(row),
-    notes: row.reason ?? row.action_taken,
-    flaggedKeywords: [],
-    createdAt: row.timestamp,
+    schoolId: row.school_id,
+    coachId: row.coach_id,
+    athleteId: row.athlete_id,
+    actionType: row.action_type,
+    clearanceStatus: row.clearance_status,
+    notes: row.notes,
+    flaggedKeywords: row.flagged_keywords ?? [],
+    createdAt: row.created_at,
   };
 }
 
 function getStatusConfig(status: ClearanceStatus) {
   if (status === "CLEARED") {
-    return { color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", icon: ShieldCheck };
+    return { color: "text-lime-400 bg-lime-500/10 border-lime-500/20", icon: ShieldCheck };
   }
   if (status === "BLOCKED_INDUCEMENT" || status === "NIL_NOT_CLEARED" || status === "NIL_FLAGGED") {
     return { color: "text-rose-400 bg-rose-500/10 border-rose-500/20", icon: AlertTriangle };
@@ -60,7 +52,7 @@ function periodAccent(period: NcaaRecruitingPeriod): string {
   if (period === "DEAD") return "text-rose-500";
   if (period === "QUIET") return "text-amber-500";
   if (period === "EVALUATION") return "text-cyan-400";
-  return "text-emerald-500";
+  return "text-lime-500";
 }
 
 export const ComplianceDashboard: React.FC = () => {
@@ -87,9 +79,11 @@ export const ComplianceDashboard: React.FC = () => {
 
       try {
         const { data, error } = await supabase
-          .from("communication_audit_logs")
-          .select("id, sender_id, receiver_id, status, action_taken, reason, timestamp")
-          .order("timestamp", { ascending: false })
+          .from("compliance_audit_logs")
+          .select(
+            "id, school_id, coach_id, athlete_id, action_type, clearance_status, notes, flagged_keywords, created_at",
+          )
+          .order("created_at", { ascending: false })
           .limit(50);
 
         if (!isMounted) return;
@@ -100,7 +94,7 @@ export const ComplianceDashboard: React.FC = () => {
           return;
         }
 
-        const remote = (data as CommunicationAuditRow[]).map(mapCommunicationAuditRow);
+        const remote = (data as ComplianceAuditRow[]).map(mapComplianceAuditRow);
         setAuditLogs(remote.length > 0 ? remote : localLedger);
         setLoading(false);
       } catch {
@@ -133,7 +127,7 @@ export const ComplianceDashboard: React.FC = () => {
       <div className="md:w-80 bg-slate-950 p-6 border-b md:border-b-0 md:border-r border-slate-800 flex flex-col gap-6">
         <div>
           <h2 className="text-xl font-black text-slate-100 uppercase tracking-tight flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 shrink-0 text-emerald-500" />
+            <ShieldCheck className="w-5 h-5 shrink-0 text-lime-500" />
             <span className="truncate">Compliance Hub</span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5 font-mono">System Telemetry & Audit Gates</p>
@@ -159,13 +153,13 @@ export const ComplianceDashboard: React.FC = () => {
           </h3>
           <ul className="text-xs font-mono text-slate-300 space-y-2">
             <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" /> Inducement Scanning: ON
+              <div className="w-1.5 h-1.5 rounded-full bg-lime-500 shrink-0" /> Inducement Scanning: ON
             </li>
             <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" /> COPPA / Minor Consent: ON
+              <div className="w-1.5 h-1.5 rounded-full bg-lime-500 shrink-0" /> COPPA / Minor Consent: ON
             </li>
             <li className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" /> RLS Database Filters: ON
+              <div className="w-1.5 h-1.5 rounded-full bg-lime-500 shrink-0" /> RLS Database Filters: ON
             </li>
           </ul>
         </div>
@@ -227,7 +221,7 @@ export const ComplianceDashboard: React.FC = () => {
                       <span className="text-slate-700">•</span>
                       <span
                         className={`font-bold ${
-                          log.clearanceStatus === "CLEARED" ? "text-emerald-500" : "text-rose-500"
+                          log.clearanceStatus === "CLEARED" ? "text-lime-500" : "text-rose-500"
                         }`}
                       >
                         {log.clearanceStatus}

@@ -7,7 +7,8 @@ export type RallySafeReleaseDenialCode =
   | "CSC_FLAGGED"
   | "CSC_PENDING"
   | "STRIPE_HMAC_UNVERIFIED"
-  | "ALREADY_RELEASED";
+  | "ALREADY_RELEASED"
+  | "BELOW_REPORTING_FLOOR";
 
 export type RallySafeReleaseDecision =
   | { ok: true }
@@ -40,8 +41,14 @@ export function canReleaseNilEscrow(tx: RallySafeReleaseSnapshot): RallySafeRele
   if (!tx.stripeMilestoneVerified) {
     return { ok: false, code: "STRIPE_HMAC_UNVERIFIED" };
   }
+  if (
+    !Number.isInteger(tx.dealAmountCents) ||
+    tx.dealAmountCents < NIL_GO_REPORTING_THRESHOLD_CENTS
+  ) {
+    return { ok: false, code: "BELOW_REPORTING_FLOOR" };
+  }
   return { ok: true };
 }
 
-/** CSC NIL Go reporting floor: $600 aggregate → 60_000 cents. */
+/** CSC NIL Go reporting floor: $600 aggregate → 60_000 cents. Sub-floor deals are not inserted or released. */
 export const NIL_GO_REPORTING_THRESHOLD_CENTS = 60_000;

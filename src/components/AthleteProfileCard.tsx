@@ -159,20 +159,20 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
       {/* WEB VIEW (HIDDEN ON PRINT) */}
       <div className="max-w-6xl mx-auto px-4 py-8 text-white space-y-8 print:hidden">
         {/* 1. AT-A-GLANCE HEADER CARD */}
-      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 border-2 border-emerald-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-lime-950 border-2 border-lime-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         {/* Glowing Background Effect */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-lime-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
           {/* Avatar & Key Header Info */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
             <div className="relative">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 p-1 shadow-xl">
-                <div className="w-full h-full rounded-xl bg-slate-950 flex items-center justify-center font-black text-3xl sm:text-4xl text-emerald-400 border border-emerald-500/30">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-gradient-to-tr from-lime-600 to-teal-400 p-1 shadow-xl">
+                <div className="w-full h-full rounded-xl bg-slate-950 flex items-center justify-center font-black text-3xl sm:text-4xl text-lime-400 border border-lime-500/30">
                   {profile.primaryPosition}
                 </div>
               </div>
-              <span className="absolute -bottom-2 -right-2 bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1 border border-slate-950">
+              <span className="absolute -bottom-2 -right-2 bg-lime-500 text-slate-950 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1 border border-slate-950">
                 <ShieldCheck className="w-3 h-3" /> VERIFIED
               </span>
             </div>
@@ -200,7 +200,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
               </div>
 
               <p className="text-sm text-slate-300 font-medium flex flex-wrap items-center gap-2">
-                <span className="flex items-center gap-1 text-emerald-400 font-bold">
+                <span className="flex items-center gap-1 text-lime-400 font-bold">
                   <MapPin className="w-4 h-4" /> {profile.highSchool} ({profile.cityState})
                 </span>
                 <span className="text-slate-500">•</span>
@@ -241,7 +241,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             <button
               onClick={() => setShowPitchRecorderStudio(!showPitchRecorderStudio)}
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-black text-xs transition-all shadow-lg shadow-emerald-500/20"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-lime-500 to-teal-400 hover:from-lime-400 hover:to-teal-300 text-slate-950 font-black text-xs transition-all shadow-lg shadow-lime-500/20"
             >
               <Zap className="w-4 h-4 fill-slate-950" /> 30s Coach Pitch Studio
             </button>
@@ -289,7 +289,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
               className="flex items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-all"
               title="Share Profile Link"
             >
-              {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+              {copied ? <CheckCircle2 className="w-4 h-4 text-lime-400" /> : <Share2 className="w-4 h-4" />}
             </button>
           </div>
         </div>
@@ -312,7 +312,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
 
           <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-center">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Core NCAA GPA</p>
-            <p className="text-base font-black text-emerald-400 mt-0.5">
+            <p className="text-base font-black text-lime-400 mt-0.5">
               {profile.coreGpa} <span className="text-[10px] text-slate-400">/ 4.0</span>
             </p>
           </div>
@@ -327,7 +327,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
           <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-800 text-center">
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Division I Offers</p>
             <p className="text-base font-black text-white mt-0.5">
-              {profile.offers.length} <span className="text-xs font-semibold text-emerald-400">Offers</span>
+              {profile.offers.length} <span className="text-xs font-semibold text-lime-400">Offers</span>
             </p>
           </div>
 
@@ -416,7 +416,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
           </div>
           <div className="w-full bg-slate-950 rounded-full h-3 p-0.5 border border-slate-800 overflow-hidden">
             <div
-              className="bg-gradient-to-r from-lime-500 to-emerald-400 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(132,204,22,0.5)]"
+              className="bg-gradient-to-r from-lime-500 to-lime-400 h-full rounded-full transition-all duration-700 shadow-[0_0_12px_rgba(132,204,22,0.5)]"
               style={{ width: `${overallCompletionPercentage}%` }}
             ></div>
           </div>
@@ -443,7 +443,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
                         ? "bg-blue-900/60 text-sky-300 border border-blue-800"
                         : item.category === "Media"
                         ? "bg-orange-900/60 text-orange-300 border border-orange-800"
-                        : "bg-emerald-900/60 text-emerald-300 border border-emerald-800"
+                        : "bg-lime-900/60 text-lime-300 border border-lime-800"
                     }`}
                   >
                     {item.category}
@@ -487,7 +487,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
                   className={`min-h-[44px] min-w-[44px] px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1 shadow-md ${
                     item.isComplete
                       ? "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
-                      : "bg-gradient-to-r from-lime-500 to-emerald-500 hover:from-lime-400 hover:to-emerald-400 text-slate-950 font-extrabold"
+                      : "bg-gradient-to-r from-lime-500 to-lime-500 hover:from-lime-400 hover:to-lime-400 text-slate-950 font-extrabold"
                   }`}
                 >
                   {item.actionText} <ArrowRight className="w-3.5 h-3.5" />
@@ -510,17 +510,17 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
         {/* Left Column (2/3): 30-Sec Video Intro Card, Offers, Physical Stats & Season Highlights */}
         <div className="lg:col-span-2 space-y-8">
           {/* 30-SECOND ATHLETE INTRODUCTION PITCH CARD */}
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border-2 border-emerald-500/30 rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border-2 border-lime-500/30 rounded-3xl p-6 shadow-xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
+                  <span className="px-2.5 py-0.5 rounded-full bg-lime-500/10 text-lime-400 border border-lime-500/30 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
                     <Mic className="w-3 h-3" /> Verified Athlete Pitch
                   </span>
                   <span className="text-xs text-amber-400 font-bold">30-Second Limit</span>
                 </div>
                 <h2 className="text-lg font-extrabold text-white mt-1 flex items-center gap-2">
-                  <Video className="w-5 h-5 text-emerald-400" /> College Coach Introduction Pitch
+                  <Video className="w-5 h-5 text-lime-400" /> College Coach Introduction Pitch
                 </h2>
                 <p className="text-xs text-slate-400">
                   Direct personal pitch evaluating character, hometown roots, strengths, weaknesses & fit.
@@ -529,9 +529,9 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
 
               <button
                 onClick={() => setShowPitchRecorderStudio(!showPitchRecorderStudio)}
-                className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-extrabold text-xs border border-emerald-500/40 transition-all flex items-center gap-1.5 self-start sm:self-center"
+                className="px-4 py-2 rounded-xl bg-lime-500/20 hover:bg-lime-500/30 text-lime-300 font-extrabold text-xs border border-lime-500/40 transition-all flex items-center gap-1.5 self-start sm:self-center"
               >
-                <Zap className="w-4 h-4 text-emerald-400" />
+                <Zap className="w-4 h-4 text-lime-400" />
                 {showPitchRecorderStudio ? "Close Studio" : "Record / Edit Pitch"}
               </button>
             </div>
@@ -548,15 +548,15 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
                   controls
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-emerald-400 border border-slate-800 flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400" /> 30-Sec Coach Pitch
+                <div className="absolute top-2 left-2 bg-slate-950/80 backdrop-blur-md px-2.5 py-1 rounded-full text-[10px] font-bold text-lime-400 border border-slate-800 flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-lime-400" /> 30-Sec Coach Pitch
                 </div>
               </div>
 
               {/* Right Structured Speech Points (7 Cols) */}
               <div className="md:col-span-7 space-y-2.5 text-xs">
                 <div className="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block mb-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-lime-400 block mb-0.5">
                     1. Identity & Roots
                   </span>
                   <p className="text-slate-200 font-medium leading-relaxed">
@@ -602,8 +602,8 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
                   <div key={offer.id} className="bg-slate-950 p-4 rounded-xl border border-slate-800 flex items-center justify-between group hover:border-slate-700 transition-all">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                        <h3 className="font-extrabold text-sm text-white group-hover:text-emerald-400 transition-colors">
+                        <span className="w-2.5 h-2.5 rounded-full bg-lime-400"></span>
+                        <h3 className="font-extrabold text-sm text-white group-hover:text-lime-400 transition-colors">
                           {offer.schoolName}
                         </h3>
                       </div>
@@ -613,7 +613,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
                       <p className="text-[10px] text-slate-500 mt-0.5">Offered: {offer.offerDate}</p>
                     </div>
 
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-lime-500/10 text-lime-400 border border-lime-500/30">
                       {offer.status}
                     </span>
                   </div>
@@ -625,14 +625,14 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
           {/* VERIFIED PHYSICAL & ATHLETIC TEST NUMBERS */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
             <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-400" /> Verified Performance Benchmarks
+              <ShieldCheck className="w-5 h-5 text-lime-400" /> Verified Performance Benchmarks
             </h2>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
                 <p className="text-xs text-slate-400 font-semibold">5-10-5 Shuttle</p>
                 <p className="text-lg font-black text-white mt-1">{profile.shuttleTime}s</p>
-                <span className="text-[10px] text-emerald-400 font-medium">Top 5% National</span>
+                <span className="text-[10px] text-lime-400 font-medium">Top 5% National</span>
               </div>
 
               <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
@@ -657,7 +657,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
             <div className="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
               <span>Hand Size: <strong className="text-white">{profile.handSizeInches}"</strong></span>
               <span>Arm Length: <strong className="text-white">{profile.armLengthInches}"</strong></span>
-              <span>Timing: <strong className="text-emerald-400">{profile.fortyTimingType}</strong></span>
+              <span>Timing: <strong className="text-lime-400">{profile.fortyTimingType}</strong></span>
             </div>
           </div>
 
@@ -673,7 +673,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
             </div>
 
             <div>
-              <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-wider mb-1">
+              <h3 className="text-sm font-bold text-lime-400 uppercase tracking-wider mb-1">
                 Honors, Awards & Team Captaincy
               </h3>
               <p className="text-sm text-slate-200 leading-relaxed bg-slate-950 p-3 rounded-xl border border-slate-800">
@@ -705,7 +705,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
               </div>
               <div className="flex items-center justify-between text-xs py-2 border-b border-slate-800">
                 <span className="text-slate-400">NCAA Core GPA</span>
-                <span className="font-extrabold text-emerald-400 text-sm">{profile.coreGpa}</span>
+                <span className="font-extrabold text-lime-400 text-sm">{profile.coreGpa}</span>
               </div>
               <div className="flex items-center justify-between text-xs py-2 border-b border-slate-800">
                 <span className="text-slate-400">SAT / ACT Score</span>
@@ -719,8 +719,8 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
               </div>
             </div>
 
-            <div className="mt-4 p-3 bg-emerald-950/60 border border-emerald-500/30 rounded-xl flex items-center gap-2 text-xs text-emerald-300 font-medium">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="mt-4 p-3 bg-lime-950/60 border border-lime-500/30 rounded-xl flex items-center gap-2 text-xs text-lime-300 font-medium">
+              <ShieldCheck className="w-4 h-4 text-lime-400 shrink-0" />
               NCAA Qualifier Status: Core GPA & Test Score Approved for DI & DII
             </div>
           </div>
@@ -780,8 +780,8 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
             </div>
 
             <div className="aspect-video bg-slate-950 rounded-xl border border-slate-800 flex flex-col items-center justify-center p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500 flex items-center justify-center text-emerald-400 mb-3 animate-pulse">
-                <Play className="w-8 h-8 fill-emerald-400 ml-1" />
+              <div className="w-16 h-16 rounded-full bg-lime-500/20 border border-lime-500 flex items-center justify-center text-lime-400 mb-3 animate-pulse">
+                <Play className="w-8 h-8 fill-lime-400 ml-1" />
               </div>
               <p className="text-sm font-bold text-white mb-1">Hudl Game Highlight Reel</p>
               <p className="text-xs text-slate-400 mb-4 max-w-md">
@@ -809,10 +809,10 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
     {/* PRINTABLE PDF RECRUITMENT PROFILE (ONLY VISIBLE WHEN PRINTING / EXPORTING PDF) */}
     <div className="hidden print:block p-8 bg-white text-slate-900 font-sans space-y-6 text-sm leading-normal">
       {/* HEADER DOSSIER BANNER */}
-      <div className="border-b-4 border-emerald-600 pb-4 flex justify-between items-start">
+      <div className="border-b-4 border-lime-600 pb-4 flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="bg-emerald-600 text-white px-3 py-1 font-black text-xs uppercase tracking-widest rounded">
+            <span className="bg-lime-600 text-white px-3 py-1 font-black text-xs uppercase tracking-widest rounded">
               GRIDIRON GATEWAY
             </span>
             <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">
@@ -830,7 +830,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
         <div className="text-right border-l-2 border-slate-200 pl-4">
           <p className="text-xs font-bold text-slate-500 uppercase">NCAA Eligibility ID</p>
           <p className="text-lg font-black text-slate-900 font-mono">{profile.ncaaEligibilityId}</p>
-          <p className="text-xs text-emerald-700 font-bold mt-1">
+          <p className="text-xs text-lime-700 font-bold mt-1">
             {profile.starRating ? `${"★".repeat(profile.starRating)} (${profile.starRating}-Star Recruit)` : "Verified Recruit"}
           </p>
         </div>
@@ -852,7 +852,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
         </div>
         <div>
           <span className="text-[10px] uppercase font-bold text-slate-500 block">Hudl Film Link</span>
-          <span className="font-bold text-emerald-700 truncate block">{profile.hudlUrl}</span>
+          <span className="font-bold text-lime-700 truncate block">{profile.hudlUrl}</span>
         </div>
       </div>
 
@@ -903,7 +903,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
           </div>
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-500 block">NCAA Core GPA</span>
-            <span className="font-black text-emerald-800 text-sm">{profile.coreGpa} / 4.0</span>
+            <span className="font-black text-lime-800 text-sm">{profile.coreGpa} / 4.0</span>
           </div>
           <div>
             <span className="text-[10px] uppercase font-bold text-slate-500 block">SAT / ACT</span>
@@ -941,7 +941,7 @@ export const AthleteProfileCard: React.FC<AthleteProfileCardProps> = ({
                   <td className="p-2 font-semibold text-slate-700 border-r border-slate-200">{off.division}</td>
                   <td className="p-2 text-slate-700 border-r border-slate-200">{off.conference}</td>
                   <td className="p-2 text-slate-600 border-r border-slate-200">{off.offerDate}</td>
-                  <td className="p-2 font-black text-emerald-800">{off.status}</td>
+                  <td className="p-2 font-black text-lime-800">{off.status}</td>
                 </tr>
               ))}
             </tbody>
