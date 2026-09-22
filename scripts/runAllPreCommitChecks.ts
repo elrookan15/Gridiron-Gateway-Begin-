@@ -57,6 +57,14 @@ try {
   execSync("npx tsx scripts/federov/runFederovKernelTests.ts", { stdio: "inherit" });
   console.log("");
 
+  console.log("1️⃣4️⃣ Executing Stripe Webhook Secret Fail-Closed Gate...");
+  execSync("npx tsx src/stripeWebhookSecretTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣5️⃣ Executing schema.sql Schools DDL Integrity Gate...");
+  execSync("npx tsx src/schemaSqlIntegrityTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
   console.log("⚡ ==================================================");
   console.log("🟢 ALL PRE-COMMIT STATUTORY, DIRECTORY, TELEMETRY, FEDEROV & TYPE CHECKS PASSED");
   console.log("⚡ ==================================================");

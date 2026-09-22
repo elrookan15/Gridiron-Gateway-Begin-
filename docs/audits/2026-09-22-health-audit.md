@@ -25,12 +25,12 @@ Both `package-lock.json` (218 KB, lockfileVersion 3) and `bun.lock` (94 KB) exis
 | Secrets in commit / `.env` present | **PASS** (no `.env`; `.gitignore` covers `.env*`) |
 | Live architecture vs docs | **PASS with P1/P2 gaps** (see §5) |
 
-**Verdict:** Repo health is **green** for typecheck, statutory suites, and production bundle. Remaining work is hygiene, docs/CI label drift, mock→live migration debt in secondary UI surfaces, and schema/artifact cleanup — not failing gates.
+**Verdict:** Repo health is **green** for typecheck, statutory suites, and production bundle. **P1-2 (schema schools DDL) and P1-4 (Stripe demo whsec fallback) addressed in this PR** with red/green suites. Remaining: P1-3 mockData secondary surfaces + P2 hygiene.
 
 **Pass/fail counts (package.json `test:*` + lint + build + pre-commit):**  
-- Pass: **17**  
+- Pass: **19** (incl. `test:stripe-webhook`, `test:schema-sql`)  
 - Fail: **0**  
-- Skip: **0** (all major scripts attempted)
+- Skip: **0** for major gates (`federov:issue-plan` helper skipped — needs issue context)
 
 ---
 
@@ -122,6 +122,8 @@ Evidence logs retained under `/tmp/cursor/audit-evidence/` on the audit runner (
 | `test:pre-commit` | **PASS** | aggregates above + `tsc` |
 | `test:nil-valuation` | **PASS** | 7/7 — **was orphan; wired in this PR** |
 | `test:ncaa-clearance` | **PASS** | 11/11 — **was orphan; wired in this PR** |
+| `test:stripe-webhook` | **PASS** | 12/12 fail-closed secret resolution + middleware + handler (**P1-4**) |
+| `test:schema-sql` | **PASS** | 9/9 schools DDL integrity (**P1-2**) |
 | `federov:verify-epistemic` | **PASS** | Re=0.12 (helper, not in CI gate list) |
 | `federov:issue-plan` | **SKIP** | Needs GitHub issue context / tokens; not a unit gate |
 
@@ -135,15 +137,15 @@ CI already exercises the statutory set via `.github/workflows/ci.yml` (`npm ci` 
 
 No failing lint/tests/build. No committed `.env`. No `.edu` coach emails invented in `src/data/mockData.ts` (grep clean). Directory mappers force **Contact not verified**.
 
-### P1 — should schedule soon
+### P1 — addressed this PR (except mockData debt)
 
-| ID | Gap | Why it matters |
+| ID | Gap | Status |
 |---|---|---|
-| P1-1 | **CI push branch filter was `cursor/**` only** | Cloud agent branches are `Cursor/jonathan-…` (capital C). Push-to-branch CI would miss them; PR-to-`main` still ran. **Fixed this PR** (`Cursor/**` added). |
-| P1-2 | **`schema.sql` dual / conflicting `schools` DDL** | File contains multiple `CREATE TABLE schools` shapes (MVP UUID vs production `school_id`) with an in-file WARNING. Risk of wrong schema applied offline. Prefer `schema.production.sql` + `supabase/migrations/` as SoT. |
-| P1-3 | **Mock fixtures still power secondary product surfaces** | Live directory: `schoolsApi` + Supabase in `GridironGatewayDashboard`. Still importing `mockData` in: `CoachPipelineBoard`, `CampSearchEngine`, `CoachMessagingFeed`, `NcaaEligibilityTracker`, `SocialMediaShowcase`, `TopWeeklyHighlights`, `RecruitComparisonModal`, `EndorsementSection`, `UnifiedRecruitingTimeline`, plus `INITIAL_ATHLETE_PROFILE` seed in `App` / `OnboardingWizard`. Residual migration debt per `live-supabase-lock.mdc`. |
-| P1-4 | **Stripe webhook demo HMAC default** | `src/stripe-webhook-verification.ts` falls back to `whsec_mock_gridiron_gateway_secret_2026` when env unset. Fine for local demo; production must require `STRIPE_WEBHOOK_SECRET` (fail-closed). |
-| P1-5 | **CI / pre-commit count labels drifted** | Gemini 11≠9, GCS 10≠5. **Labels corrected this PR**; counts were cosmetic only. |
+| P1-1 | **CI push branch filter was `cursor/**` only** | **ADDRESSED** — `Cursor/**` added. |
+| P1-2 | **`schema.sql` dual / conflicting `schools` DDL** | **ADDRESSED** — MVP UUID table renamed `schools_mvp_archive`; scholarship_offers FK retargeted; duplicate `college_coaches` / scouting `athlete_profiles` removed from composite dump; SoT doc `docs/schema-source-of-truth.md`; gate `npm run test:schema-sql` (9/9 PASS 2026-09-22). |
+| P1-3 | **Mock fixtures still power secondary product surfaces** | **OPEN** (out of scope this turn) — Live directory via `schoolsApi`; secondary surfaces still import `mockData` (pipeline, camps, messaging, etc.). |
+| P1-4 | **Stripe webhook demo HMAC default** | **ADDRESSED** — `resolveStripeWebhookSecret()` fail-closed; demo only with `ALLOW_STRIPE_DEMO_WEBHOOK_SECRET=1` or `NODE_ENV=test`; middleware + handler return 503 without secret; `.env.example` updated; gate `npm run test:stripe-webhook` (12/12 PASS 2026-09-22). |
+| P1-5 | **CI / pre-commit count labels drifted** | **ADDRESSED** — Gemini 11/11, GCS 10/10 labels. |
 
 ### P2 — hygiene / backlog
 
@@ -177,24 +179,46 @@ Reviewed `.env.example`: documents `VITE_SUPABASE_*` (anon), server `SUPABASE_SE
 
 ## 6. Recommended next fixes (ordered)
 
-1. **Confirm CI green on this PR** after `Cursor/**` push-filter fix.  
-2. **Declare schema SoT:** document “apply `supabase/migrations` + `schema.production.sql`; treat root `schema.sql` as historical amalgam” — or surgically split/delete conflicting DDL (P1-2).  
-3. **Wire `test:nil-valuation` + `test:ncaa-clearance` into CI / pre-commit** if jonathan wants parity with other statutory gates (P2-9).  
-4. **Fail-closed Stripe secret in production** (`NODE_ENV=production` → no mock `whsec_` fallback) (P1-4).  
-5. **Migrate pipeline / camps / messaging off mockData** behind RLS services (P1-3) — incremental, one surface at a time.  
-6. **Repo hygiene:** rename package, drop or sync `bun.lock`, quarantine/delete `gridiron_latest_code.txt`, trim unused deps (P2-1/2/4/5/6).  
-7. **Optional:** ESLint flat config + `npm run lint:eslint`; code-split dashboard routes (P2-7/8).
+1. **Confirm CI green** on this PR (Stripe + schema gates now in CI).  
+2. **Migrate pipeline / camps / messaging off mockData** behind RLS services (**P1-3 remaining**) — incremental, one surface at a time.  
+3. **Wire `test:nil-valuation` + `test:ncaa-clearance` into CI / pre-commit** if jonathan wants parity (P2-9).  
+4. **Repo hygiene:** rename package, drop or sync `bun.lock`, quarantine/delete `gridiron_latest_code.txt`, trim unused deps (P2-1/2/4/5/6).  
+5. **Optional:** ESLint flat config + `npm run lint:eslint`; code-split dashboard routes (P2-7/8).
 
 ---
 
-## 7. Code changes in this audit PR (safe / small only)
+## 7. Code changes in this PR
 
+### Pass 1 — audit baseline
 | File | Change |
 |---|---|
-| `docs/audits/2026-09-22-health-audit.md` | This report |
-| `.github/workflows/ci.yml` | Add `Cursor/**` push filter; fix Gemini/GCS step titles to 11/11 and 10/10 |
-| `scripts/runAllPreCommitChecks.ts` | Same count-label corrections |
-| `package.json` | Add `test:nil-valuation`, `test:ncaa-clearance` scripts |
+| `docs/audits/2026-09-22-health-audit.md` | Health audit report |
+| `.github/workflows/ci.yml` | `Cursor/**` push filter; Gemini/GCS count labels |
+| `scripts/runAllPreCommitChecks.ts` | Count-label corrections |
+| `package.json` | `test:nil-valuation`, `test:ncaa-clearance` |
+
+### Pass 2 — P1 hardening (Stripe + schema)
+| File | Change |
+|---|---|
+| `src/lib/stripeWebhookSecret.ts` | Fail-closed secret resolver + explicit demo hatch |
+| `src/serverSecurity.ts` | `verifyStripeWebhook` uses resolver; no open-dev bypass |
+| `src/stripe-webhook-verification.ts` | Handler refuses missing secret; always validates HMAC |
+| `src/stripeWebhookSecretTestSuite.ts` | Red/green suite (12 asserts) |
+| `src/schemaSqlIntegrityTestSuite.ts` | Static DDL integrity suite (9 asserts) |
+| `schema.sql` | `schools_mvp_archive`; single production `schools` / `college_coaches`; dossier athlete_profiles only |
+| `docs/schema-source-of-truth.md` | SoT table |
+| `.env.example` | Document fail-closed Stripe + hatch |
+| `package.json` / CI / pre-commit | Wire `test:stripe-webhook`, `test:schema-sql` |
+| `.fedorov/ledger.md` | Correction contracts |
+
+### Evidence (2026-09-22 pass 2)
+```text
+$ npm run lint                         → EXIT 0
+$ npm run test:stripe-webhook          → 12 PASSED
+$ npm run test:schema-sql              → 9 PASSED
+$ npm run test:rallysafe               → 6 PASSED
+$ npm run test:pre-commit              → ALL PASSED (incl. steps 14–15)
+```
 
 No product feature work. No Federov gutting. No secrets committed. No invented coach emails.
 

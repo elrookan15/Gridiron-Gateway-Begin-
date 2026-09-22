@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import crypto from "crypto";
+import { resolveStripeWebhookSecret } from "./lib/stripeWebhookSecret";
 
 const IS_PROD = process.env.NODE_ENV === "production";
 
@@ -84,28 +85,21 @@ export function requireWebhookSecret(headerName: string, envVar: string) {
 }
 
 /**
- * Mock Stripe signature verification.
- * Production must use stripe.webhooks.constructEvent with the raw body.
- * Here we require Stripe-Signature presence + matching STRIPE_WEBHOOK_SECRET prefix check.
+ * Stripe signature verification middleware for `/api/v1/rallysafe/webhooks/stripe`.
+ * Production path should prefer stripe.webhooks.constructEvent with the raw body;
+ * this demo HMAC still requires a resolved secret (fail-closed — no silent demo default).
  */
 export function verifyStripeWebhook(req: Request, res: Response, next: NextFunction): void {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET?.trim();
-  const signature = String(req.headers["stripe-signature"] || "").trim();
-
-  if (!secret) {
-    if (IS_PROD) {
-      res.status(503).json({
-        error: "STRIPE_WEBHOOK_SECRET_NOT_CONFIGURED",
-        message: "STRIPE_WEBHOOK_SECRET must be set in production.",
-      });
-      return;
-    }
-    console.warn("[Security] STRIPE_WEBHOOK_SECRET unset — Stripe webhook open in development.");
-    (req as Request & { stripeVerified?: boolean }).stripeVerified = false;
-    next();
+  const resolved = resolveStripeWebhookSecret();
+  if (resolved.ok === false) {
+    res.status(503).json({
+      error: resolved.error,
+      message: resolved.message,
+    });
     return;
   }
 
+  const signature = String(req.headers["stripe-signature"] || "").trim();
   if (!signature) {
     res.status(401).json({
       error: "STRIPE_SIGNATURE_MISSING",
@@ -116,7 +110,7 @@ export function verifyStripeWebhook(req: Request, res: Response, next: NextFunct
 
   // Lightweight HMAC over stable JSON body using the configured secret (demo stand-in).
   const payload = typeof req.body === "string" ? req.body : JSON.stringify(req.body ?? {});
-  const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  const expected = crypto.createHmac("sha256", resolved.secret).update(payload).digest("hex");
   const provided = signature.includes("v1=")
     ? signature.split("v1=")[1]?.split(",")[0]?.trim() || ""
     : signature;

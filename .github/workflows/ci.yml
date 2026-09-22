@@ -63,5 +63,11 @@ jobs:
       - name: Federov Correction Kernel Gate
         run: npm run test:federov-kernel
 
+      - name: Stripe Webhook Secret Fail-Closed Gate
+        run: npm run test:stripe-webhook
+
+      - name: schema.sql Schools DDL Integrity Gate
+        run: npm run test:schema-sql
+
       - name: Production Bundle Verification
         run: npm run build
