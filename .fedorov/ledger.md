@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-22 | Sidearm Presto selectors / bio-link coach signal | other | integration | Active |
 
 ## Entries
 
