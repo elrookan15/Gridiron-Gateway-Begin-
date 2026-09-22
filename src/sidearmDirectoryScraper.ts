@@ -32,6 +32,83 @@ function toCoachId(schoolId: string, fullName: string, title: string): string {
   return `staff-${slugify(schoolId)}-${slugify(fullName)}-${slugify(title)}`;
 }
 
+/** Parse Sidearm staff HTML (legacy + Presto/Nuxt table rows) into `DatabaseCoach` rows. */
+export function parseSidearmDirectoryHtml(
+  html: string,
+  schoolId: string,
+  directoryUrl: string,
+  verifiedAt: string = new Date().toISOString()
+): DatabaseCoach[] {
+  const $ = cheerio.load(html);
+  const coaches: DatabaseCoach[] = [];
+  const seen = new Set<string>();
+
+  const ROW_SELECTOR = [
+    ".staff-directory-table tbody tr",
+    ".sidearm-staff-member",
+    "table.sidearm-staff-table tbody tr",
+    ".c-coaches-page table tbody tr",
+  ].join(", ");
+
+  $(ROW_SELECTOR).each((_, element) => {
+    const $row = $(element);
+    const cells = $row.find("td");
+
+    const name =
+      $row.find(".staff-directory-name a, .sidearm-staff-member-name, td.name").first().text().trim() ||
+      cells.eq(0).text().trim();
+    const title =
+      $row.find(".staff-directory-title, .sidearm-staff-member-title, td.title").first().text().trim() ||
+      cells.eq(1).text().trim();
+
+    const hasBioLink = $row.find('a[href*="/coaches/"]').length > 0;
+
+    let emailRaw = $row.find(".staff-directory-email a").first().text().trim();
+    if (!emailRaw) {
+      const mailto = $row.find('a[href^="mailto:"]').first().attr("href");
+      emailRaw = mailto?.replace(/^mailto:/i, "").split("?")[0]?.trim() ?? "";
+    }
+    if (!emailRaw && cells.length >= 4) {
+      emailRaw = cells.eq(3).text().trim();
+    }
+
+    const phoneRaw =
+      $row.find(".staff-directory-phone, .sidearm-staff-member-phone, td.phone").first().text().trim() ||
+      (cells.length >= 3 ? cells.eq(2).text().trim() : "");
+
+    const titleLower = title.toLowerCase();
+    if (
+      !name ||
+      !(
+        titleLower.includes("football") ||
+        titleLower.includes("coach") ||
+        titleLower.includes("coordinator") ||
+        hasBioLink
+      )
+    ) {
+      return;
+    }
+
+    const dedupeKey = `${name.toLowerCase()}::${title.toLowerCase()}`;
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+
+    coaches.push({
+      coachId: toCoachId(schoolId, name, title),
+      schoolId,
+      fullName: name,
+      title,
+      email: nullIfEmpty(emailRaw),
+      officePhone: nullIfEmpty(phoneRaw),
+      twitterHandle: null,
+      sourceUrl: directoryUrl,
+      lastVerifiedAt: verifiedAt,
+    });
+  });
+
+  return coaches;
+}
+
 /**
  * Scrape a single Sidearm staff directory into `DatabaseCoach` rows.
  *
@@ -59,67 +136,8 @@ export const scrapeSidearmDirectory = async (
     }
 
     const html = await response.text();
-    const $ = cheerio.load(html);
-    const coaches: DatabaseCoach[] = [];
     const verifiedAt = new Date().toISOString();
-    const seen = new Set<string>();
-
-    // Standard Sidearm Sports HTML structure targets
-    $(
-      ".staff-directory-table tbody tr, .sidearm-staff-member, table.sidearm-staff-table tbody tr"
-    ).each((_, element) => {
-      const name = $(element)
-        .find(".staff-directory-name a, .sidearm-staff-member-name, td.name")
-        .first()
-        .text()
-        .trim();
-      const title = $(element)
-        .find(".staff-directory-title, .sidearm-staff-member-title, td.title")
-        .first()
-        .text()
-        .trim();
-
-      let emailRaw = $(element).find(".staff-directory-email a").first().text().trim();
-      if (!emailRaw) {
-        const mailto = $(element).find('a[href^="mailto:"]').first().attr("href");
-        emailRaw = mailto?.replace(/^mailto:/i, "").split("?")[0]?.trim() ?? "";
-      }
-
-      const phoneRaw = $(element)
-        .find(".staff-directory-phone, .sidearm-staff-member-phone, td.phone")
-        .first()
-        .text()
-        .trim();
-
-      const titleLower = title.toLowerCase();
-      // Only push valid football coaches
-      if (
-        !name ||
-        !(
-          titleLower.includes("football") ||
-          titleLower.includes("coach") ||
-          titleLower.includes("coordinator")
-        )
-      ) {
-        return;
-      }
-
-      const dedupeKey = `${name.toLowerCase()}::${title.toLowerCase()}`;
-      if (seen.has(dedupeKey)) return;
-      seen.add(dedupeKey);
-
-      coaches.push({
-        coachId: toCoachId(schoolId, name, title),
-        schoolId,
-        fullName: name,
-        title,
-        email: nullIfEmpty(emailRaw),
-        officePhone: nullIfEmpty(phoneRaw),
-        twitterHandle: null,
-        sourceUrl: directoryUrl,
-        lastVerifiedAt: verifiedAt,
-      });
-    });
+    const coaches = parseSidearmDirectoryHtml(html, schoolId, directoryUrl, verifiedAt);
 
     console.log(`[Sidearm Scraper] Extracted ${coaches.length} staff members.`);
     return coaches;
