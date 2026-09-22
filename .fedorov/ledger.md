@@ -9,12 +9,10 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
-<<<<<<< HEAD
+| 2026-09-20 | NCAA Recruiting Auditor ASP v1.0 land | compliance | integration | Active — packages/ncaa-recruiting-auditor |
+| 2026-09-22 | ASP fail-closed CodeRabbit majors (HALT/tz/slice) | compliance | integration | Active |
 | 2026-09-22 | Health audit baseline (CI Cursor/** + orphan suites) | other | qa | Active — see docs/audits/2026-09-22-health-audit.md |
 | 2026-09-22 | Stripe whsec fail-closed + schema schools DDL split | security / persistence | integration | Active |
-=======
-| 2026-09-20 | NCAA Recruiting Auditor ASP v1.0 land | compliance | integration | Active — packages/ncaa-recruiting-auditor |
->>>>>>> e2a9685 (feat(compliance): land NCAA Recruiting Auditor ASP v1.0 package)
 
 ## Entries
 
@@ -44,7 +42,20 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
 
-<<<<<<< HEAD
+## [2026-09-20] NCAA Recruiting Auditor ASP v1.0 land
+
+- Category: compliance
+- Persona: integration
+- File(s): `packages/ncaa-recruiting-auditor/**`
+- Root Cause: Frozen ASP v1.0 package needed a durable home in-repo without merging into `src/complianceEngine.ts` or inventing Slice 2 ledgers.
+- Patch: Self-contained package under `packages/ncaa-recruiting-auditor/` + root script `test:ncaa-auditor-asp`.
+- Red Test: Absent package → no CI surface for July 10 PeriodGate vectors.
+- Green Test: `npm run test:ncaa-auditor-asp` → 6/6 vitest pass.
+- Regression Guard: `src/periodGate.test.ts` July/August/TZ vectors; `vitest.config.ts` isolates from root Vite config.
+- Residual Risk: Not wired into live `complianceEngine` / message send path; bylaw strings are architectural assertions only.
+- Recurrence Count: 1
+- Status: Active
+
 ## [2026-09-22] Health audit baseline — CI Cursor/** filter + orphan suite scripts
 
 - Category: other
@@ -69,18 +80,5 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Green Test: `npm run test:stripe-webhook` 12/12; `npm run test:schema-sql` 9/9; `npm run lint` + `npm run test:pre-commit` EXIT 0 (2026-09-22).
 - Regression Guard: CI steps `test:stripe-webhook` + `test:schema-sql`; static CREATE TABLE count asserts.
 - Residual Risk: Live Stripe `constructEvent` still demo-HMAC; mockData secondary UI (P1-3) untouched; fresh full `schema.sql` apply not executed against a live Postgres in this run.
-=======
-## [2026-09-20] NCAA Recruiting Auditor ASP v1.0 land
-
-- Category: compliance
-- Persona: integration
-- File(s): `packages/ncaa-recruiting-auditor/**`
-- Root Cause: Frozen ASP v1.0 package needed a durable home in-repo without merging into `src/complianceEngine.ts` or inventing Slice 2 ledgers.
-- Patch: Self-contained package under `packages/ncaa-recruiting-auditor/` + root script `test:ncaa-auditor-asp`.
-- Red Test: Absent package → no CI surface for July 10 PeriodGate vectors.
-- Green Test: `npm run test:ncaa-auditor-asp` → 6/6 vitest pass.
-- Regression Guard: `src/periodGate.test.ts` July/August/TZ vectors; `vitest.config.ts` isolates from root Vite config.
-- Residual Risk: Not wired into live `complianceEngine` / message send path; bylaw strings are architectural assertions only.
->>>>>>> e2a9685 (feat(compliance): land NCAA Recruiting Auditor ASP v1.0 package)
 - Recurrence Count: 1
 - Status: Active

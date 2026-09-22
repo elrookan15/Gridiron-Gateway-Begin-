@@ -111,8 +111,13 @@ export const RawExtractorEventSchema = z
     temp_event_id: z.string().min(1),
     interaction_mode: InteractionModeSchema,
     timestamp_text: z.string().min(1),
-    location: z.string().min(1),
+    location: LocationSchema,
     prospects: z.array(RawProspectNodeSchema),
+    direction: z.enum(["OUTBOUND", "INBOUND", "UNKNOWN"]).optional(),
+    booster: z.boolean().optional(),
+    booster_involved: z.boolean().optional(),
+    staff_role: z.string().optional(),
+    expense_beneficiary: z.string().nullable().optional(),
   })
   .passthrough();
 export const RawExtractorOutputSchema = z.object({
@@ -126,9 +131,14 @@ export const EnrichedComplianceEventSchema = z.object({
   interaction_mode: InteractionModeSchema,
   occurred_at: z.string().datetime({ offset: true }),
   timestamp_text: z.string().min(1),
-  location: z.string().min(1),
+  location: LocationSchema,
   calendar: z.string().nullable(),
   prospects: z.array(z.union([ProspectReadySchema, ProspectHaltSchema])),
+  direction: z.enum(["OUTBOUND", "INBOUND", "UNKNOWN"]).optional(),
+  booster: z.boolean().optional(),
+  booster_involved: z.boolean().optional(),
+  staff_role: z.string().optional(),
+  expense_beneficiary: z.string().nullable().optional(),
 }).passthrough();
 export const EnrichedComplianceBatchSchema = z.object({
   session: SessionContextSchema,
@@ -145,10 +155,27 @@ export function calendarResolver(
 ): string | null {
   const date = occurredAt instanceof Date ? occurredAt : new Date(occurredAt);
   if (Number.isNaN(date.getTime())) return null;
+  // Keys are labeled _2026 for the frozen ASP handoff; no inventing a year lock —
+  // unmatched years fail closed via PeriodGate RULE_TABLE_MISS / CALENDAR_NULL.
   if (sport === "FOOTBALL" && division === "FBS") return "D1_FBS_FOOTBALL_2026";
   if (sport === "FOOTBALL" && division === "FCS") return "D1_FCS_FOOTBALL_2026";
   if (division === "D1") return `D1_${sport}_2026`;
   return null;
+}
+
+/**
+ * Accept only offset-bearing ISO-8601 timestamps that round-trip.
+ * Date-only / offset-free strings are ambiguous and must fall back to session.occurred_at.
+ */
+export function parseOffsetBearingTimestamp(timestampText: string): string | null {
+  const trimmed = timestampText.trim();
+  if (!/(?:[Zz]|[+-]\d{2}:\d{2})$/.test(trimmed)) return null;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  const iso = parsed.toISOString();
+  // Round-trip: re-parse ISO must match the original instant.
+  if (new Date(iso).getTime() !== parsed.getTime()) return null;
+  return iso;
 }
 
 function asInitiator(value: unknown): Initiator {
@@ -203,10 +230,7 @@ export function assembleComplianceEnvelope(
   const raw = RawExtractorOutputSchema.parse(rawOutput);
   const session = SessionContextSchema.parse(sessionContext);
   const events = raw.events.map((event) => {
-    const occurredAt = new Date(event.timestamp_text);
-    const occurred_at = Number.isNaN(occurredAt.getTime())
-      ? session.occurred_at
-      : occurredAt.toISOString();
+    const occurred_at = parseOffsetBearingTimestamp(event.timestamp_text) ?? session.occurred_at;
     const prospects = event.prospects.map((prospect) => normalizeProspect({
       ...prospect,
       interaction_mode: event.interaction_mode,
@@ -220,6 +244,12 @@ export function assembleComplianceEnvelope(
       location: event.location,
       calendar: calendarResolver(occurred_at, session.sport, session.division),
       prospects,
+      // Preserve only metadata fields the outer harness actually consumes.
+      ...(event.direction !== undefined ? { direction: event.direction } : {}),
+      ...(event.booster !== undefined ? { booster: event.booster } : {}),
+      ...(event.booster_involved !== undefined ? { booster_involved: event.booster_involved } : {}),
+      ...(event.staff_role !== undefined ? { staff_role: event.staff_role } : {}),
+      ...(event.expense_beneficiary !== undefined ? { expense_beneficiary: event.expense_beneficiary } : {}),
     });
   });
   return EnrichedComplianceBatchSchema.parse({ session, events });

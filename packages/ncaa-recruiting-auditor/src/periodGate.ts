@@ -97,12 +97,14 @@ export interface PeriodGateVerdict {
 
 function canonicalInput(input: EvaluationInput) {
   const direction = input.direction ?? (input.initiator === "INITIATOR" ? "OUTBOUND" : input.initiator === "PASSIVE" ? "INBOUND" : "UNKNOWN");
+  const staffTimezone = input.staffTimezone ?? input.staff_timezone;
   return {
     ...input,
     occurredAt: input.occurredAt ?? input.occurred_at,
     sport: input.sport,
     division: input.division,
-    staffTimezone: input.staffTimezone ?? input.staff_timezone ?? "UTC",
+    // Never invent UTC — missing tz must fail closed before localParts.
+    staffTimezone: typeof staffTimezone === "string" && staffTimezone.trim().length > 0 ? staffTimezone : undefined,
     interactionMode: input.interactionMode ?? input.interaction_mode,
     direction,
     signingStatus: input.signingStatus ?? input.signing_status ?? "UNSIGNED",
@@ -159,9 +161,24 @@ export function evaluatePeriodGate(input: EvaluationInput): PeriodGateVerdict {
   if (!occurredAt || !value.interactionMode) {
     return { status: "FLAGGED", rule_id: null, reason: "RULE_TABLE_MISS: missing temporal or interaction fields", local_time: null, fallback: "RULE_TABLE_MISS" };
   }
+  if (!timeZone) {
+    return { status: "FLAGGED", rule_id: null, reason: "RULE_TABLE_MISS: missing staff timezone", local_time: null, fallback: "RULE_TABLE_MISS" };
+  }
   const local = localParts(occurredAt, timeZone);
   if (!local) {
     return { status: "FLAGGED", rule_id: null, reason: "RULE_TABLE_MISS: invalid timestamp or staff timezone", local_time: null, fallback: "RULE_TABLE_MISS" };
+  }
+  // Frozen table rows are year-scoped (ids FBS-2026-…); month-day matching alone
+  // would apply 2026 quiet/dead windows to other years — refuse with RULE_TABLE_MISS.
+  const localYear = local.local.slice(0, 4);
+  if (localYear !== "2026") {
+    return {
+      status: "FLAGGED",
+      rule_id: null,
+      reason: "RULE_TABLE_MISS: frozen D1_FBS_FOOTBALL_2026 table has no row for this local year",
+      local_time: local.local,
+      fallback: "RULE_TABLE_MISS",
+    };
   }
   const candidates = D1_FBS_FOOTBALL_RULES.filter((row) =>
     value.sport === row.sport && value.division === row.division &&
