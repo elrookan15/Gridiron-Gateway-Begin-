@@ -9,6 +9,8 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-20 | NCAA Recruiting Auditor ASP v1.0 land | compliance | integration | Active — packages/ncaa-recruiting-auditor |
+| 2026-09-22 | ASP fail-closed CodeRabbit majors (HALT/tz/slice) | compliance | integration | Active |
 | 2026-09-22 | Health audit baseline (CI Cursor/** + orphan suites) | other | qa | Active — see docs/audits/2026-09-22-health-audit.md |
 | 2026-09-22 | Stripe whsec fail-closed + schema schools DDL split | security / persistence | integration | Active |
 
@@ -39,6 +41,34 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-20] NCAA Recruiting Auditor ASP v1.0 land
+
+- Category: compliance
+- Persona: integration
+- File(s): `packages/ncaa-recruiting-auditor/**`
+- Root Cause: Frozen ASP v1.0 package needed a durable home in-repo without merging into `src/complianceEngine.ts` or inventing Slice 2 ledgers.
+- Patch: Self-contained package under `packages/ncaa-recruiting-auditor/` + root script `test:ncaa-auditor-asp`.
+- Red Test: Absent package → no CI surface for July 10 PeriodGate vectors.
+- Green Test: `npm run test:ncaa-auditor-asp` → 6/6 vitest pass.
+- Regression Guard: `src/periodGate.test.ts` July/August/TZ vectors; `vitest.config.ts` isolates from root Vite config.
+- Residual Risk: Not wired into live `complianceEngine` / message send path; bylaw strings are architectural assertions only.
+- Recurrence Count: 1
+- Status: Active
+
+## [2026-09-22] ASP fail-closed CodeRabbit majors (HALT / tz / slice / location)
+
+- Category: compliance
+- Persona: integration
+- File(s): `packages/ncaa-recruiting-auditor/src/{auditComplianceBatch,periodGate,sessionEnvelope,periodGate.test}.ts`
+- Root Cause: HALT prospects skipped → CLEAR; non-FBS sessions CLEAR; UTC default for missing tz; open location string; offset-free timestamp_text; dropped booster/direction metadata.
+- Patch: EXTRACTOR_HALT quarantine; SLICE_NOT_IMPLEMENTED outside FOOTBALL/FBS; no UTC default; LocationSchema on raw+enriched; offset-bearing parse only; preserve consumed metadata fields. Narrow year scope in PeriodGate only (frozen `FBS-2026-*` table) — no invented calendarResolver year lock.
+- Red Test: HALT-only / FCS / missing tz previously CLEAR or PERMISSIBLE.
+- Green Test: `npm run test:ncaa-auditor-asp` → 13/13 (6 July + 7 fail-closed).
+- Regression Guard: vitest fail-closed suite in `periodGate.test.ts`.
+- Residual Risk: Slice 2 still deferred; live complianceEngine not wired.
+- Recurrence Count: 1
+- Status: Active
 
 ## [2026-09-22] Health audit baseline — CI Cursor/** filter + orphan suite scripts
 
