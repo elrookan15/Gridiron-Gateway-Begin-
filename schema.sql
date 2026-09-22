@@ -1,7 +1,17 @@
 -- =============================================================================
--- GRIDIRON GATEWAY — PRODUCTION RELATIONAL SCHEMA
+-- GRIDIRON GATEWAY — COMPOSITE SCHEMA (directory + app + ingest mirrors)
 -- Target Platform: Supabase / PostgreSQL 15+
 -- Philosophy: Fail-Closed Security, Complete Data Integrity & NCAA Compliance
+--
+-- SOURCE OF TRUTH (read this before applying):
+--   • Fresh production directory: prefer `schema.production.sql` + `supabase/migrations/`.
+--   • This file is a composite historical dump. Production `schools` /
+--     `college_coaches` (VARCHAR school_id) are defined FIRST.
+--   • Legacy MVP UUID directory lives ONLY as `schools_mvp_archive` (never a
+--     second `CREATE TABLE schools`). Dossier / scholarship_offers may still
+--     join the archive — do not invent coach emails.
+--   • Scouting-shaped `athlete_profiles(athlete_id VARCHAR)` lives in
+--     `schema.production.sql` — not redefined here (dossier uses user_id UUID).
 -- =============================================================================
 
 CREATE TYPE division_tier_enum AS ENUM ('FBS_POWER_4', 'FBS_GROUP_OF_5', 'FCS', 'D2', 'D3', 'NAIA', 'JUCO', 'PREP');
@@ -33,22 +43,13 @@ CREATE TABLE IF NOT EXISTS college_coaches (
     last_verified_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS athlete_profiles (
-    athlete_id VARCHAR(100) PRIMARY KEY,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    grad_year INTEGER NOT NULL,
-    primary_position VARCHAR(10) NOT NULL,
-    state VARCHAR(50),
-    star_rating INTEGER DEFAULT 0,
-    true_speed_mph DECIMAL(5,2),
-    cognition_score INTEGER
-);
-
 -- Optimize queries for the Autonomous Scouting Agent and Leaderboard
 CREATE INDEX IF NOT EXISTS idx_schools_tier ON schools(tier);
 CREATE INDEX IF NOT EXISTS idx_coaches_school ON college_coaches(school_id);
-CREATE INDEX IF NOT EXISTS idx_athletes_position_year ON athlete_profiles(primary_position, grad_year);
+
+COMMENT ON TABLE schools IS 'Production CFBD/CSV directory (school_id VARCHAR). SoT also: schema.production.sql.';
+COMMENT ON TABLE college_coaches IS 'Production staff contacts; email NULL when unpublished — never LLM-invented.';
+COMMENT ON COLUMN college_coaches.email IS 'Sidearm/CSV verified only — null → Contact not verified in SPA.';
 
 -- -----------------------------------------------------------------------------
 -- 1. STRICT DOMAIN ENUMS
@@ -131,13 +132,12 @@ COMMENT ON COLUMN users.guardian_id IS 'Self-referencing FK linking minor athlet
 
 -- Colleges, Universities & Prep Programs Directory (LEGACY MVP UUID model)
 -- =============================================================================
--- WARNING: This second `CREATE TABLE schools` conflicts with production
--- `schools(school_id VARCHAR)` defined earlier (IF NOT EXISTS). On greenfield,
--- apply schema.production.sql only. This MVP block remains for historical
--- scholarship_offers UUID joins / dossier debt — do not deploy both blindly.
--- Live SPA directories use production schools + college_coaches exclusively.
+-- Archived as `schools_mvp_archive` so it NEVER collides with production
+-- `schools(school_id VARCHAR)` above. Matches live cutover migration
+-- `20260909150000_production_schools_directory_cutover.sql`.
+-- scholarship_offers / dossier debt may still FK here. Do not invent coach emails.
 -- =============================================================================
-CREATE TABLE schools (
+CREATE TABLE schools_mvp_archive (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   mascot TEXT,
@@ -154,7 +154,8 @@ CREATE TABLE schools (
   updated_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
-COMMENT ON TABLE schools IS 'LEGACY MVP UUID directory OR production VARCHAR school_id depending on which migration landed first. Prefer schema.production.sql for new deploys.';
+COMMENT ON TABLE schools_mvp_archive IS 'Pre-cutover UUID schools retained for dossier / scholarship_offers joins. Production directory = public.schools (VARCHAR school_id).';
+COMMENT ON COLUMN schools_mvp_archive.primary_recruiting_email IS 'Nullable historical field — never LLM-fill; prefer Contact not verified when null.';
 
 -- Athlete Physical, Academic & NIL Profiles (1-to-1 with users)
 CREATE TABLE athlete_profiles (
@@ -204,7 +205,7 @@ COMMENT ON TABLE athlete_profiles IS 'Detailed athletic, combine, academic, and 
 CREATE TABLE scholarship_offers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   athlete_id UUID NOT NULL REFERENCES athlete_profiles(user_id) ON DELETE CASCADE,
-  school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+  school_id UUID NOT NULL REFERENCES schools_mvp_archive(id) ON DELETE CASCADE,
   is_official BOOLEAN DEFAULT FALSE NOT NULL,
   offer_date DATE DEFAULT CURRENT_DATE NOT NULL,
   commitment_status commitment_status DEFAULT 'Uncommitted' NOT NULL,
@@ -284,8 +285,8 @@ CREATE TRIGGER update_users_updated_at
   BEFORE UPDATE ON users
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_schools_updated_at
-  BEFORE UPDATE ON schools
+CREATE TRIGGER update_schools_mvp_archive_updated_at
+  BEFORE UPDATE ON schools_mvp_archive
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_athlete_profiles_updated_at
@@ -344,9 +345,9 @@ CREATE INDEX idx_athlete_profiles_grad_class ON athlete_profiles(grad_class);
 CREATE INDEX idx_athlete_profiles_primary_pos ON athlete_profiles(primary_position);
 CREATE INDEX idx_athlete_profiles_city_state ON athlete_profiles(city_state);
 CREATE INDEX idx_athlete_profiles_star_rating ON athlete_profiles(star_rating);
-CREATE INDEX idx_schools_division ON schools(division);
-CREATE INDEX idx_schools_state ON schools(state);
-CREATE INDEX idx_schools_conference ON schools(conference);
+CREATE INDEX idx_schools_mvp_archive_division ON schools_mvp_archive(division);
+CREATE INDEX idx_schools_mvp_archive_state ON schools_mvp_archive(state);
+CREATE INDEX idx_schools_mvp_archive_conference ON schools_mvp_archive(conference);
 CREATE INDEX idx_messages_status ON messages(status);
 CREATE INDEX idx_compliance_rules_active_dates ON compliance_rules(is_active, start_time, end_time);
 
@@ -357,6 +358,7 @@ CREATE INDEX idx_compliance_rules_active_dates ON compliance_rules(is_active, st
 -- Enable RLS across all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE schools ENABLE ROW LEVEL SECURITY;
+ALTER TABLE schools_mvp_archive ENABLE ROW LEVEL SECURITY;
 ALTER TABLE athlete_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE scholarship_offers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE athlete_media ENABLE ROW LEVEL SECURITY;
@@ -379,7 +381,7 @@ CREATE POLICY "Users can update their own profile"
   WITH CHECK (auth.uid() = id);
 
 -- ------------------------------------
--- B. SCHOOLS POLICIES
+-- B. SCHOOLS POLICIES (production VARCHAR directory + MVP archive)
 -- ------------------------------------
 CREATE POLICY "Schools directory is viewable by authenticated users"
   ON schools FOR SELECT
@@ -388,6 +390,21 @@ CREATE POLICY "Schools directory is viewable by authenticated users"
 
 CREATE POLICY "Compliance officers can insert/update schools"
   ON schools FOR ALL
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM users
+      WHERE users.id = auth.uid() AND users.role = 'compliance_officer'
+    )
+  );
+
+CREATE POLICY "MVP archive schools viewable by authenticated users"
+  ON schools_mvp_archive FOR SELECT
+  TO authenticated
+  USING (true);
+
+CREATE POLICY "Compliance officers can insert/update MVP archive schools"
+  ON schools_mvp_archive FOR ALL
   TO authenticated
   USING (
     EXISTS (
@@ -944,27 +961,12 @@ COMMENT ON TABLE coaching_staff IS 'Verified coach contacts from Sidearm scrape 
 COMMENT ON COLUMN coaching_staff.email IS 'Must be extracted from published athletics pages or verified CSV — never LLM-generated. Nullable when unpublished.';
 COMMENT ON COLUMN coaching_staff.twitter_handle IS 'Optional public handle; null until verified from staff page or CSV.';
 
--- Application-facing coach directory (legacy TEXT ids). Prefer schema.production.sql
--- college_coaches (UUID + schools.school_id FK) for new Supabase deployments.
-CREATE TABLE college_coaches (
-  coach_id TEXT PRIMARY KEY,
-  school_id TEXT NOT NULL REFERENCES program_directory(id) ON DELETE CASCADE,
-  full_name TEXT NOT NULL,
-  title TEXT NOT NULL,
-  email TEXT,
-  office_phone TEXT,
-  twitter_handle TEXT,
-  source_url TEXT,
-  last_verified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE INDEX idx_college_coaches_school ON college_coaches (school_id);
-CREATE INDEX idx_college_coaches_email ON college_coaches (email) WHERE email IS NOT NULL;
-
-COMMENT ON TABLE college_coaches IS 'Legacy ingest mirror. Production deployments should use schema.production.sql.';
+-- Application-facing coach directory historically used TEXT ids against
+-- program_directory. That second `CREATE TABLE college_coaches` CONFLICTED with
+-- production UUID `college_coaches` defined at the top of this file.
+-- SoT for live SPA: schema.production.sql `college_coaches` + migrations.
+-- Ingest staff mirror: `coaching_staff` above (nullable email — never invent).
+-- Intentionally no duplicate CREATE TABLE college_coaches here.
 
 -- RallySafe third-party NIL Go ledger (fail-closed clearinghouse). Apply:
 -- supabase/migrations/20260814120000_nil_transactions.sql

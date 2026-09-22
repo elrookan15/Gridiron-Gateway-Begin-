@@ -33,11 +33,11 @@ try {
   execSync("npx tsx src/combineLaserTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("8️⃣ Executing Gemini AI School Generator & Database Suite (9/9 Schema Audit)...");
+  console.log("8️⃣ Executing Gemini AI School Generator & Database Suite (11/11 Schema Audit)...");
   execSync("npx tsx src/geminiSchoolGeneratorTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("9️⃣ Executing GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)...");
+  console.log("9️⃣ Executing GCS V4 Signed URL & COPPA Minor Gate (10/10 Metric Audit)...");
   execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
@@ -55,6 +55,14 @@ try {
 
   console.log("1️⃣3️⃣ Executing Federov Correction Kernel Toolkit Gate...");
   execSync("npx tsx scripts/federov/runFederovKernelTests.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣4️⃣ Executing Stripe Webhook Secret Fail-Closed Gate...");
+  execSync("npx tsx src/stripeWebhookSecretTestSuite.ts", { stdio: "inherit" });
+  console.log("");
+
+  console.log("1️⃣5️⃣ Executing schema.sql Schools DDL Integrity Gate...");
+  execSync("npx tsx src/schemaSqlIntegrityTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
   console.log("⚡ ==================================================");

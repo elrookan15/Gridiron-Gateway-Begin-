@@ -9,6 +9,8 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-22 | Health audit baseline (CI Cursor/** + orphan suites) | other | qa | Active — see docs/audits/2026-09-22-health-audit.md |
+| 2026-09-22 | Stripe whsec fail-closed + schema schools DDL split | security / persistence | integration | Active |
 
 ## Entries
 
@@ -37,3 +39,30 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-22] Health audit baseline — CI Cursor/** filter + orphan suite scripts
+
+- Category: other
+- Persona: qa
+- File(s): `docs/audits/2026-09-22-health-audit.md`, `.github/workflows/ci.yml`, `package.json`, `scripts/runAllPreCommitChecks.ts`
+- Root Cause: No committed evidence-backed health baseline; CI push filter missed `Cursor/**` agent branches; gemini/gcs step titles drifted from suite counts; two TestSuites lacked npm scripts.
+- Patch: Audit markdown; add `Cursor/**` to CI push branches; correct 11/11 and 10/10 labels; wire `test:nil-valuation` / `test:ncaa-clearance`.
+- Red Test: Push to `Cursor/*` did not match `cursor/**` filter (case-sensitive); suite output 11/11 vs CI claim 9/9.
+- Green Test: Full matrix in audit doc — lint/build/pre-commit/`test:*` EXIT 0 on 2026-09-22 runner.
+- Regression Guard: CI titles match suite prints; orphan scripts in `package.json`.
+- Recurrence Count: 1
+- Status: Active
+
+## [2026-09-22] Stripe webhook demo secret fail-closed + schema.sql schools DDL split
+
+- Category: security / persistence
+- Persona: integration
+- File(s): `src/lib/stripeWebhookSecret.ts`, `src/serverSecurity.ts`, `src/stripe-webhook-verification.ts`, `schema.sql`, `docs/schema-source-of-truth.md`, suites + CI
+- Root Cause: (1) Silent `whsec_mock_*` fallback when `STRIPE_WEBHOOK_SECRET` unset allowed forged webhooks in non-prod that looks like prod. (2) `schema.sql` defined conflicting `CREATE TABLE schools` (VARCHAR vs UUID) plus duplicate `college_coaches` / `athlete_profiles`.
+- Patch: `resolveStripeWebhookSecret()` — demo only with `ALLOW_STRIPE_DEMO_WEBHOOK_SECRET=1` or `NODE_ENV=test`; middleware/handler 503 without secret; MVP schools → `schools_mvp_archive`; SoT doc; integrity + secret suites wired to CI/pre-commit.
+- Red Test: Missing secret / demo secret without hatch → reject; second `CREATE TABLE schools` would fail integrity suite.
+- Green Test: `npm run test:stripe-webhook` 12/12; `npm run test:schema-sql` 9/9; `npm run lint` + `npm run test:pre-commit` EXIT 0 (2026-09-22).
+- Regression Guard: CI steps `test:stripe-webhook` + `test:schema-sql`; static CREATE TABLE count asserts.
+- Residual Risk: Live Stripe `constructEvent` still demo-HMAC; mockData secondary UI (P1-3) untouched; fresh full `schema.sql` apply not executed against a live Postgres in this run.
+- Recurrence Count: 1
+- Status: Active

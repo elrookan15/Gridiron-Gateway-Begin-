@@ -1,14 +1,19 @@
-import express, { Request, Response } from "express";
+import { Request, Response } from "express";
 import crypto from "crypto";
+import {
+  resolveStripeWebhookSecret,
+  STRIPE_DEMO_WEBHOOK_SECRET,
+} from "./lib/stripeWebhookSecret";
 
 /**
  * 🛡️ GRIDIRON GATEWAY — RALLYSAFE STRIPE CONNECT WEBHOOK VERIFICATION & COMPLIANCE HANDLER
- * 
+ *
  * Enterprise Standards:
  * 1. NCAA Transfer Portal Compliance Lock (blocks payouts on transfer.created with HTTP 403)
  * 2. Raw Buffer HMAC SHA-256 Signature Verification
  * 3. Integer Math in Cents (prevents float drift across $20.5M roster cap)
  * 4. Audit Log Triggers for payment_intent.succeeded, payout.failed, account.updated
+ * 5. Fail-closed webhook secret — no silent demo `whsec_` fallback (see stripeWebhookSecret.ts)
  */
 
 // Interface contracts
@@ -64,6 +69,16 @@ export class MockComplianceService {
 
 export const mockComplianceService = new MockComplianceService();
 
+/** Narrow Stripe event object fields used by this handler (demo HMAC path). */
+type StripeWebhookEventObject = {
+  amount?: number;
+  metadata?: { campaignId?: string; athleteId?: string };
+  destination?: string;
+  failure_message?: string;
+  id?: string;
+  payouts_enabled?: boolean;
+};
+
 // Mock Stripe Webhook Constructor Signature Verifier
 export function verifyStripeSignature(rawBody: Buffer | string, signatureHeader: string, webhookSecret: string): boolean {
   if (!signatureHeader || !webhookSecret) return false;
@@ -89,26 +104,37 @@ export function verifyStripeSignature(rawBody: Buffer | string, signatureHeader:
 // Stripe Webhook Event Router & Express Endpoint Handler
 export async function handleStripeWebhook(req: Request, res: Response): Promise<void> {
   const signature = req.headers["stripe-signature"] as string;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "whsec_mock_gridiron_gateway_secret_2026";
+  const resolved = resolveStripeWebhookSecret();
+  if (resolved.ok === false) {
+    res.status(503).json({
+      error: resolved.error,
+      message: resolved.message,
+    });
+    return;
+  }
 
-  // Raw Buffer Signature Verification
+  // Raw Buffer Signature Verification — always fail-closed when a secret is resolved
   const rawBody = req.body instanceof Buffer ? req.body : Buffer.from(JSON.stringify(req.body));
-  const isValidSignature = verifyStripeSignature(rawBody, signature, webhookSecret);
+  const isValidSignature = verifyStripeSignature(rawBody, signature, resolved.secret);
 
-  if (!isValidSignature && process.env.NODE_ENV === "production") {
+  if (!isValidSignature) {
     res.status(400).send("Webhook Signature Verification Failed: Invalid HMAC Hash");
     return;
   }
 
-  let event: any;
+  let event: { id?: string; type?: string; data?: { object?: StripeWebhookEventObject } };
   try {
     const bodyString = Buffer.isBuffer(req.body)
       ? req.body.toString("utf8")
       : typeof req.body === "string"
       ? req.body
       : JSON.stringify(req.body);
-    event = JSON.parse(bodyString);
-  } catch (err) {
+    event = JSON.parse(bodyString) as {
+      id?: string;
+      type?: string;
+      data?: { object?: StripeWebhookEventObject };
+    };
+  } catch {
     res.status(400).send("Webhook Error: Invalid JSON Payload");
     return;
   }
@@ -236,9 +262,17 @@ export async function runStripeWebhookTestRunner(): Promise<void> {
   console.log("🧪 RUNNING STRIPE WEBHOOK & COMPLIANCE TEST SUITE");
   console.log("==================================================");
 
-  const webhookSecret = "whsec_mock_gridiron_gateway_secret_2026";
+  // Explicit hatch for this local runner — never rely on silent demo fallback.
+  const prevAllow = process.env.ALLOW_STRIPE_DEMO_WEBHOOK_SECRET;
+  const prevSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  process.env.ALLOW_STRIPE_DEMO_WEBHOOK_SECRET = "1";
+  process.env.STRIPE_WEBHOOK_SECRET = STRIPE_DEMO_WEBHOOK_SECRET;
+  const webhookSecret = STRIPE_DEMO_WEBHOOK_SECRET;
 
-  const createMockRequest = (eventType: string, payloadObj: any): { req: Request; res: Response; getStatus: () => number; getBody: () => any } => {
+  const createMockRequest = (
+    eventType: string,
+    payloadObj: Record<string, unknown>,
+  ): { req: Request; res: Response; getStatus: () => number; getBody: () => unknown } => {
     const rawPayload = JSON.stringify({
       id: `evt_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
       type: eventType,
@@ -246,11 +280,14 @@ export async function runStripeWebhookTestRunner(): Promise<void> {
     });
 
     const timestamp = Math.floor(Date.now() / 1000).toString();
-    const signature = crypto.createHmac("sha256", webhookSecret).update(`${timestamp}.${rawPayload}`).digest("hex");
+    const signature = crypto
+      .createHmac("sha256", webhookSecret)
+      .update(`${timestamp}.${rawPayload}`)
+      .digest("hex");
     const stripeHeader = `t=${timestamp},v1=${signature}`;
 
     let statusCode = 200;
-    let responseBody: any = null;
+    let responseBody: unknown = null;
 
     const req = {
       headers: { "stripe-signature": stripeHeader },
@@ -262,11 +299,11 @@ export async function runStripeWebhookTestRunner(): Promise<void> {
         statusCode = code;
         return res;
       },
-      send: (data: any) => {
+      send: (data: unknown) => {
         responseBody = data;
         return res;
       },
-      json: (data: any) => {
+      json: (data: unknown) => {
         responseBody = data;
         return res;
       },
@@ -298,6 +335,11 @@ export async function runStripeWebhookTestRunner(): Promise<void> {
   });
   await handleStripeWebhook(test3.req, test3.res);
   console.log(`  ${test3.getStatus() === 200 ? "✅ PASS" : "❌ FAIL"}: Escrow PaymentIntent Succeeded (Status ${test3.getStatus()})`);
+
+  if (prevAllow === undefined) delete process.env.ALLOW_STRIPE_DEMO_WEBHOOK_SECRET;
+  else process.env.ALLOW_STRIPE_DEMO_WEBHOOK_SECRET = prevAllow;
+  if (prevSecret === undefined) delete process.env.STRIPE_WEBHOOK_SECRET;
+  else process.env.STRIPE_WEBHOOK_SECRET = prevSecret;
 
   console.log("==================================================");
   console.log("📊 STRIPE WEBHOOK COMPLIANCE VERIFICATION COMPLETE");
