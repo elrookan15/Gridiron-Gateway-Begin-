@@ -33,11 +33,11 @@ try {
   execSync("npx tsx src/combineLaserTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("8️⃣ Executing Gemini AI School Generator & Database Suite (9/9 Schema Audit)...");
+  console.log("8️⃣ Executing Gemini AI School Generator & Database Suite (11/11 Schema Audit)...");
   execSync("npx tsx src/geminiSchoolGeneratorTestSuite.ts", { stdio: "inherit" });
   console.log("");
 
-  console.log("9️⃣ Executing GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)...");
+  console.log("9️⃣ Executing GCS V4 Signed URL & COPPA Minor Gate (10/10 Metric Audit)...");
   execSync("npx tsx src/gcsSignedUrlTestSuite.ts", { stdio: "inherit" });
   console.log("");
 

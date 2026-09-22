@@ -9,6 +9,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 |---|---|---|---|---|
 | 2026-09-07 | Compliance clock-drift (ML-001) | compliance | qa | Active — see MISTAKE_LEDGER |
 | 2026-09-09 | Dual schools / MVP archive dossier debt | persistence | integration | Superseded — archive dropped via dossier cleanup migration |
+| 2026-09-22 | Health audit baseline (CI Cursor/** + orphan suites) | other | qa | Active — see docs/audits/2026-09-22-health-audit.md |
 
 ## Entries
 
@@ -37,3 +38,16 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: Dossier mapper suite + pre-commit gate.
 - Recurrence Count: 1
 - Status: Superseded (archive dropped on live project)
+
+## [2026-09-22] Health audit baseline — CI Cursor/** filter + orphan suite scripts
+
+- Category: other
+- Persona: qa
+- File(s): `docs/audits/2026-09-22-health-audit.md`, `.github/workflows/ci.yml`, `package.json`, `scripts/runAllPreCommitChecks.ts`
+- Root Cause: No committed evidence-backed health baseline; CI push filter missed `Cursor/**` agent branches; gemini/gcs step titles drifted from suite counts; two TestSuites lacked npm scripts.
+- Patch: Audit markdown; add `Cursor/**` to CI push branches; correct 11/11 and 10/10 labels; wire `test:nil-valuation` / `test:ncaa-clearance`.
+- Red Test: Push to `Cursor/*` did not match `cursor/**` filter (case-sensitive); suite output 11/11 vs CI claim 9/9.
+- Green Test: Full matrix in audit doc — lint/build/pre-commit/`test:*` EXIT 0 on 2026-09-22 runner.
+- Regression Guard: CI titles match suite prints; orphan scripts in `package.json`.
+- Recurrence Count: 1
+- Status: Active

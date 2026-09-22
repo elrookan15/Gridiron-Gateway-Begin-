@@ -2,7 +2,8 @@ name: Gridiron Gateway CI Gatekeeper
 
 on:
   push:
-    branches: [ main, master, "cursor/**" ]
+    # Include both casings: cloud agents use Cursor/**; some forks use cursor/**
+    branches: [ main, master, "cursor/**", "Cursor/**" ]
   pull_request:
     branches: [ main, master ]
 
@@ -45,10 +46,10 @@ jobs:
       - name: Combine Laser Hardware Ingestion Gate (8/8 Metric Audit)
         run: npm run test:laser
 
-      - name: Gemini AI School Generator Gate (9/9 Schema Audit)
+      - name: Gemini AI School Generator Gate (11/11 Schema Audit)
         run: npm run test:gemini-school
 
-      - name: GCS V4 Signed URL & COPPA Minor Gate (5/5 Metric Audit)
+      - name: GCS V4 Signed URL & COPPA Minor Gate (10/10 Metric Audit)
         run: npm run test:gcs-signed-url
 
       - name: Directory Mapper & Persist Gates
