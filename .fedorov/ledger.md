@@ -56,6 +56,20 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Recurrence Count: 1
 - Status: Active
 
+## [2026-09-22] ASP fail-closed CodeRabbit majors (HALT / tz / slice / location)
+
+- Category: compliance
+- Persona: integration
+- File(s): `packages/ncaa-recruiting-auditor/src/{auditComplianceBatch,periodGate,sessionEnvelope,periodGate.test}.ts`
+- Root Cause: HALT prospects skipped → CLEAR; non-FBS sessions CLEAR; UTC default for missing tz; open location string; offset-free timestamp_text; dropped booster/direction metadata.
+- Patch: EXTRACTOR_HALT quarantine; SLICE_NOT_IMPLEMENTED outside FOOTBALL/FBS; no UTC default; LocationSchema on raw+enriched; offset-bearing parse only; preserve consumed metadata fields. Narrow year scope in PeriodGate only (frozen `FBS-2026-*` table) — no invented calendarResolver year lock.
+- Red Test: HALT-only / FCS / missing tz previously CLEAR or PERMISSIBLE.
+- Green Test: `npm run test:ncaa-auditor-asp` → 13/13 (6 July + 7 fail-closed).
+- Regression Guard: vitest fail-closed suite in `periodGate.test.ts`.
+- Residual Risk: Slice 2 still deferred; live complianceEngine not wired.
+- Recurrence Count: 1
+- Status: Active
+
 ## [2026-09-22] Health audit baseline — CI Cursor/** filter + orphan suite scripts
 
 - Category: other
