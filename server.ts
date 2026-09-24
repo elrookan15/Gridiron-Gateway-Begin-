@@ -38,6 +38,7 @@ import type {
   NilRegulatoryPlane,
 } from "./src/types";
 import { canReleaseNilEscrow } from "./src/lib/rallySafeReleaseGate";
+import { isPlausibleLaserFortyTime } from "./src/lib/combineLaserEngine";
 import {
   isDirectoryPostgresConfigured,
   persistCoachesToPostgres,
@@ -732,10 +733,10 @@ app.post(
       }
 
       const forty = Number(laserFortyTime);
-      if (!Number.isFinite(forty) || forty <= 0) {
+      if (!isPlausibleLaserFortyTime(forty)) {
         return res.status(400).json({
-          error: "MISSING_LASER_TELEMETRY",
-          message: "laserFortyTime must be a positive number.",
+          error: "INVALID_40_YARD_DASH",
+          message: "laserFortyTime must be a laser-plausible 4.10s–6.00s. Impossible times are not stamped Laser Verified.",
         });
       }
 

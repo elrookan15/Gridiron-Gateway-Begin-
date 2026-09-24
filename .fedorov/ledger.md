@@ -13,6 +13,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 | 2026-09-22 | ASP fail-closed CodeRabbit majors (HALT/tz/slice) | compliance | integration | Active |
 | 2026-09-22 | Health audit baseline (CI Cursor/** + orphan suites) | other | qa | Active — see docs/audits/2026-09-22-health-audit.md |
 | 2026-09-22 | Stripe whsec fail-closed + schema schools DDL split | security / persistence | integration | Active |
+| 2026-09-24 | Laser webhook stamped Verified on any positive 40 | other | integration | Active |
 
 ## Entries
 
@@ -95,4 +96,18 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Regression Guard: CI steps `test:stripe-webhook` + `test:schema-sql`; static CREATE TABLE count asserts.
 - Residual Risk: Live Stripe `constructEvent` still demo-HMAC; mockData secondary UI (P1-3) untouched; fresh full `schema.sql` apply not executed against a live Postgres in this run.
 - Recurrence Count: 1
+- Status: Active
+
+## [2026-09-24] Laser webhook stamped Verified on any positive 40
+
+- Category: other
+- Persona: integration
+- File(s): `server.ts`, `src/lib/combineLaserEngine.ts`, `src/combineLaserTestSuite.ts`
+- Root Cause: `POST /api/v1/combines/webhooks/laser` accepted any `laserFortyTime > 0` and persisted `badge: Laser Verified` without `isPlausibleLaserFortyTime` / `validateAndIngestLaserPacket`. A 3.50s or 9.90s packet became a verified combine row in RAM + `combine_laser_entries`.
+- Patch: Shared `isPlausibleLaserFortyTime` (4.10–6.00s) used by the engine and the live webhook. Out-of-range forties return 400 `INVALID_40_YARD_DASH` and never persist.
+- Red Test: Old webhook: `Number.isFinite(forty) || forty <= 0` lets 3.50 through. `isPlausibleLaserFortyTime(3.5) === false` fails on old code.
+- Green Test: `npm run test:laser` — webhook predicate rejects 3.50 / 6.50 / 0 / NaN; accepts 4.10 / 4.48 / 6.00.
+- Regression Guard: `src/combineLaserTestSuite.ts` webhook-contract asserts; wired via `test:laser` / pre-commit.
+- Residual Risk: Shuttle / 3-cone / jumps still optional on the webhook (forty-only packets remain valid). Full `validateAndIngestLaserPacket` still unused on the HTTP path so partial vendor payloads are not rejected.
+- Recurrence Count: 2 (prior PR #16 rejected 2026-09-07; 30-day refresh)
 - Status: Active
