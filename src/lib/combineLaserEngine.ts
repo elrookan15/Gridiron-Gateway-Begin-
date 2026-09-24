@@ -28,6 +28,22 @@ export interface LaserIngestionResult {
   };
 }
 
+/** Human 40-yard floor/ceiling. Below 4.10s is not a recorded laser time; above 6.00s is not a verified sprint. */
+export const LASER_FORTY_MIN_SECONDS = 4.1;
+export const LASER_FORTY_MAX_SECONDS = 6.0;
+
+/**
+ * Webhook + engine share this predicate so a positive-but-impossible 40
+ * (3.50s, 9.90s) cannot be stamped Laser Verified.
+ */
+export function isPlausibleLaserFortyTime(forty: number): boolean {
+  return (
+    Number.isFinite(forty) &&
+    forty >= LASER_FORTY_MIN_SECONDS &&
+    forty <= LASER_FORTY_MAX_SECONDS
+  );
+}
+
 export function validateAndIngestLaserPacket(payload: Partial<LaserIngestionPayload>): LaserIngestionResult {
   if (!payload.athleteId || !payload.athleteId.trim()) {
     return { success: false, errorCode: "MISSING_ATHLETE_ID", message: "Athlete ID is required for combine verification." };
@@ -40,7 +56,7 @@ export function validateAndIngestLaserPacket(payload: Partial<LaserIngestionPayl
   }
 
   const forty = Number(payload.laserFortyTime);
-  if (isNaN(forty) || forty < 4.10 || forty > 6.00) {
+  if (!isPlausibleLaserFortyTime(forty)) {
     return { success: false, errorCode: "INVALID_40_YARD_DASH", message: "Laser 40-yard dash time must be between 4.10s and 6.00s." };
   }
 

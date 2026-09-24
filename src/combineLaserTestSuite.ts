@@ -1,4 +1,5 @@
 import {
+  isPlausibleLaserFortyTime,
   validateAndIngestLaserPacket,
   type LaserIngestionPayload,
 } from "./lib/combineLaserEngine";
@@ -63,6 +64,16 @@ export function runCombineLaserTestSuite() {
   // Test 7: Missing Athlete ID
   const result7 = validateAndIngestLaserPacket({ ...validPayload, athleteId: "" });
   assert(result7.success === false && result7.errorCode === "MISSING_ATHLETE_ID", "Missing athlete ID rejected");
+
+  // Webhook contract: any positive 40 used to stamp Laser Verified. Shared predicate
+  // must reject the same impossible values the live POST /v1/combines/webhooks/laser path sees.
+  assert(isPlausibleLaserFortyTime(4.48) === true, "Plausible 4.48s forty accepted by webhook predicate");
+  assert(isPlausibleLaserFortyTime(4.1) === true, "Floor 4.10s forty accepted");
+  assert(isPlausibleLaserFortyTime(6.0) === true, "Ceiling 6.00s forty accepted");
+  assert(isPlausibleLaserFortyTime(3.5) === false, "Webhook rejects 3.50s (positive but impossible)");
+  assert(isPlausibleLaserFortyTime(6.5) === false, "Webhook rejects 6.50s (positive but not a verified sprint)");
+  assert(isPlausibleLaserFortyTime(0) === false, "Webhook rejects zero forty");
+  assert(isPlausibleLaserFortyTime(Number.NaN) === false, "Webhook rejects NaN forty");
 
   console.log("==================================================");
   console.log(`📊 TEST RESULTS SUMMARY: ${passedTests} PASSED, ${failedTests} FAILED`);
