@@ -1,4 +1,8 @@
 import { canReleaseNilEscrow } from "./lib/rallySafeReleaseGate";
+import {
+  hydrateEscrowStore,
+  isEscrowAlreadyReleased,
+} from "./lib/escrowCampaignStore";
 import type { RallySafeReleaseSnapshot } from "./types";
 
 function runRallySafeClearinghouseTestSuite() {
@@ -53,6 +57,55 @@ function runRallySafeClearinghouseTestSuite() {
     canReleaseNilEscrow({ ...cleared, regulatoryPlane: "INSTITUTIONAL_CAPS" }).ok === false,
     "CapGM / CAPS plane cannot release via RallySafe NIL Go",
   );
+
+  const alreadyReleased = canReleaseNilEscrow({ ...cleared, payoutReleased: true });
+  assert(
+    alreadyReleased.ok === false && alreadyReleased.code === "ALREADY_RELEASED",
+    "Released campaigns cannot be released again",
+  );
+  assert(
+    isEscrowAlreadyReleased("RELEASED") === true
+      && isEscrowAlreadyReleased("FUNDED") === false,
+    "RELEASED escrowStatus maps to payoutReleased",
+  );
+
+  const ramSeed = {
+    campaignId: "esc-cleared",
+    id: "esc-cleared",
+    escrowStatus: "FUNDED",
+  };
+  const pgReleased = {
+    campaignId: "esc-cleared",
+    id: "esc-cleared",
+    escrowStatus: "RELEASED",
+  };
+  const staleRam = [ramSeed];
+  const hydrated = hydrateEscrowStore(staleRam, pgReleased, "esc-cleared");
+  assert(
+    hydrated?.escrowStatus === "RELEASED" && staleRam[0]?.escrowStatus === "RELEASED",
+    "Postgres RELEASED overwrites stale RAM seed on hydrate",
+  );
+
+  const ramOnly = [{ campaignId: "esc-pending", escrowStatus: "FUNDED" }];
+  const ramFallback = hydrateEscrowStore(ramOnly, null, "esc-pending");
+  assert(
+    ramFallback?.campaignId === "esc-pending",
+    "RAM seed used when Postgres has no row",
+  );
+
+  const emptyStore: Array<{ campaignId: string; escrowStatus: string }> = [];
+  const pgOnly = hydrateEscrowStore(
+    emptyStore,
+    { campaignId: "cmp_post_restart", escrowStatus: "FUNDED" },
+    "cmp_post_restart",
+  );
+  assert(
+    pgOnly?.campaignId === "cmp_post_restart" && emptyStore.length === 1,
+    "Postgres-only campaign hydrates after process restart",
+  );
+
+  const missing = hydrateEscrowStore([], null, "cmp_unknown");
+  assert(missing === undefined, "Unknown campaign stays missing (fail-closed 404)");
 
   console.log("==================================================");
   console.log(`RESULTS: ${passedTests} PASSED, ${failedTests} FAILED`);

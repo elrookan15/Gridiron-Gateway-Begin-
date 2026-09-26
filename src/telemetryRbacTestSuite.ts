@@ -8,7 +8,7 @@ import {
   persistBioscanTelemetry,
   persistLaserCombineEntry,
 } from "./lib/telemetryPersist";
-import { persistEscrowCampaign } from "./lib/escrowPersist";
+import { fetchEscrowCampaign, persistEscrowCampaign } from "./lib/escrowPersist";
 import {
   parseGatewayStaffRole,
   permissionsForGatewayRole,
@@ -103,6 +103,12 @@ async function main(): Promise<void> {
       timestamp: new Date().toISOString(),
     });
     assert.equal(laser.ok, false);
+  });
+
+  await check("escrow fetch fails closed without service role", async () => {
+    if (isServiceRoleConfigured()) return;
+    const row = await fetchEscrowCampaign("cmp_missing");
+    assert.equal(row, null);
   });
 
   await check("escrow persist fails closed without service role", async () => {

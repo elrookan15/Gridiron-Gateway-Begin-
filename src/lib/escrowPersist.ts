@@ -101,6 +101,22 @@ export async function persistEscrowCampaign(
   return { ok: true, upserted: 1 };
 }
 
+export async function fetchEscrowCampaign(
+  campaignId: string,
+): Promise<EscrowCampaignRecord | null> {
+  const client = getServiceRoleClient();
+  if (!client || !campaignId) return null;
+
+  const { data, error } = await client
+    .from("rallysafe_escrow_campaigns")
+    .select("*")
+    .eq("campaign_id", campaignId)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return fromRow(data as Record<string, unknown>);
+}
+
 export async function listEscrowCampaigns(): Promise<EscrowCampaignRecord[]> {
   const client = getServiceRoleClient();
   if (!client) return [];
