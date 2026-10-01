@@ -13,6 +13,7 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 | 2026-09-22 | ASP fail-closed CodeRabbit majors (HALT/tz/slice) | compliance | integration | Active |
 | 2026-09-22 | Health audit baseline (CI Cursor/** + orphan suites) | other | qa | Active — see docs/audits/2026-09-22-health-audit.md |
 | 2026-09-22 | Stripe whsec fail-closed + schema schools DDL split | security / persistence | integration | Active |
+| 2026-10-01 | Orphan NCAA/NIL suites not executed by CI | build-config | devops | Active |
 
 ## Entries
 
@@ -94,5 +95,19 @@ Also cross-check root [`MISTAKE_LEDGER.md`](../MISTAKE_LEDGER.md).
 - Green Test: `npm run test:stripe-webhook` 12/12; `npm run test:schema-sql` 9/9; `npm run lint` + `npm run test:pre-commit` EXIT 0 (2026-09-22).
 - Regression Guard: CI steps `test:stripe-webhook` + `test:schema-sql`; static CREATE TABLE count asserts.
 - Residual Risk: Live Stripe `constructEvent` still demo-HMAC; mockData secondary UI (P1-3) untouched; fresh full `schema.sql` apply not executed against a live Postgres in this run.
+- Recurrence Count: 1
+- Status: Active
+
+## [2026-10-01] Orphan NCAA/NIL suites not executed by CI
+
+- Category: build-config
+- Persona: devops
+- File(s): `.github/workflows/ci.yml`
+- Root Cause: Root scripts `test:ncaa-auditor-asp`, `test:ncaa-clearance`, `test:nil-valuation` existed but neither `ci.yml` nor `runAllPreCommitChecks.ts` invoked them; auditor package is not an npm workspace so its deps were never installed in CI.
+- Patch: New job `orphaned-ncaa-nil-gate` ("NCAA Auditor ASP / Clearance / NIL Valuation Gate") — root `npm ci` + `npm ci --prefix packages/ncaa-recruiting-auditor` with `cache-dependency-path` covering both lockfiles; runs all three scripts fail-closed (no continue-on-error).
+- Red Test: Prior CI green on auditor vitest PRs without ever installing/running that package.
+- Green Test: Local main — auditor 13/13, clearance 11/11, NIL 7/7 (2026-10-01).
+- Regression Guard: Dedicated CI job on pull_request + push to main.
+- Residual Risk: `runAllPreCommitChecks.ts` still omits these three (local pre-commit parity not requested); `master` trigger retained (remote `origin/master` exists).
 - Recurrence Count: 1
 - Status: Active

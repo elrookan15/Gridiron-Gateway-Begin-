@@ -71,3 +71,38 @@ jobs:
 
       - name: Production Bundle Verification
         run: npm run build
+
+  # Standalone gate for suites that were scripted but never executed by CI.
+  # Separate job so failures are attributable (not buried in the pre-commit matrix).
+  # packages/ncaa-recruiting-auditor is NOT an npm workspace — needs its own npm ci.
+  orphaned-ncaa-nil-gate:
+    name: NCAA Auditor ASP / Clearance / NIL Valuation Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            packages/ncaa-recruiting-auditor/package-lock.json
+
+      - name: Install Root Dependencies
+        run: npm ci
+
+      - name: Install NCAA Recruiting Auditor Package Dependencies
+        run: npm ci --prefix packages/ncaa-recruiting-auditor
+
+      - name: NCAA Recruiting Auditor ASP Gate (vitest)
+        run: npm run test:ncaa-auditor-asp
+
+      - name: NCAA Clearance Engine Gate
+        run: npm run test:ncaa-clearance
+
+      - name: NIL Valuation Integer-Cents Gate
+        run: npm run test:nil-valuation
